@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "FIVONDRONANA",
+    "slug": "fivondronana",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"]
+  }
+}

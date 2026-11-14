@@ -1,0 +1,75 @@
+# Environment files and local credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Dependency directories and package manager caches
+node_modules/
+node_modules/*
+**/node_modules/*
+apps/mobile/node_modules/*
+.pnp.*
+.yarn/cache/
+.yarn/unplugged/
+.bun
+
+.bun-cache/
+.npm/
+.cache/
+
+# Build output and coverage
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# Expo / React Native / Metro
+.expo/
+.expo-shared/
+.metro-cache/
+web-build/
+**/android/.gradle/
+**/android/app/build/
+**/android/build/
+**/ios/Pods/
+**/ios/build/
+*.xcarchive/
+*.xcuserstate
+
+# Prisma generated client and local databases
+apps/api/src/generated/
+.prisma/
+*.db
+*.db-journal
+
+# Logs and diagnostic output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
+lerna-debug.log*
+report.*.json
+
+# Local configuration and editor state
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.history/
+.turbo/
+.vercel/
+.netlify/
+*.swp
+*.swo
+*.orig
+
+# Local certificates and private keys
+*.key
+*.p12
+*.pfx
+*.pem

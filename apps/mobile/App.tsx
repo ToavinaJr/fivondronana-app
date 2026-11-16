@@ -1,66 +1,33 @@
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useReducer } from 'react';
+import { BackHandler, StatusBar } from 'react-native';
+import { accessFlowReducer, initialAccessFlow } from './src/access/access-flow';
+import { LoginScreen, RecoveryScreen, WelcomeScreen } from './src/access/AccessScreens';
+import { colors } from './src/theme/tokens';
 
 export default function App() {
+  const [flow, dispatch] = useReducer(accessFlowReducer, initialAccessFlow);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (flow.screen === 'welcome') return false;
+      dispatch({ type: 'BACK' });
+      return true;
+    });
+    return () => subscription.remove();
+  }, [flow.screen]);
+
+  const screenProps = {
+    onLogin: () => dispatch({ type: 'OPEN_LOGIN' }),
+    onRecovery: () => dispatch({ type: 'OPEN_RECOVERY' }),
+    onBack: () => dispatch({ type: 'BACK' }),
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.brand}>FIVONDRONANA</Text>
-      <Text style={styles.title}>Tongasoa</Text>
-      <Text style={styles.description}>
-        Sehatra ho an’ny mpiandraikitra.
-      </Text>
-      <Text style={styles.action}>HIDITRA</Text>
-      <Text style={styles.note}>
-        Fototra fanombohana ihany ity efijery ity. Tsy mbola ampifandraisina amin’ny API ny fidirana.
-      </Text>
+    <>
       <StatusBar barStyle="dark-content" />
-    </View>
+      {flow.screen === 'welcome' ? <WelcomeScreen {...screenProps} /> : null}
+      {flow.screen === 'login' ? <LoginScreen {...screenProps} /> : null}
+      {flow.screen === 'recovery' ? <RecoveryScreen {...screenProps} /> : null}
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-    backgroundColor: '#f7f5ee',
-  },
-  brand: {
-    color: '#526442',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textAlign: 'center',
-  },
-  title: {
-    marginTop: 28,
-    color: '#242820',
-    fontSize: 32,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  description: {
-    marginTop: 10,
-    color: '#5d6258',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  action: {
-    marginTop: 36,
-    overflow: 'hidden',
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#526442',
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  note: {
-    marginTop: 20,
-    color: '#74786f',
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-});

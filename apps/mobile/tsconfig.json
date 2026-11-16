@@ -3,6 +3,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "types": ["react"]
   },
   "include": ["App.tsx", "src/**/*.ts", "src/**/*.tsx"]

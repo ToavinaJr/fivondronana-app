@@ -4,10 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "start:dev": "bun --watch src/main.ts",
+    "start:dev": "bun --env-file=../../.env --watch src/main.ts",
     "start": "bun dist/main.js",
     "build": "bun run db:generate && tsc -p tsconfig.build.json",
     "typecheck": "bun run db:generate && tsc --noEmit -p tsconfig.json",
+    "test": "bun test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy"

@@ -21,13 +21,13 @@ The package versions are pinned to compatible framework release lines in each wo
 ## Local development
 
 1. Copy `.env.example` to `.env` and replace `POSTGRES_PASSWORD` with a unique local value. Keep `.env` untracked.
-2. Start PostgreSQL with `docker compose -f infra/docker-compose.yml up -d postgres`.
+2. Start PostgreSQL with `docker compose --env-file .env -f infra/docker-compose.yml up -d postgres`.
 3. Install dependencies and create the Bun lockfile with `bun install`.
 4. Generate the Prisma client with `bun run db:generate`.
 5. Start the API with `bun run dev:api`.
 6. In a second terminal, start Expo with `bun run dev:mobile`.
 
-To run the containerized API with PostgreSQL instead, use `docker compose -f infra/docker-compose.yml up --build` and skip step 5. Ports bind to `127.0.0.1` by default. For a physical phone, set `API_BIND_ADDRESS` and `EXPO_PUBLIC_API_URL` to the development machine's LAN address; leave `POSTGRES_BIND_ADDRESS` on loopback.
+To run the containerized API with PostgreSQL instead, use `docker compose --env-file .env -f infra/docker-compose.yml up --build` and skip step 5. Ports bind to `127.0.0.1` by default. For a physical phone, set `API_BIND_ADDRESS` and `EXPO_PUBLIC_API_URL` to the development machine's LAN address; leave `POSTGRES_BIND_ADDRESS` on loopback.
 
 The initial API exposes `GET /api/health` only. Domain modules are boundaries for future work, not implemented product features. No user, conversation, CV, archive, or contact records are seeded.
 

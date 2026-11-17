@@ -26,5 +26,5 @@ const styles = StyleSheet.create({
   compactMark: { width: 38, height: 38, borderRadius: 19, borderWidth: 1.5 },
   initial: { color: colors.primary, fontSize: 36, fontWeight: '700' },
   compactInitial: { fontSize: 18 },
-  name: { color: colors.text, fontSize: 16, fontWeight: '700', letterSpacing: 1.5 },
+  name: { color: colors.text, fontSize: 16, fontWeight: '600' },
 });

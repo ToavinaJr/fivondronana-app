@@ -22,12 +22,14 @@ The reference files are JPEGs, so sampled colors are starting values and may con
 | `brand.primary` | `#B8170F` | Main action, active tab, important emphasis; sampled from `auth-page.jpeg`. |
 | `brand.accent` | `#087F7B` | Download and secondary document actions; sampled from `arisiva-page.jpeg`. |
 | `surface.page` | `#FFFFFF` | Main screen background. |
-| `surface.muted` | `#F0F0F0` | Quiet list rows and message surfaces. |
-| `surface.tinted` | `#E3EFEF` | Subtle status/category surfaces; use semantic states rather than hard-coded per-record colors. |
+| `surface.muted` | `#F5F5F5` | Quiet list rows and message surfaces. |
+| `surface.selected` | `#FCEFED` | Selected filter and navigation states. |
 | `text.primary` | `#171717` | Main labels and content. |
-| `text.secondary` | `#686868` | Supporting text and descriptions. |
-| `border.subtle` | `#E2E2E2` | Input outlines and row separators. |
-| `state.error` | `#B8170F` | Validation and destructive-state feedback, paired with text or an icon. |
+| `text.secondary` | `#595959` | Supporting text and descriptions; maintains readable contrast on white. |
+| `border.subtle` | `#DEDEDE` | Input outlines and row separators. |
+| `state.error` | `#A1120C` | Validation and destructive-state feedback, paired with text or an icon. |
+| `state.warning.surface` | `#F8F3E8` | Sample-data notice background. |
+| `state.warning.text` | `#55451F` | Sample-data notice text. |
 
 Create semantic light and dark variants from these roles; keep the supplied light appearance as the reference default. Do not use raw color values throughout screen components.
 
@@ -42,7 +44,9 @@ Create semantic light and dark variants from these roles; keep the supplied ligh
 ### Spacing and Shape
 
 - Use a 4-point spacing base with shared steps of 4, 8, 12, 16, 24, and 32.
-- Use restrained corner radii (4–8 points) for buttons, fields, and list surfaces, matching the square, lightly rounded references.
+- Use restrained 6–8 point corner radii for buttons, fields, and list surfaces, matching the lightly rounded references.
+- Keep selected filter chips the same height and padding as unselected chips; selection changes color and border only.
+- Interactive targets meet at least 44 points in both dimensions. Keep supporting labels at 11 points or larger.
 - Preserve enough separation between adjacent controls to satisfy platform touch-target guidance.
 
 ## Shared Components

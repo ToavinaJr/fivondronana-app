@@ -402,7 +402,7 @@ function Field({
         keyboardType={keyboardType}
         autoCapitalize={keyboardType === 'email-address' ? 'none' : 'sentences'}
         placeholderTextColor={colors.secondary}
-        style={styles.input}
+        style={[styles.input, error && styles.inputError]}
       />
       {error ? (
         <Text accessibilityRole="alert" style={styles.fieldError}>
@@ -428,48 +428,49 @@ function RemoveButton({ onPress }: { onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  page: { padding: 16, paddingBottom: 36 },
-  back: { minHeight: 42, justifyContent: 'center' },
+  page: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 36 },
+  back: { minHeight: 44, justifyContent: 'center' },
   link: { color: colors.primary, fontWeight: '700', fontSize: 14 },
-  heading: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 5 },
-  help: { color: colors.secondary, fontSize: 14, lineHeight: 20, marginBottom: 12 },
-  section: { marginTop: 17, paddingBottom: 14, borderBottomWidth: 1, borderColor: colors.border },
-  sectionTitle: { color: colors.text, fontWeight: '700', fontSize: 17, marginBottom: 11 },
-  field: { marginBottom: 10 },
-  label: { color: colors.text, fontSize: 14, marginBottom: 5 },
+  heading: { color: colors.text, fontSize: 24, fontWeight: '700', marginBottom: 8 },
+  help: { color: colors.secondary, fontSize: 14, lineHeight: 21, marginBottom: 16 },
+  section: { marginTop: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: colors.border },
+  sectionTitle: { color: colors.text, fontWeight: '700', fontSize: 17, marginBottom: 12 },
+  field: { marginBottom: 12 },
+  label: { color: colors.text, fontSize: 14, fontWeight: '500', marginBottom: 8 },
   input: {
-    minHeight: 46,
+    minHeight: 50,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 8,
     paddingHorizontal: 12,
     color: colors.text,
     fontSize: 16,
   },
+  inputError: { borderColor: colors.error, borderWidth: 2 },
   add: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', paddingRight: 12 },
   repeat: { marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border },
-  remove: { alignSelf: 'flex-start', minHeight: 40, justifyContent: 'center' },
+  remove: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   removeText: { color: colors.error, fontWeight: '600', fontSize: 13 },
   export: {
-    minHeight: 46,
+    minHeight: 48,
     marginTop: 20,
     borderWidth: 1,
     borderColor: colors.accent,
-    borderRadius: 4,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   exportText: { color: colors.accent, fontWeight: '700', fontSize: 14 },
   save: {
-    minHeight: 50,
+    minHeight: 52,
     marginTop: 10,
-    borderRadius: 4,
+    borderRadius: 8,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   disabled: { opacity: 0.6 },
-  saveText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  saveText: { color: colors.onPrimary, fontWeight: '600', fontSize: 15 },
   error: { color: colors.error, marginTop: 14, lineHeight: 20 },
   fieldError: { color: colors.error, marginTop: 4, fontSize: 13, lineHeight: 18 },
   success: { color: colors.accent, marginTop: 14, lineHeight: 20 },

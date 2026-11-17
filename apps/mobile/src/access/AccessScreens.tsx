@@ -51,7 +51,7 @@ export function WelcomeScreen({ onLogin }: WelcomeProps) {
         <Text style={styles.quote}>“Fa asan’ny tànany isika, voaforona tao amin’i Kristy Jesosy hanao asa tsara.”</Text>
         <Text style={styles.reference}>Efesiana 2:10</Text>
         <View style={styles.welcomeButton}>
-          <ActionButton label="HIDITRA" onPress={onLogin} />
+          <ActionButton label="Hiditra" onPress={onLogin} />
         </View>
       </View>
       <Text style={styles.footer}>FIVONDRONANA · MPIANDRAIKITRA</Text>
@@ -134,7 +134,7 @@ export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) 
             onPress={() => setShowPassword((value) => !value)}
             hitSlop={8}
           >
-            <Text style={styles.showPassword}>{showPassword ? 'AFENO' : 'ASEHOY'}</Text>
+            <Text style={styles.showPassword}>{showPassword ? 'Afeno' : 'Asehoy'}</Text>
           </Pressable>
         </View>
         {errors.password && <Text style={styles.errorText}>Ampidiro ny teny miafina.</Text>}
@@ -156,7 +156,7 @@ export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) 
         </View>
         {notice ? <Notice>{notice}</Notice> : null}
         <ActionButton
-          label={isSubmitting ? 'MIDITRA…' : 'HIDITRA'}
+          label={isSubmitting ? 'Miditra…' : 'Hiditra'}
           onPress={() => {
             void submit();
           }}
@@ -209,7 +209,7 @@ export function RecoveryScreen({ onBack }: RecoveryProps) {
         )}
         {notice ? <Notice>{notice}</Notice> : null}
         <View style={styles.recoveryButton}>
-          <ActionButton label="ALEFA" onPress={submit} />
+          <ActionButton label="Alefa" onPress={submit} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -221,60 +221,60 @@ const styles = StyleSheet.create({
   welcome: {
     flex: 1,
     backgroundColor: colors.page,
-    paddingHorizontal: 28,
-    paddingTop: 36,
+    paddingHorizontal: 24,
+    paddingTop: 32,
     paddingBottom: 24,
     justifyContent: 'space-between',
   },
   welcomeMain: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  welcomeTitle: { marginTop: 24, color: colors.text, fontSize: 23, fontWeight: '700', textAlign: 'center' },
-  quote: { maxWidth: 340, marginTop: 20, color: colors.secondary, fontSize: 16, lineHeight: 25, textAlign: 'center' },
+  welcomeTitle: { marginTop: 24, color: colors.text, fontSize: 24, fontWeight: '700', textAlign: 'center' },
+  quote: { maxWidth: 340, marginTop: 16, color: colors.secondary, fontSize: 16, lineHeight: 24, textAlign: 'center' },
   reference: { marginTop: 8, color: colors.secondary, fontSize: 14 },
-  welcomeButton: { alignSelf: 'stretch', marginTop: 38 },
+  welcomeButton: { alignSelf: 'stretch', marginTop: 32 },
   button: {
-    minHeight: 50,
+    minHeight: 52,
     paddingHorizontal: 20,
-    borderRadius: 6,
+    borderRadius: 8,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pressed: { opacity: 0.82 },
   disabled: { opacity: 0.58 },
-  buttonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15, letterSpacing: 0.4 },
-  footer: { color: colors.secondary, fontSize: 11, textAlign: 'center', letterSpacing: 0.6 },
+  buttonText: { color: colors.onPrimary, fontWeight: '600', fontSize: 15 },
+  footer: { color: colors.secondary, fontSize: 11, textAlign: 'center' },
   formPage: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 },
   back: { minHeight: 44, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8 },
   backText: { color: colors.primary, fontSize: 34, lineHeight: 38 },
   backLabel: { color: colors.secondary, fontSize: 14 },
-  title: { marginTop: 14, marginBottom: 28, color: colors.text, fontSize: 22, fontWeight: '700' },
-  formBrand: { alignItems: 'center', marginBottom: 30 },
+  title: { marginTop: 16, marginBottom: 24, color: colors.text, fontSize: 24, fontWeight: '700' },
+  formBrand: { alignItems: 'center', marginBottom: 24 },
   label: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 8 },
   input: {
-    minHeight: 50,
+    minHeight: 52,
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 6,
+    borderRadius: 8,
     color: colors.text,
     fontSize: 16,
   },
   inputError: { borderColor: colors.error },
   passwordLabel: { marginTop: 20 },
   passwordRow: {
-    minHeight: 50,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   passwordInput: { flex: 1, paddingVertical: 12, color: colors.text, fontSize: 16 },
-  showPassword: { color: colors.primary, fontSize: 12, fontWeight: '700', paddingVertical: 8 },
+  showPassword: { color: colors.primary, fontSize: 12, fontWeight: '600', paddingVertical: 12, paddingHorizontal: 4 },
   optionsRow: {
     marginTop: 18,
-    marginBottom: 26,
+    marginBottom: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -292,11 +292,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxChecked: { borderColor: colors.primary, backgroundColor: colors.primary },
-  checkmark: { color: '#FFFFFF', fontSize: 14, lineHeight: 16, fontWeight: '700' },
+  checkmark: { color: colors.onPrimary, fontSize: 14, lineHeight: 16, fontWeight: '700' },
   rememberText: { color: colors.secondary, fontSize: 13 },
   recoveryLink: { minHeight: 44, justifyContent: 'center' },
   link: { color: colors.primary, fontSize: 13, fontWeight: '600' },
-  description: { marginTop: -12, marginBottom: 28, color: colors.secondary, fontSize: 15, lineHeight: 22 },
+  description: { marginTop: -8, marginBottom: 24, color: colors.secondary, fontSize: 15, lineHeight: 22 },
   errorText: { color: colors.error, fontSize: 13, marginTop: 6 },
   notice: {
     marginBottom: 18,
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 14,
     lineHeight: 20,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   recoveryButton: { marginTop: 28 },
 });

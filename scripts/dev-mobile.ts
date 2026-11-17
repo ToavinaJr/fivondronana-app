@@ -45,7 +45,7 @@ for (const [name, args] of commands) {
     const lanIp = getLanIpv4();
     if (lanIp) {
       env.REACT_NATIVE_PACKAGER_HOSTNAME = lanIp;
-      env.EXPO_PUBLIC_API_URL = `http://${lanIp}:3001/api`;
+      env.EXPO_PUBLIC_API_URL = `http://${lanIp}:${process.env.API_PORT ?? '3000'}/api`;
     } else {
       console.warn('Aucune adresse IPv4 LAN détectée. Le téléphone devra pouvoir résoudre EXPO_PUBLIC_API_URL.');
     }

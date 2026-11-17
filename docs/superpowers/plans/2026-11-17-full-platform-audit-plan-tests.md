@@ -10,6 +10,8 @@
 
 **Documents de référence :** `docs/Application mobile FIVONDRONANA.md`, `docs/screens/`, `apps/mobile/PRODUCT.md`, `apps/mobile/DESIGN.md`.
 
+**Documents d’exécution détaillés :** [conception technique et TDD des tâches restantes](../specs/2026-11-17-fivondronana-remaining-work-tdd.md) et [cahier de tests complet](../test-plans/2026-11-17-fivondronana-test-book.md). Ce document conserve l’audit initial et son inventaire de mocks.
+
 ## État audité au 17 novembre 2026
 
 Le dépôt contient `apps/mobile` et `apps/api`. Il n’existe pas de `apps/backoffice`, ni de routes ou de module d’administration opérationnel. `AdministrationModule`, `UsersModule`, `ArchivesModule`, `ContactsModule` et `ConversationsModule` sont des modules NestJS vides. Le backoffice doit donc être traité comme une application à construire, pas comme un écran déjà existant.

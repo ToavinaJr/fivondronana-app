@@ -4,17 +4,19 @@ import { Brand } from './Brand';
 import { validateEmail, validateLogin } from './validation';
 import { colors } from '../theme/tokens';
 
-type Props = { onLogin: () => void; onRecovery: () => void; onBack: () => void };
+type WelcomeProps = { onLogin: () => void };
+type LoginProps = { onRecovery: () => void; onBack: () => void; onAuthenticate: (identifier: string, password: string) => Promise<void> };
+type RecoveryProps = { onBack: () => void };
 
-function ActionButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.button, pressed && styles.pressed]}><Text style={styles.buttonText}>{label}</Text></Pressable>;
+function ActionButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.button, pressed && styles.pressed, disabled && styles.disabled]}><Text style={styles.buttonText}>{label}</Text></Pressable>;
 }
 
 function Notice({ children }: { children: string }) {
   return <Text accessibilityRole="alert" style={styles.notice}>{children}</Text>;
 }
 
-export function WelcomeScreen({ onLogin }: Props) {
+export function WelcomeScreen({ onLogin }: WelcomeProps) {
   return (
     <View style={styles.welcome}>
       <View style={styles.welcomeMain}>
@@ -29,17 +31,28 @@ export function WelcomeScreen({ onLogin }: Props) {
   );
 }
 
-export function LoginScreen({ onRecovery, onBack }: Props) {
+export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [errors, setErrors] = useState<{ identifier?: boolean; password?: boolean }>({});
   const [notice, setNotice] = useState('');
-  const submit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const submit = async () => {
     const validation = validateLogin(identifier, password);
     setErrors({ identifier: validation.identifier === 'required', password: validation.password === 'required' });
-    setNotice(Object.keys(validation).length ? '' : 'Tsy mbola mifandray amin’ny rafitra fidirana ny fampiharana.');
+    setNotice('');
+    if (Object.keys(validation).length) return;
+    setIsSubmitting(true);
+    try {
+      await onAuthenticate(identifier.trim(), password);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Tsy tontosa ny fidirana.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -62,13 +75,13 @@ export function LoginScreen({ onRecovery, onBack }: Props) {
           <Pressable accessibilityRole="button" onPress={onRecovery} style={styles.recoveryLink}><Text style={styles.link}>Hadino ny teny miafina?</Text></Pressable>
         </View>
         {notice ? <Notice>{notice}</Notice> : null}
-        <ActionButton label="HIDITRA" onPress={submit} />
+        <ActionButton label={isSubmitting ? 'MIDITRA…' : 'HIDITRA'} onPress={() => { void submit(); }} disabled={isSubmitting} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-export function RecoveryScreen({ onBack }: Props) {
+export function RecoveryScreen({ onBack }: RecoveryProps) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<'required' | 'invalid'>();
   const [notice, setNotice] = useState('');
@@ -104,6 +117,7 @@ const styles = StyleSheet.create({
   welcomeButton: { alignSelf: 'stretch', marginTop: 38 },
   button: { minHeight: 50, paddingHorizontal: 20, borderRadius: 6, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.82 },
+  disabled: { opacity: 0.58 },
   buttonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15, letterSpacing: 0.4 },
   footer: { color: colors.secondary, fontSize: 11, textAlign: 'center', letterSpacing: 0.6 },
   formPage: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 },

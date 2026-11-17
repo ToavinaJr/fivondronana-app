@@ -11,7 +11,8 @@
     "test": "bun test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy"
+    "db:deploy": "prisma migrate deploy",
+    "db:seed:demo": "bun --env-file=../../.env run scripts/seed-demo.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.0",

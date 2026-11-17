@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
-import { AccessTokenGuard, AuthenticatedRequest } from './access-token.guard.js';
+import { AccessTokenGuard, type AuthenticatedRequest } from './access-token.guard.js';
 import { AuthService } from './auth.service.js';
 
 @Controller('auth')

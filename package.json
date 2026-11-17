@@ -7,12 +7,14 @@
   ],
   "scripts": {
     "dev": "bun run --filter @fivondronana/api start:dev",
-    "dev:mobile": "bun run --filter @fivondronana/mobile start",
+    "dev:mobile": "bun run scripts/dev-mobile.ts",
     "dev:api": "bun run --filter @fivondronana/api start:dev",
     "build:api": "bun run --filter @fivondronana/api build",
     "typecheck": "bun run --filter '*' typecheck",
+    "db:up": "docker compose --env-file .env -f infra/docker-compose.yml up -d postgres",
     "db:generate": "bun run --filter @fivondronana/api db:generate",
     "db:migrate": "bun run --filter @fivondronana/api db:migrate",
-    "db:deploy": "bun run --filter @fivondronana/api db:deploy"
+    "db:deploy": "bun run --filter @fivondronana/api db:deploy",
+    "db:seed:demo": "bun run --filter @fivondronana/api db:seed:demo"
   }
 }

@@ -19,6 +19,7 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   sessions     AuthSession[]
+  cv           Cv?
 }
 
 model AuthSession {
@@ -31,4 +32,50 @@ model AuthSession {
 
   @@index([userId, revokedAt])
   @@index([expiresAt])
+}
+
+model Cv {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  firstName     String
+  lastName      String
+  address       String
+  birthDate     DateTime
+  birthPlace    String?
+  phone         String
+  email         String
+  facebook      String?
+  province      String
+  area          String
+  fivondronana  String
+  extraPersonal String[]    @default([])
+  extraContact  String[]    @default([])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branches      CvBranch[]
+  activities    CvActivity[]
+}
+
+model CvBranch {
+  id        String   @id @default(cuid())
+  cvId      String
+  name      String
+  group     String
+  project   String?
+  startedAt DateTime?
+  endedAt   DateTime?
+  cv        Cv       @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  @@index([cvId])
+}
+
+model CvActivity {
+  id          String   @id @default(cuid())
+  cvId        String
+  name        String?
+  responsibility String?
+  description String?
+  date        DateTime?
+  cv          Cv       @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  @@index([cvId])
 }

@@ -4,15 +4,18 @@
   "version": "0.1.0",
   "main": "expo/AppEntry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "start": "bun --env-file=../../.env run expo start",
+    "android": "bun --env-file=../../.env run expo start --android",
+    "ios": "bun --env-file=../../.env run expo start --ios",
+    "web": "bun --env-file=../../.env run expo start --web",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "expo": "~58.0.0",
+    "expo-constants": "~58.0.16",
+    "expo-print": "~58.0.9",
+    "expo-sharing": "~58.0.23",
     "react": "19.3.0",
     "react-native": "0.88.0"
   },

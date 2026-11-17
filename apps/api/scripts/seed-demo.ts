@@ -1,13 +1,10 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { hashPassword } from '../src/modules/auth/auth.crypto.js';
+import { assertDemoSeedAllowed, requireDemoDatabaseUrl } from './demo-seed-config.js';
 
-if (process.env['NODE_ENV'] === 'production' || process.env['APP_ENV'] === 'production') {
-  throw new Error('The demo account seed is disabled in production.');
-}
-
-const connectionString = process.env['DATABASE_URL'];
-if (!connectionString) throw new Error('DATABASE_URL must be set before creating the demo account.');
+assertDemoSeedAllowed(process.env);
+const connectionString = requireDemoDatabaseUrl(process.env);
 
 const email = 'demo@fivondronana.test';
 const password = 'FivondronanaDemo2026!';

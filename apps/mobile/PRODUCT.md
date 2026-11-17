@@ -45,6 +45,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 - The source requirements do not define the behavior of global search, notification dismissal/read state, or the sign-in screen's remember-me control; the screenshots show these controls but do not specify their rules.
 - The source says users may edit permitted personal information but does not enumerate every editable account field.
 - The source does not state who may change a leader's group assignment.
+- The ADR also tracks unresolved file-download revocation timing, migration compatibility with existing data/clients, and target scale/service objectives. These remain technical/product decisions, not current behavior.
 - The backoffice is required by the business rules. The project has not yet selected its authentication transport, hosting target, or deployment arrangement; see [ADR 0001](../decisions/0001-platform-foundation.md).
 - Official logo, unit emblems, and profile illustrations are visible only inside the reference JPEGs. Standalone source assets have not been found in the repository.
 

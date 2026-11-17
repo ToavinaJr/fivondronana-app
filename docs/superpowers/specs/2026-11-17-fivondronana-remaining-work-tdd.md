@@ -6,6 +6,8 @@
 
 ## Avancement d’exécution
 
+- **Lot 0.1 — registre préparé, décisions en attente :** l’ADR recense désormais 12 décisions avec statut explicite; un test documentaire/contrat vérifie la couverture et interdit l’introduction prématurée des modèles dépendants dans le schéma Prisma. Aucune décision métier n’est réputée validée.
+- **Lot 0.4 — gardes de configuration testées :** extraction des validations pures pour le runner PostgreSQL d’intégration et le seed de démonstration; tests unitaires couvrent URL `_test`, forçage de l’environnement enfant, refus en production et absence de `DATABASE_URL`.
 - **Lot 0.2 — terminé :** contrat d’erreur HTTP, pagination bornée en taille et en offset sûr, helper Prisma `skip/take`, OpenAPI versionné; tests unitaires et document OpenAPI HTTP.
 - **Lot 0.3 — en attente de validation DB locale :** tests HTTP NestJS/PostgreSQL écrits et commande d’intégration sécurisée ajoutée. L’exécution locale a été arrêtée par une erreur d’authentification PostgreSQL avant toute migration; `DATABASE_URL_TEST` doit correspondre à une base isolée terminée par `_test`.
 - **Lot 0.4 — socle déjà présent :** le workflow CI contient PostgreSQL jetable, migrations et étapes de format/lint/typecheck/tests/build API; le workflow distant n’a pas été exécuté dans cette session.
@@ -94,13 +96,13 @@ Les chemins ci-dessous indiquent les responsabilités attendues; respecter les c
 
 ### Lot 0 — décisions, contrats et socle de qualité (reste à terminer)
 
-**0.1 Résoudre les décisions métier.** Mettre à jour `docs/decisions/0001-platform-foundation.md`, `docs/Application mobile FIVONDRONANA.md` et `apps/mobile/PRODUCT.md`. Ajouter un test de conformité documentaire/contrat vérifiant que les valeurs confirmées (cardinalités, rôles, limites, session) ont une représentation unique et que les éléments en attente ne sont pas codés comme invariants.
+**0.1 Résoudre les décisions métier.** Le registre des 12 décisions est maintenant explicite dans `docs/decisions/0001-platform-foundation.md`, répercuté dans le document métier et le Product Brief mobile, et protégé par `apps/api/tests/decisions-contract.test.ts`. Les choix et approbations du propriétaire produit restent attendus; ne pas considérer cette tâche comme validée tant que les statuts n’ont pas été tranchés.
 
 **0.2 [x] Contrat API et erreurs.** Écrire d’abord `apps/api/tests/api-contract.test.ts` : chaque erreur a le schéma stable choisi; pagination accepte les bornes et rejette les valeurs hors limites; les helpers refusent aussi les métadonnées invalides hors HTTP; l’OpenAPI expose les routes et DTO attendus. Implémenté dans `api-errors.ts`, `common/pagination.ts`, `openapi.ts` et `api-bootstrap.ts`; global prefix, filtre et schémas partagés sont branchés au démarrage.
 
 **0.3 Tests HTTP réels.** Ajouter `apps/api/tests/http.integration.test.ts` avec l’application Nest réelle et PostgreSQL isolé. Tester health, login, `/auth/me`, logout, CV courant, validation et persistance. Les tests sont ajoutés; leur exécution locale reste à valider car les identifiants configurés pour `fivondronana_test` ont provoqué P1000 avant migration. `scripts/test-integration.ts` refuse les bases dont le nom ne finit pas par `_test` et passe explicitement `DATABASE_URL_TEST` à Prisma.
 
-**0.4 CI reproductible.** Ajouter workflow CI pour install verrouillée, format check, lint, typecheck, unités, migration sur DB jetable, intégration, puis builds. Ajouter des tests de scripts/config qui détectent une variable requise absente, le seed démo en production et le démarrage sans base. La pipeline doit échouer sur n’importe quel étage rouge.
+**0.4 CI reproductible.** Le workflow CI existant effectue install verrouillée, génération Prisma, migration, format, lint, typecheck, tests et build sur un PostgreSQL jetable. Des tests ciblés sont maintenant ajoutés pour la configuration du runner d’intégration et le seed démo en production ou sans URL de base. À compléter : exécution CI distante et garde dédiée au démarrage API sans configuration de base; la pipeline doit échouer sur n’importe quel étage rouge.
 
 **Sortie/gate :** ADR relu, décisions nécessaires aux tâches 1–7 consignées, contrat d’erreurs/pagination et tests HTTP exécutables; pipeline verte sur checkout propre.
 

@@ -301,3 +301,5 @@ L'audit d'implémentation a relevé des règles qui se contredisent ou ne sont p
 
 Le code actuel ne met en œuvre que la santé de l'API, l'authentification/session, le changement de mot de passe et le CV personnel de l'utilisateur. Le répertoire des responsables, les archives, les contacts, les conversations, les notifications et le backoffice restent à construire. Les données de démonstration locales ne constituent pas des données métier validées.
 
+Le registre ADR 0001 explicite également les décisions encore ouvertes sur la révocation des téléchargements, la compatibilité des migrations avec d'éventuels clients/données existants et les volumes/objectifs de service. Ces propositions techniques ne valent pas validation métier.
+

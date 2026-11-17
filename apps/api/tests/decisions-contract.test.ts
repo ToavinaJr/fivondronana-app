@@ -4,7 +4,10 @@ import { describe, expect, it } from 'bun:test';
 
 const adrPath = resolve(import.meta.dir, '../../../docs/decisions/0001-platform-foundation.md');
 const adr = readFileSync(adrPath, 'utf8');
-const businessRules = readFileSync(resolve(import.meta.dir, '../../../docs/Application mobile FIVONDRONANA.md'), 'utf8');
+const businessRules = readFileSync(
+  resolve(import.meta.dir, '../../../docs/Application mobile FIVONDRONANA.md'),
+  'utf8',
+);
 const prismaSchema = readFileSync(resolve(import.meta.dir, '../prisma/schema.prisma'), 'utf8');
 
 describe('ADR decision contract', () => {
@@ -27,7 +30,9 @@ describe('ADR decision contract', () => {
     for (const decision of expectedDecisions) {
       const row = adr.split('\n').find((line) => line.startsWith(`| ${decision} |`));
       expect(row, `ADR must state the decision and its status: ${decision}`).toBeDefined();
-      expect(row).toMatch(/\| \*\*(En attente du propriétaire produit|Partiel|Règle confirmée[^|]*|Direction proposée)\*\* \|$/);
+      expect(row).toMatch(
+        /\| \*\*(En attente du propriétaire produit|Partiel|Règle confirmée[^|]*|Direction proposée)\*\* \|$/,
+      );
     }
   });
 
@@ -35,7 +40,9 @@ describe('ADR decision contract', () => {
     expect(adr).toContain('En attente du propriétaire produit');
     expect(adr).toContain('ne doivent pas être transformées silencieusement');
     expect(businessRules).toContain('aucune règle contradictoire ne doit être choisie implicitement');
-    expect(prismaSchema).not.toMatch(/^model (EntityMembership|Responsibility|Notification|Archive|Conversation|Message) /m);
+    expect(prismaSchema).not.toMatch(
+      /^model (EntityMembership|Responsibility|Notification|Archive|Conversation|Message) /m,
+    );
     expect(prismaSchema).not.toMatch(/^enum (Role|UserRole) /m);
   });
 });

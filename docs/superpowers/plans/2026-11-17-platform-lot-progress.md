@@ -107,3 +107,30 @@
 - `bun run typecheck` depuis `apps/mobile`: passe.
 - `bun run lint` et `bun run format:check` depuis la racine: passent.
 - Le test réel du parcours CV sur appareil et le rendu visuel PDF restent à effectuer manuellement; les composants React Native ne sont pas testés par un renderer dans la suite actuelle.
+
+### Lot 0.1 — registre des décisions métier
+
+- RED: le nouveau test `decisions-contract.test.ts` échoue car l’ADR ne contenait pas les trois décisions sur révocation de téléchargement, compatibilité de migration et objectifs de charge/service.
+- GREEN: ADR 0001 liste maintenant 12 sujets avec un état explicite; les propositions restent marquées en attente/partielles. Un test vérifie aussi que les modèles métier dépendant de ces choix ne sont pas introduits prématurément dans le schéma Prisma.
+- Les documents source métier et Product Brief mobile précisent que ces propositions ne sont pas des validations et pointent vers le registre.
+- `bun test tests/decisions-contract.test.ts`: 2 tests passent, 29 assertions.
+- `bun test` depuis `apps/api`: 33 tests passent, 10 tests DB/PostgreSQL ignorés faute de DB de test configurée.
+- `bun run format:check`, `bun run lint` et `bun run typecheck` depuis la racine passent.
+- Statut: registre et garde documentaire livrés; décisions métier toujours en attente de validation produit. Les lots 1 et suivants qui dépendent des cardinalités/permissions ne doivent pas coder de choix implicite.
+
+### Lot 0.4 — tests des gardes de configuration et du seed
+
+- RED: `bun test tests/environment-safety.test.ts` échoue car les helpers de configuration n’existent pas.
+- GREEN: `createIntegrationEnv` valide les protocoles PostgreSQL, exige un nom de base terminant par `_test` et force `DATABASE_URL`/`NODE_ENV=test` dans les processus enfants. Le seed démo utilise maintenant des gardes testables qui refusent production et URL absente avant de créer le client Prisma.
+- `bun test tests/environment-safety.test.ts`: 4 tests passent, 12 assertions.
+- `bun test` depuis `apps/api`: 37 tests passent, 10 tests DB/PostgreSQL ignorés faute de DB de test locale.
+- Typecheck complet, format check et lint passent.
+- Le workflow GitHub Actions déjà présent n’a pas été exécuté à distance. Le test d’intégration DB local reste en attente d’identifiants valides; aucun test n’a migré ou écrit dans la base développeur.
+
+#### Complément Lot 0.4 — garde de démarrage API sans base
+
+- RED: le test d’absence de `DATABASE_URL` échoue car `database-config.ts` n’existe pas.
+- GREEN: `PrismaService` utilise maintenant `requireDatabaseUrl` avant de construire l’adaptateur Prisma; l’absence de configuration échoue immédiatement avec l’erreur documentée.
+- `bun test` depuis `apps/api`: 38 tests passent, 10 tests PostgreSQL sont ignorés, 0 échec. La suite de sécurité ciblée compte 5 tests / 14 assertions.
+- `bun run typecheck`, `bun run format:check` et `bun run lint` passent.
+- Le workflow CI distant et l’exécution réelle avec une base de test restent à vérifier.

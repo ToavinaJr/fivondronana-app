@@ -145,7 +145,7 @@ Pour chaque lot, consigner dans la PR ou le journal de release : commit, command
 |---|---|---|
 | CV-01 | GET CV inexistant de l’utilisateur connecté | État formulaire vierge, sans erreur ni CV d’un autre utilisateur. |
 | CV-02 | Enregistrer CV complet et le relire après redémarrage | Toutes les propriétés et lignes répétées persistent sans décalage de date/UTC. |
-| CV-03 | Champ requis absent, espaces uniquement, date invalide/future si interdite | Erreurs près du champ; serveur rejette même si validation client contournée. |
+| CV-03 | Champ requis absent, espaces uniquement, date impossible (`2026-02-30`) ou format autre que `YYYY-MM-DD`; date future si interdite | Erreurs près du champ; client bloque les dates calendaires invalides et serveur rejette même si validation client contournée. |
 | CV-04 | Email, téléphone, texte Unicode/Malagasy, accents et limites de longueur | Valeurs valides acceptées et conservées; valeurs excessives rejetées avec message utile. |
 | CV-05 | Ajouter/éditer/supprimer 0, 1 et plusieurs lignes branches/activités | Ajouts/mises à jour/suppressions persistés; identifiants stables; pas de duplication à retry. |
 | CV-06 | Ligne branche sans nom/groupe lorsque requis | Toute la transaction échoue, ancien CV intact. |

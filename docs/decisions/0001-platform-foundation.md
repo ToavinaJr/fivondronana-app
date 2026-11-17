@@ -9,19 +9,24 @@
 
 Le dépôt contient un client Expo/React Native, une API NestJS et une base PostgreSQL/Prisma. Le backoffice est requis par les règles métier, mais aucun client ni système de rôles d'administration n'existe encore. Certaines règles de cardinalité et d'accès se contredisent; elles ne doivent pas être transformées silencieusement en contraintes de base ou en autorisations.
 
-## Décisions proposées
+## Registre des décisions
 
-| Sujet | Décision proposée ou règle existante | État |
+Les statuts **En attente** et **Partiel** ne constituent pas une approbation. Les propositions décrivent des options à soumettre au propriétaire produit; les migrations, permissions ou expériences utilisateur qui en dépendent restent différées jusqu'à validation.
+
+| Sujet | Décision à valider ou règle existante | État |
 |---|---|---|
-| Affectation groupe/entité | Le texte interdit deux groupes/deux entités, mais la messagerie décrit aussi plusieurs appartenances. Choisir une cardinalité avant le schéma. | **En attente du propriétaire produit** |
-| Acteurs et rôles | Les règles distinguent Administrateur, Responsable, Responsable d'entité et Responsable général. L'API devra appliquer les rôles et périmètres côté serveur. Le cumul Admin + Responsable reste à confirmer. | **Partiel** |
-| Lecture et export CV | Les responsables consultent les CV autorisés; l'export individuel et l'export global sont demandés. Le périmètre exact (tous les responsables ou même entité) n'est pas précisé. | **En attente du propriétaire produit** |
-| Responsabilités officielles | Création, attribution et retrait relèvent de l'administrateur; suppression permise seulement si aucune affectation n'existe. Les responsabilités citées dans le texte sont des exemples, pas un catalogue exhaustif confirmé. | **Règle confirmée; catalogue à confirmer** |
-| Mot de passe et session | Le changement vérifie l'ancien mot de passe. La récupération, « Tsarovy aho » et la durée voulue ne sont pas définis. L'API actuelle émet un jeton de 15 minutes; cette durée est un choix technique provisoire, pas une règle produit. La désactivation devra empêcher toute authentification et révoquer les sessions. | **Partiel** |
-| Fichiers | Les archives acceptées sont PDF et Word; les messages supportent images, vidéos et fichiers. Taille, MIME réel, stockage, rétention et détails de téléchargement ne sont pas définis. Stockage privé et autorisation serveur proposés. | **Partiel** |
-| Notifications | Le document métier n'établit ni état lu/non lu, ni suppression, ni règles d'origine. Ne pas créer d'engagement produit avant décision. | **En attente du propriétaire produit** |
-| Données personnelles éditables | L'utilisateur peut modifier les informations personnelles autorisées, mais la liste n'est pas définie. Entité et responsabilités restent administrées. Politique de suppression/rétention non précisée. | **Partiel** |
-| Backoffice | Créer un portail web interne responsive dans `apps/backoffice`, en React + TypeScript, qui consomme l'API NestJS. Les règles et contrôles d'accès restent dans l'API. L'authentification admin, son transport navigateur et l'hébergement restent à décider avant le lot 1. | **Direction proposée** |
+| Affectation groupe/entité | Le texte interdit deux groupes/deux entités, mais la messagerie décrit aussi plusieurs appartenances. Confirmer cardinalité et exceptions avant le schéma. | **En attente du propriétaire produit** |
+| Acteurs et rôles | Les règles citent Administrateur, Responsable, Responsable d'entité et Responsable général. Confirmer la matrice rôle × opération × périmètre, le cumul Admin + Responsable et les permissions d'un responsable général. | **Partiel** |
+| Lecture et export CV | L'édition de son propre CV est prévue. Confirmer qui peut consulter/exporter un CV individuel et tous les CV, notamment hors entité. | **En attente du propriétaire produit** |
+| Responsabilités officielles | L'administration gère les responsabilités et peut supprimer une responsabilité inutilisée. Les noms cités ne forment pas un catalogue validé; confirmer le catalogue initial et qui peut le modifier. | **Règle confirmée; catalogue à confirmer** |
+| Mot de passe et session | Le changement vérifie l'ancien mot de passe. Confirmer récupération, « Tsarovy aho », durée, persistance, rotation et révocation à la désactivation. Le jeton de 15 minutes est provisoire. | **Partiel** |
+| Fichiers | PDF/Word sont cités pour les archives et images/vidéos/fichiers pour le chat. Confirmer types MIME, limites, stockage, rétention, analyse antivirus et partage externe. | **Partiel** |
+| Notifications | Confirmer les sources, lecture/non-lu, masquage/suppression et périmètres; aucune sémantique n'est définie par le document métier. | **En attente du propriétaire produit** |
+| Données personnelles éditables | Confirmer les champs modifiables hors CV et la suppression/anonymisation/rétention. Entité et responsabilités officielles sont administrées. | **Partiel** |
+| Backoffice | Portail React/TypeScript dans `apps/backoffice` proposé. Confirmer le choix web, l'authentification navigateur, l'hébergement et la stratégie de stockage de fichiers. | **Direction proposée** |
+| Révocation des téléchargements après retrait d’accès | Confirmer si un téléchargement déjà autorisé cesse immédiatement après révocation. Proposition technique : chaque lecture repasse par l'API et revérifie l'accès; une URL signée conserve un accès jusqu'à expiration. | **En attente du propriétaire produit** |
+| Compatibilité des migrations avec les données et clients existants | Confirmer s'il existe des données réelles ou d'anciennes versions mobiles à préserver. Proposition : migrations additives et maintien des contrats `/auth/*` et `/cvs/me` pendant la transition. | **En attente du propriétaire produit** |
+| Volumes cibles et objectifs de service | Définir utilisateurs, connexions simultanées, archives/pièces jointes, volume d'export, latence, disponibilité, RPO et RTO avant les choix de charge et de traitement asynchrone. | **En attente du propriétaire produit** |
 
 ## Contraintes techniques retenues
 

@@ -84,4 +84,31 @@ describe('API request validation policy', () => {
 
     await expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
   });
+
+  test('accepts Malagasy diacritics and text exactly at the documented CV length limit', async () => {
+    const cv = {
+      firstName: 'Tiana',
+      lastName: 'Rabe',
+      address: 'Antananarivo',
+      birthDate: '1990-02-28',
+      phone: '0341234567',
+      email: 'tiana@example.org',
+      province: 'Anôsy',
+      area: 'Avaradrano',
+      fivondronana: 'Antananarivo',
+      extraPersonal: ['Fahaiza-manao amin’ny asa sy fiaraha-monina'],
+      branches: [{ name: 'Mpanazava', group: 'Tily', project: 'Fampandrosoana ny tanora' }],
+      activities: [
+        { name: 'Fanompoana', responsibility: 'Mpitarika', description: 'Fandraisana anjara amin’ny fiaraha-monina' },
+      ],
+    };
+    const cvMetadata = { type: 'body' as const, metatype: CvInputDto, data: '' };
+
+    const result = await apiValidationPipe.transform({ ...cv, firstName: 'T'.repeat(100) }, cvMetadata);
+
+    expect(result).toBeInstanceOf(CvInputDto);
+    await expect(apiValidationPipe.transform({ ...cv, firstName: 'T'.repeat(101) }, cvMetadata)).rejects.toMatchObject({
+      status: 400,
+    });
+  });
 });

@@ -12,6 +12,8 @@ import {
 } from '../access/auth-api';
 import { colors } from '../theme/tokens';
 import { isCvDirty } from './cv-dirty';
+import { createCvHtml } from './cv-pdf';
+import { validateCv } from './cv-validation';
 
 const blankCv = (): PersonalCv => ({
   firstName: '',
@@ -40,6 +42,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const savedCv = useRef(blankCv());
   const nextExtraRowId = useRef(0);
   const createExtraRowId = useCallback(() => `extra-row-${nextExtraRowId.current++}`, []);
@@ -75,7 +78,14 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
       active = false;
     };
   }, [session.accessToken, createExtraRowId]);
-  const field = (key: keyof PersonalCv, value: string) => setCv((current) => ({ ...current, [key]: value }));
+  const field = (key: keyof PersonalCv, value: string) => {
+    setCv((current) => ({ ...current, [key]: value }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  };
   const requestBack = () => {
     if (!isCvDirty(cv, savedCv.current)) {
       onBack();
@@ -90,29 +100,24 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
     key: 'branches' | 'activities',
     index: number,
     value: Partial<T>,
-  ) =>
+  ) => {
     setCv((current) => ({
       ...current,
       [key]: current[key].map((row, rowIndex) => (rowIndex === index ? { ...row, ...value } : row)),
     }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      for (const property of Object.keys(value)) delete next[`${key}.${index}.${property}`];
+      return next;
+    });
+  };
   const save = async () => {
     setSaving(true);
     setFeedback('');
-    const missing: string[] = [];
-    if (!cv.firstName.trim()) missing.push('Anarana');
-    if (!cv.lastName.trim()) missing.push('Fanampiny');
-    if (!cv.address.trim()) missing.push('Adiresy');
-    if (!cv.birthDate.trim() || Number.isNaN(Date.parse(cv.birthDate))) missing.push('Daty nahaterahana');
-    if (!cv.phone.trim()) missing.push('Finday');
-    if (!cv.email.trim()) missing.push('Mailaka');
-    if (!cv.province.trim()) missing.push('Faritany');
-    if (!cv.area.trim()) missing.push('Faritra');
-    if (!cv.fivondronana.trim()) missing.push('Fivondronana');
-    const incompleteBranch = cv.branches.some((row) => !row.name.trim() || !row.group.trim());
-    if (missing.length || incompleteBranch) {
-      setFeedback(
-        `Fenoy ny saha tsy maintsy fenoina: ${missing.join(', ')}${incompleteBranch ? `${missing.length ? ', ' : ''}Anarana sy vondrona amin’ny sampana` : ''}.`,
-      );
+    const errors = validateCv(cv);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setFeedback('Hamarino ireo saha voamarika etsy ambany.');
       setSaving(false);
       return;
     }
@@ -130,7 +135,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
   const exportPdf = async () => {
     setFeedback('');
     try {
-      const html = cvHtml(cv);
+      const html = createCvHtml(cv);
       const file = await Print.printToFileAsync({ html, base64: false });
       if (await Sharing.isAvailableAsync())
         await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', dialogTitle: 'CV FIVONDRONANA' });
@@ -153,14 +158,25 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
       <Text style={styles.heading}>Ny CV-ko</Text>
       <Text style={styles.help}>Fenoy ireo saha misy *. Ny CV anao ihany no azonao ovaina.</Text>
       <Section title="Fampahafantarana ny tena">
-        <Field label="Anarana *" value={cv.firstName} onChange={(v) => field('firstName', v)} />
-        <Field label="Fanampiny *" value={cv.lastName} onChange={(v) => field('lastName', v)} />
-        <Field label="Adiresy *" value={cv.address} onChange={(v) => field('address', v)} />
+        <Field
+          label="Anarana *"
+          value={cv.firstName}
+          onChange={(v) => field('firstName', v)}
+          error={fieldErrors.firstName}
+        />
+        <Field
+          label="Fanampiny *"
+          value={cv.lastName}
+          onChange={(v) => field('lastName', v)}
+          error={fieldErrors.lastName}
+        />
+        <Field label="Adiresy *" value={cv.address} onChange={(v) => field('address', v)} error={fieldErrors.address} />
         <Field
           label="Daty nahaterahana * (YYYY-MM-DD)"
           value={cv.birthDate}
           onChange={(v) => field('birthDate', v)}
           keyboardType="numbers-and-punctuation"
+          error={fieldErrors.birthDate}
         />
         <Field label="Toerana nahaterahana" value={cv.birthPlace ?? ''} onChange={(v) => field('birthPlace', v)} />
         {cv.extraPersonal.map((value, index) => (
@@ -185,8 +201,20 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
         />
       </Section>
       <Section title="Fifandraisana">
-        <Field label="Finday *" value={cv.phone} onChange={(v) => field('phone', v)} keyboardType="phone-pad" />
-        <Field label="Mailaka *" value={cv.email} onChange={(v) => field('email', v)} keyboardType="email-address" />
+        <Field
+          label="Finday *"
+          value={cv.phone}
+          onChange={(v) => field('phone', v)}
+          keyboardType="phone-pad"
+          error={fieldErrors.phone}
+        />
+        <Field
+          label="Mailaka *"
+          value={cv.email}
+          onChange={(v) => field('email', v)}
+          keyboardType="email-address"
+          error={fieldErrors.email}
+        />
         <Field label="Facebook" value={cv.facebook ?? ''} onChange={(v) => field('facebook', v)} />
         {cv.extraContact.map((value, index) => (
           <Field
@@ -210,9 +238,19 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
         />
       </Section>
       <Section title="Fampahafantarana ny maha skoto">
-        <Field label="Faritany *" value={cv.province} onChange={(v) => field('province', v)} />
-        <Field label="Faritra *" value={cv.area} onChange={(v) => field('area', v)} />
-        <Field label="Fivondronana *" value={cv.fivondronana} onChange={(v) => field('fivondronana', v)} />
+        <Field
+          label="Faritany *"
+          value={cv.province}
+          onChange={(v) => field('province', v)}
+          error={fieldErrors.province}
+        />
+        <Field label="Faritra *" value={cv.area} onChange={(v) => field('area', v)} error={fieldErrors.area} />
+        <Field
+          label="Fivondronana *"
+          value={cv.fivondronana}
+          onChange={(v) => field('fivondronana', v)}
+          error={fieldErrors.fivondronana}
+        />
       </Section>
       <Section title="Sampana">
         {cv.branches.map((row, index) => (
@@ -221,11 +259,13 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
               label="Anarana *"
               value={row.name}
               onChange={(v) => updateRow<CvBranch>('branches', index, { name: v })}
+              error={fieldErrors[`branches.${index}.name`]}
             />
             <Field
               label="Vondrona *"
               value={row.group}
               onChange={(v) => updateRow<CvBranch>('branches', index, { group: v })}
+              error={fieldErrors[`branches.${index}.group`]}
             />
             <Field
               label="Tetikasa"
@@ -236,11 +276,13 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
               label="Daty nanombohana"
               value={row.startedAt}
               onChange={(v) => updateRow<CvBranch>('branches', index, { startedAt: v })}
+              error={fieldErrors[`branches.${index}.startedAt`]}
             />
             <Field
               label="Daty namaranana"
               value={row.endedAt}
               onChange={(v) => updateRow<CvBranch>('branches', index, { endedAt: v })}
+              error={fieldErrors[`branches.${index}.endedAt`]}
             />
             <RemoveButton
               onPress={() =>
@@ -276,6 +318,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
               label="Daty"
               value={row.date}
               onChange={(v) => updateRow<CvActivity>('activities', index, { date: v })}
+              error={fieldErrors[`activities.${index}.date`]}
             />
             <RemoveButton
               onPress={() =>
@@ -341,11 +384,13 @@ function Field({
   value,
   onChange,
   keyboardType,
+  error,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'numbers-and-punctuation';
+  error?: string;
 }) {
   return (
     <View style={styles.field}>
@@ -359,6 +404,11 @@ function Field({
         placeholderTextColor={colors.secondary}
         style={styles.input}
       />
+      {error ? (
+        <Text accessibilityRole="alert" style={styles.fieldError}>
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -375,37 +425,6 @@ function RemoveButton({ onPress }: { onPress: () => void }) {
       <Text style={styles.removeText}>Esory ity andalana ity</Text>
     </Pressable>
   );
-}
-
-function cvHtml(cv: PersonalCv): string {
-  const escapeHtml = (value: string | null | undefined) =>
-    (value ?? '').replace(
-      /[&<>"']/g,
-      (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] ?? character,
-    );
-  const row = (label: string, value: string | null | undefined) =>
-    `<p><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</p>`;
-  const branches = cv.branches
-    .map(
-      (item) =>
-        `<li>${escapeHtml(item.name)} · ${escapeHtml(item.group)}${item.project ? ` — ${escapeHtml(item.project)}` : ''}</li>`,
-    )
-    .join('');
-  const activities = cv.activities
-    .map(
-      (item) =>
-        `<li>${escapeHtml(item.name)}${item.responsibility ? ` — ${escapeHtml(item.responsibility)}` : ''}${item.description ? `: ${escapeHtml(item.description)}` : ''}${item.date ? ` (${escapeHtml(item.date)})` : ''}</li>`,
-    )
-    .join('');
-  const extraPersonal = cv.extraPersonal
-    .filter(Boolean)
-    .map((value, index) => row(`Fanampiny ${index + 1}`, value))
-    .join('');
-  const extraContact = cv.extraContact
-    .filter(Boolean)
-    .map((value, index) => row(`Fifandraisana fanampiny ${index + 1}`, value))
-    .join('');
-  return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#171717;padding:28px;line-height:1.45}h1{color:#B8170F;font-size:24px}h2{font-size:17px;border-bottom:1px solid #ddd;padding-bottom:5px;margin-top:22px}p,li{font-size:13px}</style></head><body><h1>FIVONDRONANA — CV</h1><h2>Fampahafantarana ny tena</h2>${row('Anarana', `${cv.firstName} ${cv.lastName}`)}${row('Adiresy', cv.address)}${row('Daty nahaterahana', cv.birthDate)}${row('Toerana nahaterahana', cv.birthPlace)}${extraPersonal}<h2>Fifandraisana</h2>${row('Finday', cv.phone)}${row('Mailaka', cv.email)}${row('Facebook', cv.facebook)}${extraContact}<h2>Fampahafantarana ny maha skoto</h2>${row('Faritany', cv.province)}${row('Faritra', cv.area)}${row('Fivondronana', cv.fivondronana)}<h2>Sampana</h2><ul>${branches}</ul><h2>Hetsika</h2><ul>${activities}</ul></body></html>`;
 }
 
 const styles = StyleSheet.create({
@@ -452,5 +471,6 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.6 },
   saveText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
   error: { color: colors.error, marginTop: 14, lineHeight: 20 },
+  fieldError: { color: colors.error, marginTop: 4, fontSize: 13, lineHeight: 18 },
   success: { color: colors.accent, marginTop: 14, lineHeight: 20 },
 });

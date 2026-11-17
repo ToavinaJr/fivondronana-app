@@ -63,8 +63,47 @@
 - `bun test tests/api-contract.test.ts` depuis `apps/api`: 16 tests passent.
 - `bun run format:check`, `bun run lint` et `bun run typecheck` passent. Une invocation depuis la racine avec un chemin relatif au workspace API a chargÃ© les mÃ©tadonnÃ©es Nest hors de lâ€™ordre attendu; le test ciblÃ© depuis `apps/api` passe correctement.
 
+### Lot 3.1 â€” limites et caractÃ¨res malgaches du CV
+
+- Ajout dâ€™un test de validation couvrant `firstName` Ã  100 caractÃ¨res puis Ã  101, les accents malgaches et les textes Unicode dans les champs et sections rÃ©pÃ©tÃ©es.
+- Les limites dÃ©jÃ  dÃ©clarÃ©es dans le DTO acceptent la valeur Ã  la borne et rejettent le dÃ©passement; aucun changement de rÃ¨gles nâ€™a Ã©tÃ© nÃ©cessaire.
+- `bun test tests/api-validation.test.ts`: 7 tests passent. `bun test` depuis `apps/api`: 31 passent, 10 PostgreSQL sont ignorÃ©s.
+- `bun run format:check`, `bun run lint` et `bun run typecheck` passent aprÃ¨s formatage.
+- Une exÃ©cution accidentelle de `bun test` depuis la racine a chargÃ© les variables du `.env` : un test dâ€™intÃ©gration a Ã©chouÃ© en P1000 avant toute Ã©criture; les imports dÃ©corateurs Nest ont aussi Ã©chouÃ© car cette commande a exÃ©cutÃ© les fichiers hors du workspace API. La suite correcte depuis `apps/api` passe; la base de dÃ©veloppement nâ€™a pas Ã©tÃ© modifiÃ©e.
+
+### Lot 3.2 â€” validation stricte des dates CV dans le mobile
+
+- RED: le test dÃ©diÃ© Ã©choue car `cv-validation.ts` nâ€™existe pas.
+- GREEN: `isValidDateOnly` valide le format ISO et le calendrier grÃ©gorien (annÃ©es bissextiles comprises); le formulaire bloque les dates obligatoires et facultatives invalides avant lâ€™appel API.
+- `bun test tests/cv-validation.test.ts`: 2 tests passent; `bun test` depuis `apps/mobile`: 16 tests passent.
+- `bun run format:check`, `bun run lint` et `bun run typecheck` passent.
+- La validation visuelle des messages prÃ¨s des champs et le parcours sur appareil restent Ã  faire; les erreurs sont pour lâ€™instant affichÃ©es dans le message global dâ€™aide/erreur.
+
 ## Suite autorisÃ©e / bloquÃ©e
 
 - Continuer les changements indÃ©pendants des dÃ©cisions produit ouvertes.
 - Les migrations de rÃ´les, cardinalitÃ©s dâ€™appartenance, pÃ©rimÃ¨tres CV et membership des conversations restent bloquÃ©es par les dÃ©cisions de lot 0 listÃ©es dans le TDD.
 - Lâ€™intÃ©gration DB locale dÃ©pend dâ€™identifiants valides pour une base suffixÃ©e `_test`; ne pas contourner la vÃ©rification ou employer la base de dÃ©veloppement.
+
+### Lot 3.2 — erreurs de validation par champ dans le CV
+
+- RED: le test `validateCv` ne pouvait pas importer la fonction, car elle n’existait pas.
+- GREEN: `validateCv` retourne les erreurs de champs requis, date de naissance, dates de sections et branche requise avec des clés par champ. `CvEditor` les rend en alerte sous les champs et efface l’erreur d’un champ lorsqu’il est corrigé.
+- `bun test tests/cv-validation.test.ts` depuis `apps/mobile`: 3 tests passent, 14 assertions.
+- `bun run typecheck` depuis `apps/mobile` et `bun run lint` depuis la racine passent.
+- À faire dans le même lot: suite mobile complète, vérification format, parcours visuel Expo sur appareil/simulateur et tests composant d’ajout/suppression/sauvegarde.
+
+### Lot 3.4 — sécurité du contenu PDF individuel
+
+- RED: `bun test tests/cv-pdf.test.ts` ne pouvait pas résoudre le module `cv-pdf` avant son extraction.
+- GREEN: `createCvHtml` a été extrait de l’écran et testé pour l’échappement des balises/attributs HTML, les caractères spéciaux, le texte malgache, les sections CV et les valeurs optionnelles vides.
+- `bun test tests/cv-pdf.test.ts` depuis `apps/mobile`: 2 tests, 9 assertions passent.
+- La suite mobile complète compte 17 tests verts après le lot 3.2; à relancer avec le test PDF ajouté. Typecheck, format et lint de la nouvelle extraction à relancer également.
+- Le PDF partagé par Expo n’a pas été visualisé sur appareil; modèles spécifiques Tily/Mpanazava et export groupé restent ouverts.
+
+### Vérification des lots CV 3.2 et 3.4
+
+- `bun test` depuis `apps/mobile`: 19 tests passent, 51 assertions, 0 échec.
+- `bun run typecheck` depuis `apps/mobile`: passe.
+- `bun run lint` et `bun run format:check` depuis la racine: passent.
+- Le test réel du parcours CV sur appareil et le rendu visuel PDF restent à effectuer manuellement; les composants React Native ne sont pas testés par un renderer dans la suite actuelle.

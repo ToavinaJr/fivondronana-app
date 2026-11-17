@@ -1,17 +1,19 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard, type AuthenticatedRequest } from './access-token.guard.js';
 import { AuthService } from './auth.service.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 
 @Controller('auth')
+@ApiTags('authentication')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('login')
+  @ApiBody({ type: LoginDto })
   @HttpCode(200)
-  login(@Body() body: { identifier?: unknown; password?: unknown }) {
-    if (typeof body?.identifier !== 'string' || !body.identifier.trim() || typeof body.password !== 'string' || !body.password) {
-      throw new BadRequestException('Les champs identifier et password sont obligatoires.');
-    }
+  login(@Body() body: LoginDto) {
     return this.auth.login(body.identifier, body.password);
   }
 
@@ -30,12 +32,10 @@ export class AuthController {
   }
 
   @Post('password')
+  @ApiBody({ type: ChangePasswordDto })
   @HttpCode(200)
   @UseGuards(AccessTokenGuard)
-  async changePassword(@Req() request: AuthenticatedRequest, @Body() body: { currentPassword?: unknown; newPassword?: unknown }) {
-    if (typeof body?.currentPassword !== 'string' || typeof body.newPassword !== 'string') {
-      throw new BadRequestException('Les champs currentPassword et newPassword sont obligatoires.');
-    }
+  async changePassword(@Req() request: AuthenticatedRequest, @Body() body: ChangePasswordDto) {
     await this.auth.changePassword(request.auth.user.id, body.currentPassword, body.newPassword);
     return { status: 'ok' as const };
   }

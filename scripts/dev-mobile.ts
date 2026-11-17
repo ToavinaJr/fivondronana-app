@@ -3,9 +3,11 @@ import { networkInterfaces } from 'node:os';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '..');
-const database = spawnSync('docker', [
-  'compose', '--env-file', '.env', '-f', 'infra/docker-compose.yml', 'up', '-d', '--wait', 'postgres',
-], { cwd: root, stdio: 'inherit' });
+const database = spawnSync(
+  'docker',
+  ['compose', '--env-file', '.env', '-f', 'infra/docker-compose.yml', 'up', '-d', '--wait', 'postgres'],
+  { cwd: root, stdio: 'inherit' },
+);
 
 if (database.error || database.status !== 0) {
   console.error('Impossible de démarrer PostgreSQL. Vérifiez Docker puis lancez bun run db:up.');

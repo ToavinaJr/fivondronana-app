@@ -6,7 +6,10 @@ import { PrismaService } from '../database/prisma.service.js';
 
 @Module({
   controllers: [AuthController],
-  providers: [{ provide: AuthService, inject: [PrismaService], useFactory: (prisma: PrismaService) => new AuthService(prisma) }, AccessTokenGuard],
+  providers: [
+    { provide: AuthService, inject: [PrismaService], useFactory: (prisma: PrismaService) => new AuthService(prisma) },
+    AccessTokenGuard,
+  ],
   exports: [AuthService, AccessTokenGuard],
 })
 export class AuthModule {}

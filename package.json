@@ -10,11 +10,19 @@
     "dev:mobile": "bun run scripts/dev-mobile.ts",
     "dev:api": "bun run --filter @fivondronana/api start:dev",
     "build:api": "bun run --filter @fivondronana/api build",
+    "lint": "biome lint apps/api/src apps/api/tests apps/mobile/src apps/mobile/tests scripts",
+    "format": "biome format --write apps/api/src apps/api/tests apps/mobile/src apps/mobile/tests scripts",
+    "format:check": "biome format apps/api/src apps/api/tests apps/mobile/src apps/mobile/tests scripts",
     "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun run --filter @fivondronana/api test && bun run --filter @fivondronana/mobile test",
+    "test:integration": "bun run --filter @fivondronana/api db:generate && bun run db:deploy && bun run --filter @fivondronana/api test:integration",
     "db:up": "docker compose --env-file .env -f infra/docker-compose.yml up -d postgres",
     "db:generate": "bun run --filter @fivondronana/api db:generate",
     "db:migrate": "bun run --filter @fivondronana/api db:migrate",
     "db:deploy": "bun run --filter @fivondronana/api db:deploy",
     "db:seed:demo": "bun run --filter @fivondronana/api db:seed:demo"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.8"
   }
 }

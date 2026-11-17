@@ -11,9 +11,13 @@ export const initialMainFlow: MainFlowState = { tab: 'archives' };
 
 export function mainFlowReducer(state: MainFlowState, action: MainFlowAction): MainFlowState {
   switch (action.type) {
-    case 'SELECT_TAB': return { tab: action.tab };
-    case 'OPEN_CV': return { ...state, detail: { type: 'cv', leaderId: action.leaderId } };
-    case 'OPEN_NOTIFICATIONS': return { ...state, detail: { type: 'notifications' } };
-    case 'BACK': return state.detail ? { tab: state.tab } : state;
+    case 'SELECT_TAB':
+      return { tab: action.tab };
+    case 'OPEN_CV':
+      return { ...state, detail: { type: 'cv', leaderId: action.leaderId } };
+    case 'OPEN_NOTIFICATIONS':
+      return { ...state, detail: { type: 'notifications' } };
+    case 'BACK':
+      return state.detail ? { tab: state.tab } : state;
   }
 }

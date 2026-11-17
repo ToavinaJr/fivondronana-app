@@ -29,7 +29,9 @@ describe('main app navigation', () => {
   });
 
   test('filters leaders by text, entity, and group together', () => {
-    expect(filterLeaders(leaders, 'mpiandraikitra b', 'Mena', 'Mpanazava').map((leader) => leader.id)).toEqual(['leader-2']);
+    expect(filterLeaders(leaders, 'mpiandraikitra b', 'Mena', 'Mpanazava').map((leader) => leader.id)).toEqual([
+      'leader-2',
+    ]);
     expect(filterLeaders(leaders, 'tsy misy', 'Rehetra', 'Rehetra')).toEqual([]);
   });
 });

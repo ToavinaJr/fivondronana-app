@@ -1,6 +1,15 @@
 export type ArchiveItem = { id: string; title: string; category: string; format: 'PDF' | 'DOCX'; year?: string };
 export type Leader = { id: string; name: string; entity: string; group: string; responsibility: string };
-export type Contact = { id: string; name: string; responsibility: string; group: string; address: string; phone: string; email: string; description: string };
+export type Contact = {
+  id: string;
+  name: string;
+  responsibility: string;
+  group: string;
+  address: string;
+  phone: string;
+  email: string;
+  description: string;
+};
 export type Notice = { id: string; category: 'Hafatra' | 'Andraikitra' | 'Fifandraisana'; title: string; time: string };
 
 export const archives: ArchiveItem[] = [
@@ -17,8 +26,26 @@ export const leaders: Leader[] = [
 ];
 
 export const contacts: Contact[] = [
-  { id: 'contact-1', name: 'Tompon’andraikitra A', responsibility: 'Filohan’ny sampana', group: 'Tily foibe', address: 'Antananarivo', phone: '+261 34 00 000 01', email: 'contact1@example.org', description: 'Mifandraisa amin’ny tompon’andraikitra momba ny fandrindrana ny sampana.' },
-  { id: 'contact-2', name: 'Tompon’andraikitra B', responsibility: 'Mpiara-miasa', group: 'Fiaraha-miasa', address: 'Toamasina', phone: '+261 34 00 000 02', email: 'contact2@example.org', description: 'Mifandraisa amin’ny ekipa momba ny fiaraha-miasa sy ny tetikasa.' },
+  {
+    id: 'contact-1',
+    name: 'Tompon’andraikitra A',
+    responsibility: 'Filohan’ny sampana',
+    group: 'Tily foibe',
+    address: 'Antananarivo',
+    phone: '+261 34 00 000 01',
+    email: 'contact1@example.org',
+    description: 'Mifandraisa amin’ny tompon’andraikitra momba ny fandrindrana ny sampana.',
+  },
+  {
+    id: 'contact-2',
+    name: 'Tompon’andraikitra B',
+    responsibility: 'Mpiara-miasa',
+    group: 'Fiaraha-miasa',
+    address: 'Toamasina',
+    phone: '+261 34 00 000 02',
+    email: 'contact2@example.org',
+    description: 'Mifandraisa amin’ny ekipa momba ny fiaraha-miasa sy ny tetikasa.',
+  },
 ];
 
 export const notices: Notice[] = [
@@ -30,7 +57,13 @@ export const notices: Notice[] = [
 export function filterLeaders(items: Leader[], query: string, entity: string, group: string): Leader[] {
   const term = query.trim().toLocaleLowerCase();
   return items.filter((leader) => {
-    const matchesQuery = !term || `${leader.name} ${leader.entity} ${leader.group} ${leader.responsibility}`.toLocaleLowerCase().includes(term);
-    return matchesQuery && (entity === 'Rehetra' || leader.entity === entity) && (group === 'Rehetra' || leader.group === group);
+    const matchesQuery =
+      !term ||
+      `${leader.name} ${leader.entity} ${leader.group} ${leader.responsibility}`.toLocaleLowerCase().includes(term);
+    return (
+      matchesQuery &&
+      (entity === 'Rehetra' || leader.entity === entity) &&
+      (group === 'Rehetra' || leader.group === group)
+    );
   });
 }

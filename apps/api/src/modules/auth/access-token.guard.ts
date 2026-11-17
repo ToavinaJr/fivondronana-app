@@ -1,6 +1,6 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { AuthenticatedUser, AuthService, toAuthenticatedUser } from './auth.service.js';
-import { validateJwtSecret, verifyAccessToken } from './auth.crypto.js';
+import { type CanActivate, type ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { type AuthenticatedUser, AuthService, toAuthenticatedUser } from './auth.service.js';
+import { type AccessClaims, validateJwtSecret, verifyAccessToken } from './auth.crypto.js';
 
 export type AuthenticatedRequest = {
   headers: { authorization?: string };
@@ -9,7 +9,7 @@ export type AuthenticatedRequest = {
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
-  private readonly secret = validateJwtSecret(process.env['JWT_SECRET']);
+  private readonly secret = validateJwtSecret(process.env.JWT_SECRET);
 
   constructor(private readonly auth: AuthService) {}
 
@@ -17,7 +17,7 @@ export class AccessTokenGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const [scheme, token] = request.headers.authorization?.split(' ') ?? [];
     if (scheme !== 'Bearer' || !token) throw new UnauthorizedException('Jeton d’accès manquant.');
-    let claims;
+    let claims: AccessClaims;
     try {
       claims = verifyAccessToken(token, this.secret);
     } catch {
@@ -25,7 +25,13 @@ export class AccessTokenGuard implements CanActivate {
     }
 
     const session = await this.auth.getSession(claims.sid);
-    if (!session || session.userId !== claims.sub || session.revokedAt || session.expiresAt.getTime() <= Date.now() || !session.user.isActive) {
+    if (
+      !session ||
+      session.userId !== claims.sub ||
+      session.revokedAt ||
+      session.expiresAt.getTime() <= Date.now() ||
+      !session.user.isActive
+    ) {
       throw new UnauthorizedException('Session invalide ou expirée.');
     }
     request.auth = { user: toAuthenticatedUser(session.user), sessionId: session.id };

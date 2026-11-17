@@ -1,6 +1,10 @@
 export type AccessScreen = 'welcome' | 'login' | 'recovery';
 export type AccessFlowState = { screen: AccessScreen };
-export type AccessFlowAction = { type: 'OPEN_LOGIN' } | { type: 'OPEN_RECOVERY' } | { type: 'BACK' } | { type: 'RESET' };
+export type AccessFlowAction =
+  | { type: 'OPEN_LOGIN' }
+  | { type: 'OPEN_RECOVERY' }
+  | { type: 'BACK' }
+  | { type: 'RESET' };
 
 export const initialAccessFlow: AccessFlowState = { screen: 'welcome' };
 

@@ -295,3 +295,9 @@ Les deux groupe : Mpanazava, Tily peut avoir quatre entités : Mavo, mantso, men
 
    - Les modifications sont automatiquement répercutées dans l'application mobile. 
 
+## Addendum du 17 novembre 2026 — décisions structurantes
+
+L'audit d'implémentation a relevé des règles qui se contredisent ou ne sont pas suffisamment précises pour établir les relations de base de données, les permissions ou les flux d'administration. Elles restent ouvertes jusqu'à validation par le propriétaire produit; aucune règle contradictoire ne doit être choisie implicitement. Le registre des propositions et questions est dans [ADR 0001](./decisions/0001-platform-foundation.md).
+
+Le code actuel ne met en œuvre que la santé de l'API, l'authentification/session, le changement de mot de passe et le CV personnel de l'utilisateur. Le répertoire des responsables, les archives, les contacts, les conversations, les notifications et le backoffice restent à construire. Les données de démonstration locales ne constituent pas des données métier validées.
+

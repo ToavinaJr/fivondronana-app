@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import {
@@ -11,6 +11,7 @@ import {
   saveMyCv,
 } from '../access/auth-api';
 import { colors } from '../theme/tokens';
+import { isCvDirty } from './cv-dirty';
 
 const blankCv = (): PersonalCv => ({
   firstName: '',
@@ -39,6 +40,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const savedCv = useRef(blankCv());
   const nextExtraRowId = useRef(0);
   const createExtraRowId = useCallback(() => `extra-row-${nextExtraRowId.current++}`, []);
   useEffect(() => {
@@ -46,7 +48,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
     getMyCv(session.accessToken)
       .then((existing) => {
         if (active && existing) {
-          setCv({
+          const loadedCv = {
             ...blankCv(),
             ...existing,
             birthDate: existing.birthDate.slice(0, 10),
@@ -56,7 +58,9 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
               endedAt: row.endedAt?.slice(0, 10) ?? '',
             })),
             activities: existing.activities.map((row) => ({ ...row, date: row.date?.slice(0, 10) ?? '' })),
-          });
+          };
+          savedCv.current = loadedCv;
+          setCv(loadedCv);
           setExtraPersonalIds(existing.extraPersonal.map(createExtraRowId));
           setExtraContactIds(existing.extraContact.map(createExtraRowId));
         }
@@ -72,6 +76,16 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
     };
   }, [session.accessToken, createExtraRowId]);
   const field = (key: keyof PersonalCv, value: string) => setCv((current) => ({ ...current, [key]: value }));
+  const requestBack = () => {
+    if (!isCvDirty(cv, savedCv.current)) {
+      onBack();
+      return;
+    }
+    Alert.alert('Mbola misy fanovana', 'Tsy mbola voatahiry ireo fanovana amin’ny CV. Hiala ihany ve ianao?', [
+      { text: 'Tohizo ny fanovana', style: 'cancel' },
+      { text: 'Hiala nefa tsy hitahiry', style: 'destructive', onPress: onBack },
+    ]);
+  };
   const updateRow = <T extends CvBranch | CvActivity>(
     key: 'branches' | 'activities',
     index: number,
@@ -103,7 +117,9 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
       return;
     }
     try {
-      setCv(await saveMyCv(session.accessToken, cv));
+      const saved = await saveMyCv(session.accessToken, cv);
+      savedCv.current = saved;
+      setCv(saved);
       setFeedback('Voatahiry soa aman-tsara ny CV.');
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'Tsy voatahiry ny CV.');
@@ -131,7 +147,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
     );
   return (
     <EditorPage>
-      <Pressable accessibilityRole="button" onPress={onBack} style={styles.back}>
+      <Pressable accessibilityRole="button" onPress={requestBack} style={styles.back}>
         <Text style={styles.link}>‹ Fikirana</Text>
       </Pressable>
       <Text style={styles.heading}>Ny CV-ko</Text>

@@ -152,7 +152,7 @@ Pour chaque lot, consigner dans la PR ou le journal de release : commit, command
 | CV-07 | Charger ou modifier `/cvs/:id` d’un autre utilisateur non autorisé | 403/404 selon politique; aucune donnée écrite ou révélée. |
 | CV-08 | Utilisateur non connecté appelle routes CV | 401. |
 | CV-09 | Deux sauvegardes concurrentes du même CV | Pas de perte silencieuse non définie; stratégie de version/dernier-write convenue. |
-| CV-10 | Quitter l’éditeur avec modifications non enregistrées | Avertissement; confirmer abandon réinitialise, annuler conserve les changements. |
+| CV-10 | Quitter l’éditeur avec modifications non enregistrées | Avertissement; confirmer abandon réinitialise, annuler conserve les changements. Le calcul propre/modifié est couvert par tests unitaires; l’interaction native reste à vérifier sur appareil/simulateur. |
 | CV-11 | Export PDF individuel avec champs courts/longs, accents et section vide | PDF lisible, encodage juste, aucun HTML injecté, modèle Tily/Mpanazava choisi correctement. |
 | CV-12 | Export de CV interdit par rôle/portée | API refuse avant génération; aucun fichier temporaire public. |
 | CV-13 | Export groupé autorisé, gros volume | Tous les CV attendus une fois; export terminé/téléchargeable; mémoire/temps bornés; audit si sensible. |

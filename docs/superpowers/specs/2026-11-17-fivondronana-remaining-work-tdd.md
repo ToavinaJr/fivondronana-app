@@ -4,6 +4,15 @@
 
 **Références :** [audit et plan initial](../plans/2026-11-17-full-platform-audit-plan-tests.md), [règles métier](../../Application%20mobile%20FIVONDRONANA.md), [ADR 0001](../../decisions/0001-platform-foundation.md), [produit mobile](../../../apps/mobile/PRODUCT.md), [design mobile](../../../apps/mobile/DESIGN.md), [captures d’écran](../../screens/).
 
+## Avancement d’exécution
+
+- **Lot 0.2 — terminé :** contrat d’erreur HTTP, pagination bornée en taille et en offset sûr, helper Prisma `skip/take`, OpenAPI versionné; tests unitaires et document OpenAPI HTTP.
+- **Lot 0.3 — en attente de validation DB locale :** tests HTTP NestJS/PostgreSQL écrits et commande d’intégration sécurisée ajoutée. L’exécution locale a été arrêtée par une erreur d’authentification PostgreSQL avant toute migration; `DATABASE_URL_TEST` doit correspondre à une base isolée terminée par `_test`.
+- **Lot 0.4 — socle déjà présent :** le workflow CI contient PostgreSQL jetable, migrations et étapes de format/lint/typecheck/tests/build API; le workflow distant n’a pas été exécuté dans cette session.
+- **Lot 3.1 — partiellement traité :** les dates impossibles du CV et des sections répétées sont désormais rejetées par validation stricte; la vérification transactionnelle sur PostgreSQL reste à exécuter dans le test isolé.
+- **Lot 3.2 — partiellement traité :** l’éditeur mobile suit les changements non enregistrés et demande confirmation avant de quitter; la validation complète des interactions d’édition, des erreurs par champ et des longues valeurs reste à faire.
+- **Décisions métier :** les choix ouverts du lot 0 restent à confirmer avant les migrations des domaines et les permissions qui en dépendent.
+
 ## 1. But et périmètre
 
 Compléter la plateforme afin que les parcours visibles du mobile et du backoffice utilisent les mêmes données persistées, que l’API applique les permissions, et que chaque tâche soit livrée par un cycle TDD vérifiable. Le périmètre inclut le client mobile Expo, l’API NestJS/PostgreSQL/Prisma et le nouveau backoffice web.
@@ -87,9 +96,9 @@ Les chemins ci-dessous indiquent les responsabilités attendues; respecter les c
 
 **0.1 Résoudre les décisions métier.** Mettre à jour `docs/decisions/0001-platform-foundation.md`, `docs/Application mobile FIVONDRONANA.md` et `apps/mobile/PRODUCT.md`. Ajouter un test de conformité documentaire/contrat vérifiant que les valeurs confirmées (cardinalités, rôles, limites, session) ont une représentation unique et que les éléments en attente ne sont pas codés comme invariants.
 
-**0.2 Contrat API et erreurs.** Écrire d’abord `apps/api/tests/api-contract.test.ts` : chaque erreur a le schéma stable choisi; pagination accepte les bornes et rejette les valeurs hors limites; l’OpenAPI expose les routes et DTO attendus. Implémenter les helpers d’erreur/pagination et la génération/validation OpenAPI sans altérer les routes existantes.
+**0.2 [x] Contrat API et erreurs.** Écrire d’abord `apps/api/tests/api-contract.test.ts` : chaque erreur a le schéma stable choisi; pagination accepte les bornes et rejette les valeurs hors limites; les helpers refusent aussi les métadonnées invalides hors HTTP; l’OpenAPI expose les routes et DTO attendus. Implémenté dans `api-errors.ts`, `common/pagination.ts`, `openapi.ts` et `api-bootstrap.ts`; global prefix, filtre et schémas partagés sont branchés au démarrage.
 
-**0.3 Tests HTTP réels.** Ajouter `apps/api/tests/http/*.integration.test.ts` avec Nest TestingModule et PostgreSQL isolé. Tester login, `/auth/me`, logout, CV courant, validation, 401 et persistance après relance. Lancer chaque nouveau test avant son implémentation/ajustement; prévoir factories avec nettoyage déterministe.
+**0.3 Tests HTTP réels.** Ajouter `apps/api/tests/http.integration.test.ts` avec l’application Nest réelle et PostgreSQL isolé. Tester health, login, `/auth/me`, logout, CV courant, validation et persistance. Les tests sont ajoutés; leur exécution locale reste à valider car les identifiants configurés pour `fivondronana_test` ont provoqué P1000 avant migration. `scripts/test-integration.ts` refuse les bases dont le nom ne finit pas par `_test` et passe explicitement `DATABASE_URL_TEST` à Prisma.
 
 **0.4 CI reproductible.** Ajouter workflow CI pour install verrouillée, format check, lint, typecheck, unités, migration sur DB jetable, intégration, puis builds. Ajouter des tests de scripts/config qui détectent une variable requise absente, le seed démo en production et le démarrage sans base. La pipeline doit échouer sur n’importe quel étage rouge.
 
@@ -125,9 +134,9 @@ Les chemins ci-dessous indiquent les responsabilités attendues; respecter les c
 
 ### Lot 3 — CV complet, consultation autorisée et PDF
 
-**3.1 Validation et persistance CV.** Tests unitaires DTO/domain pour champs requis, espaces, dates, Unicode, longueurs, tableaux répétés et transaction préservant l’ancienne version. Durcir le DTO/service existant et compléter les tests HTTP/PostgreSQL.
+**3.1 Validation et persistance CV.** Tests unitaires DTO/domain pour champs requis, espaces, dates, Unicode, longueurs, tableaux répétés et transaction préservant l’ancienne version. Les dates calendaires impossibles sont maintenant rejetées avec `IsDateString({ strict: true, strictSeparator: true })`; compléter la preuve transactionnelle en intégration PostgreSQL.
 
-**3.2 Édition mobile.** Tester ajout/modification/suppression de sections, erreurs près des champs, sauvegarde/échec/retry, navigation avec modifications non sauvées et valeurs longues. Relier tous les contrôles de `CvEditor` à l’état/API; ne pas perdre de saisie après validation.
+**3.2 Édition mobile.** Tests unitaires ajoutés pour l’état propre/modifié (champs et lignes imbriquées); `CvEditor` conserve une référence de la dernière version chargée/enregistrée et demande confirmation avant de quitter les changements non sauvegardés. Tester encore l’ajout/modification/suppression de sections, erreurs près des champs, sauvegarde/échec/retry, la confirmation sur appareil et les valeurs longues. Relier tous les contrôles de `CvEditor` à l’état/API; ne pas perdre de saisie après validation.
 
 **3.3 Lecture d’un autre CV et permissions.** Tests API par propriétaire, responsable autorisé, hors périmètre et admin; tester aussi ID direct et liste. Ajouter routes/service de lecture seulement après approbation de la matrice de visibilité; connecter l’écran détail et enlever ses valeurs tirets.
 

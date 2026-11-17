@@ -37,12 +37,12 @@ export class CvBranchInputDto {
 
   @ApiPropertyOptional({ format: 'date', nullable: true })
   @ValidateIf((_object, value) => value !== '' && value !== null && value !== undefined)
-  @IsDateString()
+  @IsDateString({ strict: true, strictSeparator: true })
   startedAt?: string | null;
 
   @ApiPropertyOptional({ format: 'date', nullable: true })
   @ValidateIf((_object, value) => value !== '' && value !== null && value !== undefined)
-  @IsDateString()
+  @IsDateString({ strict: true, strictSeparator: true })
   endedAt?: string | null;
 }
 
@@ -67,7 +67,7 @@ export class CvActivityInputDto {
 
   @ApiPropertyOptional({ format: 'date', nullable: true })
   @ValidateIf((_object, value) => value !== '' && value !== null && value !== undefined)
-  @IsDateString()
+  @IsDateString({ strict: true, strictSeparator: true })
   date?: string | null;
 }
 
@@ -94,7 +94,7 @@ export class CvInputDto {
   address!: string;
 
   @ApiProperty({ format: 'date' })
-  @IsDateString()
+  @IsDateString({ strict: true, strictSeparator: true })
   birthDate!: string;
 
   @ApiPropertyOptional({ maxLength: 160, nullable: true })

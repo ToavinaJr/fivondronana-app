@@ -49,4 +49,39 @@ describe('API request validation policy', () => {
       ),
     ).rejects.toMatchObject({ status: 400 });
   });
+
+  test('rejects impossible calendar dates in the required birth date', async () => {
+    const cv = {
+      firstName: 'Tiana',
+      lastName: 'Rabe',
+      address: 'Antananarivo',
+      birthDate: '1990-02-30',
+      phone: '0341234567',
+      email: 'tiana@example.org',
+      province: 'Analamanga',
+      area: 'Avaradrano',
+      fivondronana: 'Antananarivo',
+    };
+    const cvMetadata = { type: 'body' as const, metatype: CvInputDto, data: '' };
+
+    await expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
+  });
+
+  test('rejects impossible calendar dates in optional CV sections', async () => {
+    const cv = {
+      firstName: 'Tiana',
+      lastName: 'Rabe',
+      address: 'Antananarivo',
+      birthDate: '1990-02-28',
+      phone: '0341234567',
+      email: 'tiana@example.org',
+      province: 'Analamanga',
+      area: 'Avaradrano',
+      fivondronana: 'Antananarivo',
+      branches: [{ name: 'Tily', group: 'Mpanazava', startedAt: '2026-02-30' }],
+    };
+    const cvMetadata = { type: 'body' as const, metatype: CvInputDto, data: '' };
+
+    await expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
+  });
 });

@@ -96,7 +96,7 @@ Prisma ne connaît que `User`, `AuthSession`, `Cv`, `CvBranch` et `CvActivity`. 
 - [x] Ajouter un test Prisma/PostgreSQL isolé avec données aléatoires et nettoyage; CI fournit PostgreSQL jetable et migrations.
 - [ ] Ajouter des tests HTTP NestJS sur PostgreSQL isolé; ils ne sont pas encore couverts par le test Prisma ci-dessus.
 - [x] Activer la validation Nest globale, DTO stricts et contrat OpenAPI initial.
-- [ ] Uniformiser le format d’erreurs, conventions de pagination et versionnage OpenAPI.
+- [x] Uniformiser le format d’erreurs, conventions de pagination et versionnage OpenAPI.
 - [ ] Définir la matrice rôles × opérations × périmètres qui deviendra la source des tests d’autorisation.
 
 **Sortie :** documentation alignée, pipeline vert, contrat d’API et décisions signées, test DB isolé exécutable en CI.

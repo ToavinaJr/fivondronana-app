@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { getApiErrorMessage } from './api-errors';
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 
@@ -59,7 +60,7 @@ export async function changePassword(accessToken: string, currentPassword: strin
   if (response.status === 401) throw new Error('Tsy marina ny teny miafina ankehitriny.');
   if (response.status === 400) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.message ?? 'Tsy ekena ilay teny miafina vaovao.');
+    throw new Error(getApiErrorMessage(body, 'Tsy ekena ilay teny miafina vaovao.'));
   }
   if (!response.ok) throw new Error('Tsy voaova ny teny miafina. Andramo indray.');
 }
@@ -112,9 +113,7 @@ export async function saveMyCv(accessToken: string, cv: PersonalCv): Promise<Per
   });
   if (response.status === 400) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(
-      Array.isArray(body.message) ? body.message.join('\n') : (body.message ?? 'Hamarino ireo saha tsy feno.'),
-    );
+    throw new Error(getApiErrorMessage(body, 'Hamarino ireo saha tsy feno.'));
   }
   if (!response.ok) throw new Error('Tsy voatahiry ny CV. Andramo indray.');
   return response.json() as Promise<PersonalCv>;

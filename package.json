@@ -15,7 +15,7 @@
     "format:check": "biome format apps/api/src apps/api/tests apps/mobile/src apps/mobile/tests scripts",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter @fivondronana/api test && bun run --filter @fivondronana/mobile test",
-    "test:integration": "bun run --filter @fivondronana/api db:generate && bun run db:deploy && bun run --filter @fivondronana/api test:integration",
+    "test:integration": "bun run scripts/test-integration.ts",
     "db:up": "docker compose --env-file .env -f infra/docker-compose.yml up -d postgres",
     "db:generate": "bun run --filter @fivondronana/api db:generate",
     "db:migrate": "bun run --filter @fivondronana/api db:migrate",

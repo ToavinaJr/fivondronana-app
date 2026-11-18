@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { getApiErrorMessage } from './api-errors';
+import { readCvResponse } from './cv-response';
 import { SessionExpiredError } from './session';
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
@@ -117,7 +118,7 @@ export async function getMyCv(accessToken: string): Promise<PersonalCv | null> {
     },
   );
   if (!response.ok) throw new Error('Tsy azo vakina ny CV. Andramo indray.');
-  return response.json() as Promise<PersonalCv | null>;
+  return readCvResponse(response, true);
 }
 
 export async function saveMyCv(accessToken: string, cv: PersonalCv): Promise<PersonalCv> {
@@ -133,5 +134,5 @@ export async function saveMyCv(accessToken: string, cv: PersonalCv): Promise<Per
     throw new Error(getApiErrorMessage(body, 'Hamarino ireo saha tsy feno.'));
   }
   if (!response.ok) throw new Error('Tsy voatahiry ny CV. Andramo indray.');
-  return response.json() as Promise<PersonalCv>;
+  return readCvResponse(response, false);
 }

@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { AuthSession, PersonalCv } from '../access/auth-api';
@@ -18,6 +28,8 @@ const groupLogos: Record<string, { source: number; label: string }> = {
 };
 
 export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
+  const { width, fontScale } = useWindowDimensions();
+  const stackedActions = width < 360 || fontScale > 1.2;
   const [state, dispatch] = useReducer(leaderListReducer, initialLeaderListState);
   const [facets, setFacets] = useState<LeaderFacets | null>(null);
   const [facetError, setFacetError] = useState('');
@@ -132,7 +144,9 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
         />
       }
     >
-      <Text style={styles.heading}>Mpiandraikitra</Text>
+      <Text accessibilityRole="header" style={styles.heading}>
+        Mpiandraikitra
+      </Text>
       <Text style={styles.subtitle}>Tadiavo araka ny entité, vondrona na andraikitra.</Text>
       <FilterRow
         label="Entité"
@@ -155,16 +169,17 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Sintomy PDF ny CV rehetra"
         disabled={exporting || state.data.length === 0}
+        accessibilityState={{ disabled: exporting || state.data.length === 0, busy: exporting }}
         onPress={() => {
           void exportAll();
         }}
         style={[styles.exportButton, (exporting || state.data.length === 0) && styles.disabled]}
       >
         {exporting ? (
-          <ActivityIndicator color={colors.accent} />
+          <ActivityIndicator color={colors.onPrimary} />
         ) : (
           <>
-            <BrandIcon name="download" color={colors.accent} />
+            <BrandIcon name="download" color={colors.onPrimary} />
             <Text style={styles.exportText}>Sintomy CV rehetra (PDF)</Text>
           </>
         )}
@@ -186,38 +201,44 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
       {state.status === 'success' &&
         state.data.map((leader) => (
           <View key={leader.id} style={styles.leaderRow}>
-            <View style={styles.portrait}>
-              {groupLogos[leader.group.name] ? (
-                <Image
-                  accessibilityLabel={`Emblème ${groupLogos[leader.group.name].label}`}
-                  source={groupLogos[leader.group.name].source}
-                  resizeMode="contain"
-                  style={styles.groupLogo}
-                />
-              ) : (
-                <Text style={styles.initial}>{leader.accountName.slice(0, 1).toLocaleUpperCase()}</Text>
-              )}
-            </View>
-            <View style={styles.leaderCopy}>
-              <Text numberOfLines={2} style={styles.name}>
-                {leader.accountName}
-              </Text>
-              <Text numberOfLines={1} style={styles.meta}>
-                {leader.entity.name} · {leader.group.name}
-              </Text>
-              <Text numberOfLines={2} style={styles.responsibility}>
-                {leader.responsibilities.join(', ') || 'Tsy mbola misy andraikitra'}
-              </Text>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Hijery CV an’i ${leader.accountName}`}
-              onPress={() => onOpenCv(leader.id)}
-              style={({ pressed }) => [styles.cvButton, pressed && styles.pressed]}
+            <View
+              style={styles.portrait}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
             >
-              <BrandIcon name="profile" size={16} />
-              <Text style={styles.cvButtonText}>Hijery CV</Text>
-            </Pressable>
+              <Text style={styles.initial}>{leader.accountName.trim().slice(0, 1).toLocaleUpperCase()}</Text>
+            </View>
+            <View style={[styles.leaderBody, stackedActions && styles.leaderBodyStacked]}>
+              <View style={[styles.leaderCopy, stackedActions && styles.leaderCopyStacked]}>
+                <Text style={styles.name}>{leader.accountName}</Text>
+                <View style={styles.groupContext}>
+                  {leader.group.name === 'Tily' || leader.group.name === 'Mpanazava' ? (
+                    <Image
+                      accessibilityLabel={`Emblème ${groupLogos[leader.group.name].label}`}
+                      source={groupLogos[leader.group.name].source}
+                      resizeMode="contain"
+                      style={styles.groupLogo}
+                    />
+                  ) : null}
+                  <Text style={styles.meta}>
+                    {leader.entity.name} · {leader.group.name}
+                  </Text>
+                </View>
+                <Text style={styles.responsibility}>
+                  {leader.responsibilities.join(', ') || 'Tsy mbola misy andraikitra'}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Hijery CV an’i ${leader.accountName}`}
+                onPress={() => onOpenCv(leader.id)}
+                style={({ pressed }) => [styles.cvButton, pressed && styles.pressed]}
+              >
+                <BrandIcon name="profile" size={16} color={colors.primary} />
+                <Text style={styles.cvButtonText}>Hijery CV</Text>
+              </Pressable>
+            </View>
           </View>
         ))}
       {state.status === 'success' && state.data.length === 0 ? (
@@ -301,14 +322,15 @@ function LoadingRows() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 24, gap: 10 },
+  content: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24, gap: 12, backgroundColor: colors.page },
   heading: { color: colors.text, fontSize: 21, fontWeight: '700' },
   subtitle: { color: colors.secondary, fontSize: 14, lineHeight: 20, marginBottom: 4 },
   filterGroup: { gap: 4 },
   filterLabel: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
   filterRow: { gap: 8, paddingVertical: 3 },
   chip: {
-    minHeight: 42,
+    minHeight: 48,
+    paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 7,
     borderWidth: 1,
@@ -321,6 +343,11 @@ const styles = StyleSheet.create({
   chipTextSelected: { color: colors.primary, fontWeight: '600' },
   exportButton: {
     minHeight: 48,
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: colors.accent,
     borderWidth: 1,
     borderColor: colors.accent,
     borderRadius: 7,
@@ -328,35 +355,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 2,
   },
-  exportText: { color: colors.accent, fontWeight: '700', fontSize: 15 },
+  exportText: { color: colors.onPrimary, fontWeight: '700', fontSize: 15, flexShrink: 1 },
   disabled: { opacity: 0.55 },
   feedback: { color: colors.secondary, fontSize: 14, lineHeight: 20 },
   leaderRow: {
     minHeight: 90,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    alignItems: 'flex-start',
+    gap: 12,
     backgroundColor: colors.muted,
-    borderRadius: 7,
-    padding: 10,
+    borderRadius: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    padding: 12,
   },
   portrait: {
     width: 54,
-    height: 64,
+    minHeight: 64,
+    paddingVertical: 8,
     borderRadius: 5,
     backgroundColor: colors.portrait,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  groupLogo: { width: 52, height: 62 },
+  groupContext: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  groupLogo: { width: 20, height: 24 },
   initial: { color: colors.secondary, fontSize: 23, fontWeight: '600' },
+  leaderBody: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  leaderBodyStacked: { flexDirection: 'column', alignItems: 'stretch' },
   leaderCopy: { flex: 1, minWidth: 0, gap: 3 },
+  leaderCopyStacked: { flex: 0, width: '100%' },
   name: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  meta: { color: colors.secondary, fontSize: 13 },
-  responsibility: { color: colors.text, fontSize: 13 },
+  meta: { color: colors.secondary, fontSize: 14, flex: 1 },
+  responsibility: { color: colors.text, fontSize: 14 },
   cvButton: {
     minWidth: 94,
-    minHeight: 44,
+    maxWidth: '100%',
+    minHeight: 48,
+    flexShrink: 0,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
     flexDirection: 'row',
     gap: 4,
     alignItems: 'center',
@@ -366,7 +404,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     borderRadius: 6,
   },
-  cvButtonText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
+  cvButtonText: { color: colors.primary, fontSize: 14, fontWeight: '700', flexShrink: 1 },
   empty: { color: colors.secondary, textAlign: 'center', paddingVertical: 28, fontSize: 15 },
   errorBox: { padding: 12, borderRadius: 7, backgroundColor: colors.errorSurface, gap: 8 },
   errorText: { color: colors.error, fontSize: 14, lineHeight: 20 },

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
-import { BackHandler, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, BackHandler, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Brand } from '../access/Brand';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { type AuthSession, changePassword } from '../access/auth-api';
@@ -19,6 +19,7 @@ import { initialMainFlow, type MainTab, mainFlowReducer } from './main-flow';
 import { CvEditor } from './CvEditor';
 import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
 import { LeaderCvScreen } from './LeaderCvScreen';
+import { getSignOutConfirmation } from './sign-out-confirmation';
 
 const tabs: { id: MainTab; title: string; icon: BrandIconName }[] = [
   { id: 'archives', title: 'Arisiva', icon: 'archive' },
@@ -44,33 +45,13 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
     return () => subscription.remove();
   }, [flow.detail]);
 
-  const title =
-    flow.detail?.type === 'notifications'
-      ? 'Fampafantarana'
-      : flow.detail?.type === 'cv'
-        ? 'Hijery CV'
-        : (tabs.find((tab) => tab.id === flow.tab)?.title ?? 'FIVONDRONANA');
+  const canSearch = !flow.detail && ['archives', 'leaders', 'contacts'].includes(flow.tab);
+  const isDemo = flow.detail?.type === 'notifications' || (!flow.detail && ['archives', 'contacts'].includes(flow.tab));
   const requestDownload = () => setFeedback('Tsy mbola mifandray amin’ny tahiry ny fisintonana.');
   return (
     <View style={styles.page}>
       <View style={styles.topBar}>
-        {flow.detail ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Hiverina"
-            onPress={() => dispatch({ type: 'BACK' })}
-            style={styles.headerBack}
-          >
-            <BrandIcon name="back" />
-          </Pressable>
-        ) : (
-          <Brand compact />
-        )}
-        {flow.detail ? (
-          <Text numberOfLines={1} style={styles.brandName}>
-            {title}
-          </Text>
-        ) : null}
+        <Brand compact />
         <View style={styles.headerActions}>
           <Pressable
             accessibilityRole="button"
@@ -83,14 +64,17 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
           >
             <BrandIcon name="notifications" />
           </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Karoka"
-            onPress={() => setSearchOpen((value) => !value)}
-            style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-          >
-            <BrandIcon name="search" />
-          </Pressable>
+          {canSearch && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Karoka"
+              accessibilityState={{ expanded: searchOpen }}
+              onPress={() => setSearchOpen((value) => !value)}
+              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
+            >
+              <BrandIcon name="search" />
+            </Pressable>
+          )}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Kaonty"
@@ -102,7 +86,18 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
         </View>
       </View>
 
-      {searchOpen && !flow.detail && (
+      {flow.detail?.type === 'notifications' && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Hiverina"
+          onPress={() => dispatch({ type: 'BACK' })}
+          style={styles.detailBack}
+        >
+          <BrandIcon name="back" />
+          <Text style={styles.signOutText}>Hiverina</Text>
+        </Pressable>
+      )}
+      {searchOpen && canSearch && (
         <View style={styles.searchWrap}>
           <TextInput
             accessibilityLabel="Karohy"
@@ -124,9 +119,9 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
           </Pressable>
         </View>
       )}
-      {flow.detail?.type !== 'cv' && flow.tab !== 'leaders' ? (
+      {isDemo ? (
         <View style={styles.demoBanner}>
-          <Text style={styles.demoText}>Angona santionany · mbola tsy mifandray amin’ny API fakan-kevitra</Text>
+          <Text style={styles.demoText}>Angona santionany</Text>
         </View>
       ) : null}
 
@@ -148,7 +143,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
       ) : flow.tab === 'contacts' ? (
         <ContactsScreen query={query} />
       ) : flow.tab === 'messages' ? (
-        <PlaceholderScreen title="Hafatra" text="Tsy mbola misy resaka azo aseho." />
+        <PlaceholderScreen title="Hafatra" text="Tsy mbola azo ampiasaina ny fandefasana sy fandraisana hafatra." />
       ) : (
         <SettingsScreen session={session} onSignOut={onSignOut} />
       )}
@@ -172,9 +167,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
               style={({ pressed }) => [styles.tab, flow.tab === tab.id && styles.tabActive, pressed && styles.pressed]}
             >
               <BrandIcon name={tab.icon} color={flow.tab === tab.id ? colors.primary : colors.secondary} size={20} />
-              <Text numberOfLines={1} style={[styles.tabText, flow.tab === tab.id && styles.tabTextActive]}>
-                {tab.title}
-              </Text>
+              <Text style={[styles.tabText, flow.tab === tab.id && styles.tabTextActive]}>{tab.title}</Text>
             </Pressable>
           ))}
         </View>
@@ -211,6 +204,7 @@ function ArchiveRow({ item, onDownload }: { item: ArchiveItem; onDownload: () =>
   return (
     <View style={styles.archiveRow}>
       <View style={styles.fileMark}>
+        <BrandIcon name="document" size={22} />
         <Text style={styles.fileMarkText}>{item.format}</Text>
       </View>
       <View style={styles.rowBody}>
@@ -390,7 +384,7 @@ function ContactRow({ contact, expanded, onToggle }: { contact: Contact; expande
         style={styles.contactHead}
       >
         <View style={styles.contactMark}>
-          <Text style={styles.contactMarkText}>{contact.name.slice(-1)}</Text>
+          <BrandIcon name="contacts" />
         </View>
         <View style={styles.rowBody}>
           <Text style={styles.rowTitle}>{contact.name}</Text>
@@ -401,9 +395,18 @@ function ContactRow({ contact, expanded, onToggle }: { contact: Contact; expande
       </Pressable>
       {expanded && (
         <View style={styles.contactDetails}>
-          <Text style={styles.detailLine}>{contact.address}</Text>
-          <Text style={styles.detailLine}>{contact.phone}</Text>
-          <Text style={styles.detailLine}>{contact.email}</Text>
+          <View style={styles.contactDetailRow}>
+            <BrandIcon name="location" size={18} />
+            <Text style={styles.detailLine}>{contact.address}</Text>
+          </View>
+          <View style={styles.contactDetailRow}>
+            <BrandIcon name="phone" size={18} />
+            <Text style={styles.detailLine}>{contact.phone}</Text>
+          </View>
+          <View style={styles.contactDetailRow}>
+            <BrandIcon name="email" size={18} />
+            <Text style={styles.detailLine}>{contact.email}</Text>
+          </View>
           <Text style={styles.contactDescription}>{contact.description}</Text>
         </View>
       )}
@@ -422,6 +425,7 @@ function NotificationsScreen({ items, onDismiss }: { items: Notice[]; onDismiss:
             <Text style={styles.noticeTime}>{item.time}</Text>
           </View>
           <View style={styles.noticeBottom}>
+            <BrandIcon name="notifications" size={24} />
             <Text style={styles.noticeTitle}>{item.title}</Text>
             <Pressable
               accessibilityRole="button"
@@ -429,7 +433,7 @@ function NotificationsScreen({ items, onDismiss }: { items: Notice[]; onDismiss:
               onPress={() => onDismiss(item.id)}
               style={styles.dismiss}
             >
-              <Text style={styles.dismissText}>Esory</Text>
+              <BrandIcon name="close" size={20} />
             </Pressable>
           </View>
         </View>
@@ -548,8 +552,12 @@ function SettingsScreen({ session, onSignOut }: { session: AuthSession; onSignOu
         }}
         style={styles.settingAction}
       >
-        <Text style={styles.settingActionTitle}>Ny CV-ko</Text>
-        <Text style={styles.rowMeta}>Hamorona na hanova ny mombamomba anao</Text>
+        <BrandIcon name="document" size={24} />
+        <View style={styles.rowBody}>
+          <Text style={styles.settingActionTitle}>Ny CV-ko</Text>
+          <Text style={styles.rowMeta}>Hamorona na hanova ny mombamomba anao</Text>
+        </View>
+        <BrandIcon name="forward" size={18} color={colors.secondary} />
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -559,10 +567,22 @@ function SettingsScreen({ session, onSignOut }: { session: AuthSession; onSignOu
         }}
         style={styles.settingAction}
       >
-        <Text style={styles.settingActionTitle}>Hanova teny miafina</Text>
-        <Text style={styles.rowMeta}>Ilaina ny teny miafina ankehitriny</Text>
+        <BrandIcon name="lock" size={24} />
+        <View style={styles.rowBody}>
+          <Text style={styles.settingActionTitle}>Hanova teny miafina</Text>
+          <Text style={styles.rowMeta}>Ilaina ny teny miafina ankehitriny</Text>
+        </View>
+        <BrandIcon name="forward" size={18} color={colors.secondary} />
       </Pressable>
-      <Pressable accessibilityRole="button" onPress={onSignOut} style={styles.signOut}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          const confirmation = getSignOutConfirmation(onSignOut);
+          Alert.alert(confirmation.title, confirmation.message, confirmation.buttons, { cancelable: true });
+        }}
+        style={styles.signOut}
+      >
+        <BrandIcon name="logout" />
         <Text style={styles.signOutText}>Hiala amin’ny kaonty</Text>
       </Pressable>
     </PageContent>
@@ -573,7 +593,10 @@ function PlaceholderScreen({ title, text }: { title: string; text: string }) {
   return (
     <PageContent>
       <Text style={styles.pageHeading}>{title}</Text>
-      <EmptyState text={text} />
+      <View style={styles.placeholderIcon}>
+        <BrandIcon name="messages" size={40} color={colors.secondary} />
+      </View>
+      <Text style={styles.emptyText}>{text}</Text>
     </PageContent>
   );
 }
@@ -753,7 +776,10 @@ const styles = StyleSheet.create({
     textDecorationColor: colors.primary,
   },
   contactDetails: { paddingLeft: 52, paddingBottom: 16, gap: 8 },
-  detailLine: { color: colors.text, fontSize: 13 },
+  detailLine: { flex: 1, color: colors.text, fontSize: 13 },
+  contactDetailRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  detailBack: { minHeight: 44, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center' },
+  placeholderIcon: { alignItems: 'center', paddingTop: 40 },
   contactDescription: { marginTop: 5, color: colors.secondary, fontSize: 14, lineHeight: 20 },
   noticeRow: { paddingVertical: 16, borderBottomWidth: 1, borderColor: colors.border },
   noticeTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
@@ -761,7 +787,7 @@ const styles = StyleSheet.create({
   noticeTime: { color: colors.secondary, fontSize: 12 },
   noticeBottom: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   noticeTitle: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20 },
-  dismiss: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
+  dismiss: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 8 },
   dismissText: { color: colors.primary, fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
   accountBlock: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   avatarLarge: {
@@ -780,8 +806,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: colors.border,
-    justifyContent: 'center',
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   settingActionTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
   settingsInput: {
@@ -795,6 +822,8 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.6 },
   signOut: {
+    flexDirection: 'row',
+    gap: 8,
     minHeight: 48,
     marginTop: 24,
     borderWidth: 1,
@@ -803,7 +832,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  signOutText: { color: colors.primary, fontWeight: '700' },
+  signOutText: { color: colors.primary, fontWeight: '700', flexShrink: 1 },
   emptyState: { paddingVertical: 36, paddingHorizontal: 16, alignItems: 'center' },
   emptyTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 8 },
   emptyText: { color: colors.secondary, fontSize: 14, lineHeight: 21, textAlign: 'center' },

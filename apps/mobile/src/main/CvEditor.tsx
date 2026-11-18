@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { BrandIcon } from '../access/BrandIcon';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -343,6 +353,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
         }}
         style={styles.export}
       >
+        <BrandIcon name="download" color={colors.accent} />
         <Text style={styles.exportText}>Mamorona sy mizara PDF</Text>
       </Pressable>
       {feedback ? (
@@ -370,9 +381,11 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
 
 function EditorPage({ children }: { children: React.ReactNode }) {
   return (
-    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
-      {children}
-    </ScrollView>
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+        {children}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -419,7 +432,8 @@ function Field({
 function AddButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.add}>
-      <Text style={styles.link}>{label}</Text>
+      <BrandIcon name="plus" size={18} />
+      <Text style={styles.addText}>{label.replace(/^\+\s*/, '')}</Text>
     </Pressable>
   );
 }
@@ -432,6 +446,7 @@ function RemoveButton({ onPress }: { onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   page: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 36 },
   back: { minHeight: 44, justifyContent: 'center' },
   backContent: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -439,24 +454,37 @@ const styles = StyleSheet.create({
   heading: { color: colors.text, fontSize: 24, fontWeight: '700', marginBottom: 8 },
   help: { color: colors.secondary, fontSize: 14, lineHeight: 21, marginBottom: 16 },
   section: { marginTop: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: colors.border },
-  sectionTitle: { color: colors.text, fontWeight: '700', fontSize: 17, marginBottom: 12 },
+  sectionTitle: { color: colors.text, fontWeight: '700', fontSize: 17, marginBottom: 20, textAlign: 'center' },
   field: { marginBottom: 12 },
   label: { color: colors.text, fontSize: 14, fontWeight: '500', marginBottom: 8 },
   input: {
     minHeight: 50,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     paddingHorizontal: 12,
     color: colors.text,
     fontSize: 16,
   },
   inputError: { borderColor: colors.error, borderWidth: 2 },
-  add: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', paddingRight: 12 },
+  add: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 4,
+  },
+  addText: { flexShrink: 1, color: colors.primary, fontWeight: '600', fontSize: 14 },
   repeat: { marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderColor: colors.border },
   remove: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   removeText: { color: colors.error, fontWeight: '600', fontSize: 13 },
   export: {
+    flexDirection: 'row',
+    gap: 8,
     minHeight: 48,
     marginTop: 20,
     borderWidth: 1,
@@ -465,7 +493,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  exportText: { color: colors.accent, fontWeight: '700', fontSize: 14 },
+  exportText: { color: colors.accent, fontWeight: '700', fontSize: 14, flexShrink: 1 },
   save: {
     minHeight: 52,
     marginTop: 10,

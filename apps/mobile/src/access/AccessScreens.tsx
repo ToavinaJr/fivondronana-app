@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { Brand } from './Brand';
 import { BrandIcon } from './BrandIcon';
 import { validateEmail, validateLogin } from './validation';
@@ -43,9 +53,22 @@ function Notice({ children }: { children: string }) {
   );
 }
 
+function AccessHeader({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <View style={styles.formHeader}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Hiverina" onPress={onBack} style={styles.back}>
+        <BrandIcon name="back" />
+      </Pressable>
+      <Text accessibilityRole="header" style={styles.title}>
+        {title}
+      </Text>
+    </View>
+  );
+}
+
 export function WelcomeScreen({ onLogin }: WelcomeProps) {
   return (
-    <View style={styles.welcome}>
+    <ScrollView style={styles.flex} contentContainerStyle={styles.welcome}>
       <View style={styles.welcomeMain}>
         <Brand />
         <Text style={styles.welcomeTitle}>Vonenina Mampiray</Text>
@@ -55,8 +78,33 @@ export function WelcomeScreen({ onLogin }: WelcomeProps) {
           <ActionButton label="Hiditra" onPress={onLogin} />
         </View>
       </View>
-      <Text style={styles.footer}>FIVONDRONANA · MPIANDRAIKITRA</Text>
-    </View>
+      <View style={styles.partnerLogos}>
+        <Image
+          source={require('../assets/sampana.jpeg')}
+          accessibilityLabel="Sampana"
+          resizeMode="contain"
+          style={styles.partnerLogo}
+        />
+        <Image
+          source={require('../assets/mpanaza-logo.jpeg')}
+          accessibilityLabel="Mpanazava eto Madagasikara"
+          resizeMode="contain"
+          style={styles.partnerLogo}
+        />
+        <Image
+          source={require('../assets/tily-logo.jpeg')}
+          accessibilityLabel="Tily eto Madagasikara"
+          resizeMode="contain"
+          style={styles.partnerLogo}
+        />
+        <Image
+          source={require('../assets/sampana-manga.jpeg')}
+          accessibilityLabel="Sampana manga"
+          resizeMode="contain"
+          style={styles.partnerLogo}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
@@ -87,13 +135,10 @@ export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.formPage} keyboardShouldPersistTaps="handled">
-        <Pressable accessibilityRole="button" accessibilityLabel="Hiverina" onPress={onBack} style={styles.back}>
-          <BrandIcon name="back" />
-          <Text style={styles.backLabel}>Hiverina</Text>
-        </Pressable>
-        <Text style={styles.title}>Hiditra</Text>
+        <AccessHeader title="Hiditra" onBack={onBack} />
         <View style={styles.formBrand}>
-          <Brand compact />
+          <Brand />
+          <Text style={styles.brandTitle}>Vonenina Mampiray</Text>
         </View>
         <Text style={styles.label}>Mailaka na laharana finday</Text>
         <TextInput
@@ -181,11 +226,7 @@ export function RecoveryScreen({ onBack }: RecoveryProps) {
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.formPage} keyboardShouldPersistTaps="handled">
-        <Pressable accessibilityRole="button" accessibilityLabel="Hiverina" onPress={onBack} style={styles.back}>
-          <BrandIcon name="back" />
-          <Text style={styles.backLabel}>Hiverina</Text>
-        </Pressable>
-        <Text style={styles.title}>Teny miafina adino</Text>
+        <AccessHeader title="Teny miafina adino" onBack={onBack} />
         <Text style={styles.description}>Ampidiro ny adiresy mailaka nampiasaina tamin’ny kaontinao.</Text>
         <Text style={styles.label}>Mailaka</Text>
         <TextInput
@@ -220,18 +261,18 @@ export function RecoveryScreen({ onBack }: RecoveryProps) {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.page },
   welcome: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: colors.page,
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 24,
     justifyContent: 'space-between',
   },
-  welcomeMain: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  welcomeTitle: { marginTop: 24, color: colors.text, fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  quote: { maxWidth: 340, marginTop: 16, color: colors.secondary, fontSize: 16, lineHeight: 24, textAlign: 'center' },
+  welcomeMain: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 24 },
+  welcomeTitle: { marginTop: 12, color: colors.text, fontSize: 24, fontWeight: '700', textAlign: 'center' },
+  quote: { maxWidth: 340, marginTop: 48, color: colors.secondary, fontSize: 16, lineHeight: 24, textAlign: 'center' },
   reference: { marginTop: 8, color: colors.secondary, fontSize: 14 },
-  welcomeButton: { alignSelf: 'stretch', marginTop: 32 },
+  welcomeButton: { alignSelf: 'stretch', marginTop: 48 },
   button: {
     minHeight: 52,
     paddingHorizontal: 20,
@@ -243,11 +284,13 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.82 },
   disabled: { opacity: 0.58 },
   buttonText: { color: colors.onPrimary, fontWeight: '600', fontSize: 15 },
-  footer: { color: colors.secondary, fontSize: 11, textAlign: 'center' },
+  partnerLogos: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, paddingTop: 24 },
+  partnerLogo: { width: 40, height: 44 },
+  brandTitle: { marginTop: 8, color: colors.text, fontSize: 22, fontWeight: '700', textAlign: 'center' },
   formPage: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 },
-  back: { minHeight: 44, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8 },
-  backLabel: { color: colors.secondary, fontSize: 14 },
-  title: { marginTop: 16, marginBottom: 24, color: colors.text, fontSize: 24, fontWeight: '700' },
+  formHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 },
+  back: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' },
+  title: { flex: 1, color: colors.text, fontSize: 24, fontWeight: '700' },
   formBrand: { alignItems: 'center', marginBottom: 24 },
   label: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 8 },
   input: {

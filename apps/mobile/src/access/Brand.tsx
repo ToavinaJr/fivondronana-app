@@ -1,16 +1,17 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../theme/tokens';
+import { Image, StyleSheet } from 'react-native';
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <View style={styles.wrap} accessibilityLabel="FIVONDRONANA">
-      <Text style={[styles.name, compact && styles.compactName]}>FIVONDRONANA</Text>
-    </View>
+    <Image
+      source={require('../assets/vonenina-logo.jpeg')}
+      accessibilityLabel="Vonenina Mampiray"
+      resizeMode="contain"
+      style={compact ? styles.compact : styles.logo}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center' },
-  name: { color: colors.text, fontSize: 16, fontWeight: '600' },
-  compactName: { fontSize: 13, letterSpacing: 0.2 },
+  logo: { width: 176, height: 176 },
+  compact: { width: 48, height: 48 },
 });

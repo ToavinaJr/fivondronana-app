@@ -86,26 +86,18 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
         </View>
       ) : cv ? (
         <>
-          <Text style={styles.heading}>Hijery CV</Text>
-          {cv.template ? (
-            <View style={styles.templateRow}>
-              <Image
-                accessibilityLabel={`Emblème ${cv.template}`}
-                source={templateLogos[cv.template]}
-                resizeMode="contain"
-                style={styles.templateLogo}
-              />
-              <Text style={styles.template}>{cv.template}</Text>
-            </View>
-          ) : null}
+          <Text accessibilityRole="header" style={styles.heading}>
+            Hijery CV
+          </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sintomy PDF ity CV ity"
             disabled={exporting}
+            accessibilityState={{ disabled: exporting, busy: exporting }}
             onPress={() => {
               void exportPdf();
             }}
-            style={styles.download}
+            style={({ pressed }) => [styles.download, (pressed || exporting) && styles.dimmed]}
           >
             {exporting ? (
               <ActivityIndicator color={colors.accent} />
@@ -121,47 +113,62 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
               {feedback}
             </Text>
           ) : null}
-          <CvSection
-            title="Fampahafantarana ny tena"
-            rows={[
-              ['Anarana', `${cv.firstName} ${cv.lastName}`],
-              ['Adiresy', cv.address],
-              ['Daty nahaterahana', cv.birthDate.slice(0, 10)],
-              ['Toerana nahaterahana', cv.birthPlace],
-              ...cv.extraPersonal.map((value, index) => [`Fanampiny ${index + 1}`, value]),
-            ]}
-          />
-          <CvSection
-            title="Fifandraisana"
-            rows={[
-              ['Finday', cv.phone],
-              ['Mailaka', cv.email],
-              ['Facebook', cv.facebook],
-              ...cv.extraContact.map((value, index) => [`Fifandraisana fanampiny ${index + 1}`, value]),
-            ]}
-          />
-          <CvSection
-            title="Fampahafantarana ny maha skoto"
-            rows={[
-              ['Faritany', cv.province],
-              ['Faritra', cv.area],
-              ['Fivondronana', cv.fivondronana],
-            ]}
-          />
-          <CvSection
-            title="Sampana"
-            rows={cv.branches.map((branch) => [
-              branch.name,
-              [branch.group, branch.project].filter(Boolean).join(' · '),
-            ])}
-          />
-          <CvSection
-            title="Hetsika"
-            rows={cv.activities.map((activity) => [
-              activity.name || 'Hetsika',
-              [activity.responsibility, activity.description, activity.date?.slice(0, 10)].filter(Boolean).join(' · '),
-            ])}
-          />
+          <View style={styles.document}>
+            {cv.template === 'Tily' || cv.template === 'Mpanazava' ? (
+              <View style={styles.templateRow}>
+                <Image
+                  accessibilityLabel={`Emblème ${cv.template}`}
+                  source={templateLogos[cv.template]}
+                  resizeMode="contain"
+                  style={styles.templateLogo}
+                />
+                <Text style={styles.template}>{cv.template}</Text>
+              </View>
+            ) : null}
+            <CvSection
+              title="Fampahafantarana ny tena"
+              rows={[
+                ['Anarana', `${cv.firstName} ${cv.lastName}`],
+                ['Adiresy', cv.address],
+                ['Daty nahaterahana', cv.birthDate.slice(0, 10)],
+                ['Toerana nahaterahana', cv.birthPlace],
+                ...cv.extraPersonal.map((value, index) => [`Fanampiny ${index + 1}`, value]),
+              ]}
+            />
+            <CvSection
+              title="Fifandraisana"
+              rows={[
+                ['Finday', cv.phone],
+                ['Mailaka', cv.email],
+                ['Facebook', cv.facebook],
+                ...cv.extraContact.map((value, index) => [`Fifandraisana fanampiny ${index + 1}`, value]),
+              ]}
+            />
+            <CvSection
+              title="Fampahafantarana ny maha skoto"
+              rows={[
+                ['Faritany', cv.province],
+                ['Faritra', cv.area],
+                ['Fivondronana', cv.fivondronana],
+              ]}
+            />
+            <CvSection
+              title="Sampana"
+              rows={cv.branches.map((branch) => [
+                branch.name,
+                [branch.group, branch.project].filter(Boolean).join(' · '),
+              ])}
+            />
+            <CvSection
+              title="Hetsika"
+              rows={cv.activities.map((activity) => [
+                activity.name || 'Hetsika',
+                [activity.responsibility, activity.description, activity.date?.slice(0, 10)]
+                  .filter(Boolean)
+                  .join(' · '),
+              ])}
+            />
+          </View>
         </>
       ) : (
         <Text style={styles.secondary}>Tsy mbola misy antsipirian’ny CV ao amin’ny tahiry.</Text>
@@ -173,20 +180,24 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
 function CvSection({ title, rows }: { title: string; rows: Array<Array<string | null | undefined>> }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {rows.map(([label, value], index) => (
-        <View key={`${label}-${index}`} style={styles.field}>
-          <Text style={styles.label}>{label}</Text>
-          <Text style={styles.value}>{value || '—'}</Text>
-        </View>
-      ))}
-      {rows.length === 0 ? <Text style={styles.secondary}>Tsy mbola misy angona.</Text> : null}
+      <Text accessibilityRole="header" style={styles.sectionTitle}>
+        {title}
+      </Text>
+      <View style={styles.table}>
+        {rows.map(([label, value], index) => (
+          <View key={`${label}-${index}`} style={[styles.field, index > 0 && styles.fieldDivider]}>
+            <Text style={styles.label}>{label}</Text>
+            <Text style={styles.value}>{value || '—'}</Text>
+          </View>
+        ))}
+        {rows.length === 0 ? <Text style={[styles.secondary, styles.empty]}>Tsy mbola misy angona.</Text> : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28, gap: 12 },
+  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28, gap: 12, backgroundColor: colors.page },
   back: {
     minHeight: 44,
     flexDirection: 'row',
@@ -199,24 +210,40 @@ const styles = StyleSheet.create({
   loading: { minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12 },
   heading: { color: colors.text, fontSize: 21, fontWeight: '700' },
   template: { color: colors.secondary, fontSize: 14 },
-  templateRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  templateLogo: { width: 36, height: 40 },
+  document: { gap: 20, paddingVertical: 16, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  templateRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  templateLogo: { width: 48, height: 56 },
   download: {
     minHeight: 48,
     flexDirection: 'row',
     gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  downloadText: { color: colors.accent, fontWeight: '700', fontSize: 15 },
-  section: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 8, gap: 8 },
-  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', paddingBottom: 4 },
-  field: { gap: 2 },
-  label: { color: colors.secondary, fontSize: 13 },
-  value: { color: colors.text, fontSize: 15, lineHeight: 21 },
+  downloadText: { color: colors.accent, fontWeight: '700', fontSize: 15, flexShrink: 1 },
+  dimmed: { opacity: 0.55 },
+  section: { gap: 8 },
+  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  table: { borderWidth: 1, borderColor: colors.secondary },
+  field: { flexDirection: 'row', alignItems: 'stretch' },
+  fieldDivider: { borderTopWidth: 1, borderTopColor: colors.border },
+  label: {
+    width: '42%',
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+    padding: 8,
+    backgroundColor: colors.muted,
+    borderRightWidth: 1,
+    borderRightColor: colors.border,
+  },
+  value: { flex: 1, minWidth: 0, color: colors.text, fontSize: 15, lineHeight: 21, padding: 8 },
+  empty: { padding: 12 },
   secondary: { color: colors.secondary, fontSize: 14, lineHeight: 21 },
   errorBox: { backgroundColor: colors.errorSurface, padding: 12, borderRadius: 7 },
   errorText: { color: colors.error, fontSize: 14, lineHeight: 21 },

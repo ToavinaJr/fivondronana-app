@@ -13,6 +13,15 @@ export type BrandIconName =
   | 'back'
   | 'download'
   | 'profile'
+  | 'forward'
+  | 'lock'
+  | 'logout'
+  | 'document'
+  | 'location'
+  | 'phone'
+  | 'email'
+  | 'close'
+  | 'plus'
   | 'check';
 
 type NativeSymbol = NonNullable<ComponentProps<typeof SymbolView>['name']>;
@@ -29,6 +38,15 @@ const symbols: Record<BrandIconName, NativeSymbol> = {
   download: { ios: 'arrow.down.to.line', android: 'download', web: 'download' },
   profile: { ios: 'person.crop.circle', android: 'account_circle', web: 'account_circle' },
   check: { ios: 'checkmark', android: 'check', web: 'check' },
+  forward: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
+  lock: { ios: 'lock', android: 'lock', web: 'lock' },
+  logout: { ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' },
+  document: { ios: 'doc.text', android: 'description', web: 'description' },
+  location: { ios: 'mappin.and.ellipse', android: 'location_on', web: 'location_on' },
+  phone: { ios: 'phone', android: 'call', web: 'call' },
+  email: { ios: 'envelope', android: 'mail', web: 'mail' },
+  close: { ios: 'xmark', android: 'close', web: 'close' },
+  plus: { ios: 'plus', android: 'add', web: 'add' },
 };
 
 export function BrandIcon({

@@ -48,14 +48,23 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 - A file download link is temporary. Each new link issuance rechecks authorization; a previously issued link remains valid only until its short expiry (five minutes is the proposed value).
 - No real production data or distributed mobile versions currently need migration compatibility protection.
 
-### Explicitly unresolved or underspecified
+### Resolved 18 November 2026 (see the ADR for full wording)
 
-- The exact duration and refresh policy for a session, and the behavior of the "Tsarovy aho" control, remain to be decided. The current 15-minute access token is provisional and does not define the total session duration.
-- Email/SMS delivery providers and verification mechanics for password recovery are not selected.
-- Messaging supports images, videos, and files, but exact allowed formats, size limits, retention, and scanning are not specified; enforce limits once decided.
-- The source requirements do not define global-search behavior or notification source/read/dismissal semantics.
-- The backoffice hosting target, browser session transport, file-storage provider, and operational cost are not selected.
-- Target user volumes, availability, latency, RPO, and RTO remain to be set before production operations are chosen.
+- "Tsarovy aho" opens a long-lived session via a refreshed/rotated refresh token with secure revocation; exact numeric duration is set at implementation time, not left unresolved.
+- Password recovery uses email only, via SendGrid, with a short-lived single-use token.
+- Archive files (Arisiva): 5 MB max per file, PostgreSQL-backed `FileStorage` port in development, extension allow-list + real-MIME-sniff + antivirus-scan checks required before a file is servable; production storage host (Neon vs self-hosted Postgres) is an open connection-string choice that does not block implementation.
+- Notifications (Fampafantarana): PostgreSQL-backed, generated from real application events, with read/unread and user-initiated deletion; no demo notifications in production.
+- Hafatra conversations: entity-scoped rooms plus exactly one general room, with "responsable d'entité"/"responsable général" roles enforced server-side; realtime transport is chosen during implementation from hosting constraints, not gated on an ADR vote.
+- Backoffice hosting is deliberately deferred (Vercel is the leading option when it is time) and does not block building the workspace now.
+- Target user volumes, availability, latency, RPO, and RTO are deliberately deferred until a real operational need appears.
+
+### Still genuinely unresolved or underspecified
+
+- The antivirus scanning mechanism for Arisiva uploads (which engine/service to call) — the only remaining open item blocking Task 4 Step 5's completion.
+- Whether Hafatra conversation membership is derived from entity/role or explicitly modeled as its own addable/removable record — shapes the schema and whether the backoffice needs a membership screen.
+- The backoffice's own browser session transport (cookie vs. bearer token) — distinct from mobile's token handling and not covered by the hosting decision.
+- The enumerated list of event sources that generate a notification, and global-search scope — notification storage/semantics are decided, but which events fire one, and what search covers, are not.
+- Messaging attachment byte-size/retention specifics beyond the general 5 MB file limit shared with Arisiva.
 - The standalone FIVONDRONANA organization logo and profile photos have not been supplied. Tily/Mpanazava and branch emblem JPEGs exist in `src/assets/`; use only the matching unit emblem when the related unit is known, and keep the organization wordmark until its official logo is provided.
 
 ## Brand Commitments
@@ -69,7 +78,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 - Implemented API routes: health/readiness, login/current user/logout/password change, own-CV read/save, authorized paginated responsible directory and CV read/list/export data, authorized paginated contact directory, administrator entity/group reference management and one-to-one entity/group assignment, administrator responsibility catalogue/assignment management, and administrator contact CRUD/publish.
 - Authentication sessions, roles, one entity/group membership per responsible, official responsibilities, personal CV sections, and contacts are persisted through Prisma. The local demo seed creates coherent reference data, two published demo contacts, and a responsible account; administrator account provisioning still requires the account-management slice.
 - The mobile leader directory, individual/all-CV PDF, and contact directory journeys now use authenticated API data, with filters (leaders) or search (contacts) and loading, empty, retry, and refresh states. Archive/notification/message content still includes local demonstration data, and several actions are placeholders.
-- Archive publishing/delivery, the conversation API, a backoffice application, and server-side notifications do not exist yet; the archive file-storage provider/limits are still unresolved in the ADR. PostgreSQL integration and small-device UI qualification remain outstanding; administrator-only API routes use server-side role and permission guards.
+- Archive publishing/delivery, the conversation API, a backoffice application, and server-side notifications do not exist yet, but are no longer blocked on product decisions (see "Resolved 18 November 2026" above) beyond the few narrow items still listed as unresolved. The `fivondronana_test` PostgreSQL database needs valid credentials before any PostgreSQL integration test (several already written, currently skipped) can run for real — see Task 2b in the completion plan. Small-device UI qualification remains outstanding; administrator-only API routes use server-side role and permission guards.
 - The detailed execution sequence is in `../../docs/superpowers/plans/2026-11-18-platform-completion.md`; confirmed decisions are in `../../docs/decisions/0001-platform-foundation.md`.
 
 ## Evidence on Hand

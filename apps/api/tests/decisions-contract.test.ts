@@ -26,6 +26,9 @@ describe('ADR decision contract', () => {
       'Téléchargements protégés',
       'Compatibilité des migrations',
       'Volumes et objectifs de service',
+      'Transport temps réel et gestion des membres',
+      'Infrastructure de test PostgreSQL',
+      'Global search (périmètre)',
     ];
 
     for (const decision of expectedDecisions) {

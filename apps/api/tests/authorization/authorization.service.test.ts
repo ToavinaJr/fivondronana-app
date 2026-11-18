@@ -1,5 +1,7 @@
 import { describe, expect, it, mock } from 'bun:test';
+import 'reflect-metadata';
 import { AuthorizationService } from '../../src/modules/authorization/authorization.service.js';
+import { PrismaService } from '../../src/modules/database/prisma.service.js';
 import { Permission } from '../../src/modules/authorization/permissions.js';
 import { UserRole } from '../../src/modules/authorization/roles.js';
 
@@ -14,6 +16,10 @@ const activeMembership = {
 };
 
 describe('authorization service', () => {
+  it('exposes PrismaService as the runtime Nest injection token', () => {
+    expect(Reflect.getMetadata('design:paramtypes', AuthorizationService)).toEqual([PrismaService]);
+  });
+
   it('grants administrator operations only to administrator role', async () => {
     const prisma = createPrisma({ isActive: true, roles: [{ role: UserRole.ADMINISTRATOR }], membership: null });
     const authorization = new AuthorizationService(prisma as never);

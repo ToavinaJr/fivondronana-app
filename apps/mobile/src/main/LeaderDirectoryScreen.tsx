@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { AuthSession, PersonalCv } from '../access/auth-api';
 import { getConfiguredApiBaseUrl } from '../access/auth-api';
 import { colors } from '../theme/tokens';
+import { BrandIcon } from '../access/BrandIcon';
 import { createCvCollectionHtml } from './cv-pdf';
 import { initialLeaderListState, leaderListReducer } from './leader-list-state';
 import { getLeaderFacets, listLeaders, listResponsibleCvs, type LeaderFacets } from './leader-api';
 
 type Props = { session: AuthSession; query: string; onOpenCv: (leaderId: string) => void };
 type FilterOption = { id: string; name: string };
+const groupLogos: Record<string, { source: number; label: string }> = {
+  Tily: { source: require('../assets/tily-logo.jpeg'), label: 'Tily' },
+  Mpanazava: { source: require('../assets/mpanaza-logo.jpeg'), label: 'Mpanazava' },
+};
 
 export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
   const [state, dispatch] = useReducer(leaderListReducer, initialLeaderListState);
@@ -158,7 +163,10 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
         {exporting ? (
           <ActivityIndicator color={colors.accent} />
         ) : (
-          <Text style={styles.exportText}>Sintomy CV rehetra (PDF)</Text>
+          <>
+            <BrandIcon name="download" color={colors.accent} />
+            <Text style={styles.exportText}>Sintomy CV rehetra (PDF)</Text>
+          </>
         )}
       </Pressable>
       {exportFeedback ? (
@@ -179,7 +187,16 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
         state.data.map((leader) => (
           <View key={leader.id} style={styles.leaderRow}>
             <View style={styles.portrait}>
-              <Text style={styles.initial}>{leader.accountName.slice(0, 1).toLocaleUpperCase()}</Text>
+              {groupLogos[leader.group.name] ? (
+                <Image
+                  accessibilityLabel={`Emblème ${groupLogos[leader.group.name].label}`}
+                  source={groupLogos[leader.group.name].source}
+                  resizeMode="contain"
+                  style={styles.groupLogo}
+                />
+              ) : (
+                <Text style={styles.initial}>{leader.accountName.slice(0, 1).toLocaleUpperCase()}</Text>
+              )}
             </View>
             <View style={styles.leaderCopy}>
               <Text numberOfLines={2} style={styles.name}>
@@ -196,8 +213,9 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
               accessibilityRole="button"
               accessibilityLabel={`Hijery CV an’i ${leader.accountName}`}
               onPress={() => onOpenCv(leader.id)}
-              style={styles.cvButton}
+              style={({ pressed }) => [styles.cvButton, pressed && styles.pressed]}
             >
+              <BrandIcon name="profile" size={16} />
               <Text style={styles.cvButtonText}>Hijery CV</Text>
             </Pressable>
           </View>
@@ -262,7 +280,11 @@ function InlineRetry({ message, onRetry }: { message: string; onRetry: () => voi
       <Text accessibilityRole="alert" style={styles.errorText}>
         {message}
       </Text>
-      <Pressable accessibilityRole="button" onPress={onRetry} style={styles.retryButton}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onRetry}
+        style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
+      >
         <Text style={styles.retryText}>Andramo indray</Text>
       </Pressable>
     </View>
@@ -326,19 +348,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  groupLogo: { width: 52, height: 62 },
   initial: { color: colors.secondary, fontSize: 23, fontWeight: '600' },
   leaderCopy: { flex: 1, minWidth: 0, gap: 3 },
   name: { color: colors.text, fontSize: 15, fontWeight: '700' },
   meta: { color: colors.secondary, fontSize: 13 },
   responsibility: { color: colors.text, fontSize: 13 },
-  cvButton: { minWidth: 66, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  cvButton: {
+    minWidth: 94,
+    minHeight: 44,
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 6,
+  },
   cvButtonText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
   empty: { color: colors.secondary, textAlign: 'center', paddingVertical: 28, fontSize: 15 },
   errorBox: { padding: 12, borderRadius: 7, backgroundColor: colors.errorSurface, gap: 8 },
   errorText: { color: colors.error, fontSize: 14, lineHeight: 20 },
   retryButton: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 8 },
-  retryText: { color: colors.primary, fontSize: 14, fontWeight: '700' },
+  retryText: { color: colors.primary, fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
   loadingLabel: { color: colors.secondary, textAlign: 'center', fontSize: 14, paddingVertical: 14 },
   moreButton: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
-  moreText: { color: colors.primary, fontSize: 15, fontWeight: '700' },
+  moreText: { color: colors.primary, fontSize: 15, fontWeight: '700', textDecorationLine: 'underline' },
+  pressed: { opacity: 0.65 },
 });

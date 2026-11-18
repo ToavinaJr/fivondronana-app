@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Brand } from './Brand';
+import { BrandIcon } from './BrandIcon';
 import { validateEmail, validateLogin } from './validation';
 import { colors } from '../theme/tokens';
 
@@ -87,7 +88,7 @@ export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) 
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.formPage} keyboardShouldPersistTaps="handled">
         <Pressable accessibilityRole="button" accessibilityLabel="Hiverina" onPress={onBack} style={styles.back}>
-          <Text style={styles.backText}>‹</Text>
+          <BrandIcon name="back" />
           <Text style={styles.backLabel}>Hiverina</Text>
         </Pressable>
         <Text style={styles.title}>Hiditra</Text>
@@ -146,7 +147,7 @@ export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) 
             style={styles.remember}
           >
             <View style={[styles.checkbox, remember && styles.checkboxChecked]}>
-              {remember && <Text style={styles.checkmark}>✓</Text>}
+              {remember && <BrandIcon name="check" size={14} color={colors.onPrimary} />}
             </View>
             <Text style={styles.rememberText}>Tsarovy aho</Text>
           </Pressable>
@@ -181,7 +182,7 @@ export function RecoveryScreen({ onBack }: RecoveryProps) {
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.formPage} keyboardShouldPersistTaps="handled">
         <Pressable accessibilityRole="button" accessibilityLabel="Hiverina" onPress={onBack} style={styles.back}>
-          <Text style={styles.backText}>‹</Text>
+          <BrandIcon name="back" />
           <Text style={styles.backLabel}>Hiverina</Text>
         </Pressable>
         <Text style={styles.title}>Teny miafina adino</Text>
@@ -245,7 +246,6 @@ const styles = StyleSheet.create({
   footer: { color: colors.secondary, fontSize: 11, textAlign: 'center' },
   formPage: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 },
   back: { minHeight: 44, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8 },
-  backText: { color: colors.primary, fontSize: 34, lineHeight: 38 },
   backLabel: { color: colors.secondary, fontSize: 14 },
   title: { marginTop: 16, marginBottom: 24, color: colors.text, fontSize: 24, fontWeight: '700' },
   formBrand: { alignItems: 'center', marginBottom: 24 },
@@ -271,7 +271,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   passwordInput: { flex: 1, paddingVertical: 12, color: colors.text, fontSize: 16 },
-  showPassword: { color: colors.primary, fontSize: 12, fontWeight: '600', paddingVertical: 12, paddingHorizontal: 4 },
+  showPassword: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    textDecorationLine: 'underline',
+  },
   optionsRow: {
     marginTop: 18,
     marginBottom: 24,
@@ -292,10 +299,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxChecked: { borderColor: colors.primary, backgroundColor: colors.primary },
-  checkmark: { color: colors.onPrimary, fontSize: 14, lineHeight: 16, fontWeight: '700' },
   rememberText: { color: colors.secondary, fontSize: 13 },
   recoveryLink: { minHeight: 44, justifyContent: 'center' },
-  link: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+  link: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    textDecorationColor: colors.primary,
+  },
   description: { marginTop: -8, marginBottom: 24, color: colors.secondary, fontSize: 15, lineHeight: 22 },
   errorText: { color: colors.error, fontSize: 13, marginTop: 6 },
   notice: {

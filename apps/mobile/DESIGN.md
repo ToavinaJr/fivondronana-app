@@ -56,7 +56,10 @@ Create semantic light and dark variants from these roles; keep the supplied ligh
 - **Primary button:** filled primary red with white label; show disabled, loading, and pressed states.
 - **Text input:** clear label, visible focus/error state, native keyboard type, and show/hide affordance only where useful.
 - **List row/card:** prioritize scanability and stable alignment; status colors are supportive and never the only way to convey meaning.
-- **Document action:** use the turquoise accent for download or document actions, with an accessible text label or accessibility name.
+- **Document action:** use the turquoise accent for download or document actions, with a visible button treatment and an accessible text label or accessibility name.
+- **Icons and emblems:** use `expo-symbols` through the shared `BrandIcon` component for consistent SF Symbols on iOS and Material Symbols on Android. Keep an accessible text label on every icon-only action. Show Tily/Mpanazava emblems only when that group is known; do not substitute an unrelated branch emblem for a person's portrait.
+- **Action affordance:** important actions use filled or outlined native-feeling buttons. Secondary text links use the brand primary color and an underline or another visible pressed/selected treatment; color alone must not be the only signal that text is interactive.
+- **Brand mark:** the official FIVONDRONANA logo is not available as a standalone asset. Use the FIVONDRONANA wordmark until it is supplied; do not invent a monogram or crop the screenshots. The Tily and Mpanazava logos under `src/assets/` are official unit marks and may be shown in group context.
 - **Forms and document viewers:** scroll within safe areas; preserve form values on validation errors and prevent actions from hiding behind the keyboard.
 
 ## Platform Behavior
@@ -68,6 +71,6 @@ Create semantic light and dark variants from these roles; keep the supplied ligh
 
 ## Assets and Open Decisions
 
-- No standalone official logo, unit emblems, or profile illustrations are present. Use neutral placeholders during implementation until original assets are supplied; do not ship crops from the reference screenshots as final brand assets.
+- No standalone FIVONDRONANA logo or profile illustrations are present. Tily/Mpanazava and branch emblem JPEGs do exist under `src/assets/`; use only a matching emblem in a known unit context and do not ship crops from the reference screenshots as final brand assets.
 - The source captures show light mode only. Light mode is the visual baseline; dark-mode colors require a separate review against the real screens.
 - The membership rule, password-recovery channel, attachment formats and size limits, and exact search/notification behavior remain open in `PRODUCT.md` because the source requirements conflict or do not specify them.

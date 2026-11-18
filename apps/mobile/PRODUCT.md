@@ -56,7 +56,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 - The source requirements do not define global-search behavior or notification source/read/dismissal semantics.
 - The backoffice hosting target, browser session transport, file-storage provider, and operational cost are not selected.
 - Target user volumes, availability, latency, RPO, and RTO remain to be set before production operations are chosen.
-- Official logo, unit emblems, and profile illustrations are visible only inside the reference JPEGs. Standalone source assets have not been found.
+- The standalone FIVONDRONANA organization logo and profile photos have not been supplied. Tily/Mpanazava and branch emblem JPEGs exist in `src/assets/`; use only the matching unit emblem when the related unit is known, and keep the organization wordmark until its official logo is provided.
 
 ## Brand Commitments
 

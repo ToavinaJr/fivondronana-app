@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { BrandIcon } from '../access/BrandIcon';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import {
@@ -153,7 +154,10 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
   return (
     <EditorPage>
       <Pressable accessibilityRole="button" onPress={requestBack} style={styles.back}>
-        <Text style={styles.link}>‹ Fikirana</Text>
+        <View style={styles.backContent}>
+          <BrandIcon name="back" size={18} />
+          <Text style={styles.link}>Fikirana</Text>
+        </View>
       </Pressable>
       <Text style={styles.heading}>Ny CV-ko</Text>
       <Text style={styles.help}>Fenoy ireo saha misy *. Ny CV anao ihany no azonao ovaina.</Text>
@@ -430,7 +434,8 @@ function RemoveButton({ onPress }: { onPress: () => void }) {
 const styles = StyleSheet.create({
   page: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 36 },
   back: { minHeight: 44, justifyContent: 'center' },
-  link: { color: colors.primary, fontWeight: '700', fontSize: 14 },
+  backContent: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  link: { color: colors.primary, fontWeight: '700', fontSize: 14, textDecorationLine: 'underline' },
   heading: { color: colors.text, fontSize: 24, fontWeight: '700', marginBottom: 8 },
   help: { color: colors.secondary, fontSize: 14, lineHeight: 21, marginBottom: 16 },
   section: { marginTop: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: colors.border },

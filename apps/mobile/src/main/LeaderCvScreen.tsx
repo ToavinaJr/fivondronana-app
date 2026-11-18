@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { AuthSession, PersonalCv } from '../access/auth-api';
 import { getConfiguredApiBaseUrl } from '../access/auth-api';
+import { BrandIcon } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
 import { createCvHtml } from './cv-pdf';
 import { getLeaderCv } from './leader-api';
 
 type Props = { session: AuthSession; userId: string; onBack: () => void };
+const templateLogos = {
+  Tily: require('../assets/tily-logo.jpeg'),
+  Mpanazava: require('../assets/mpanaza-logo.jpeg'),
+};
 
 export function LeaderCvScreen({ session, userId, onBack }: Props) {
   const [cv, setCv] = useState<PersonalCv | null>(null);
@@ -62,7 +67,8 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
         onPress={onBack}
         style={styles.back}
       >
-        <Text style={styles.backText}>‹ Mpiandraikitra</Text>
+        <BrandIcon name="back" size={18} />
+        <Text style={styles.backText}>Mpiandraikitra</Text>
       </Pressable>
       {loading ? (
         <View accessibilityRole="progressbar" accessibilityLabel="Mamaky ny CV" style={styles.loading}>
@@ -81,7 +87,17 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
       ) : cv ? (
         <>
           <Text style={styles.heading}>Hijery CV</Text>
-          {cv.template ? <Text style={styles.template}>{cv.template}</Text> : null}
+          {cv.template ? (
+            <View style={styles.templateRow}>
+              <Image
+                accessibilityLabel={`Emblème ${cv.template}`}
+                source={templateLogos[cv.template]}
+                resizeMode="contain"
+                style={styles.templateLogo}
+              />
+              <Text style={styles.template}>{cv.template}</Text>
+            </View>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sintomy PDF ity CV ity"
@@ -94,7 +110,10 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
             {exporting ? (
               <ActivityIndicator color={colors.accent} />
             ) : (
-              <Text style={styles.downloadText}>Sintomy PDF</Text>
+              <>
+                <BrandIcon name="download" color={colors.accent} />
+                <Text style={styles.downloadText}>Sintomy PDF</Text>
+              </>
             )}
           </Pressable>
           {feedback ? (
@@ -168,13 +187,24 @@ function CvSection({ title, rows }: { title: string; rows: Array<Array<string | 
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28, gap: 12 },
-  back: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 4 },
+  back: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    paddingHorizontal: 4,
+  },
   backText: { color: colors.primary, fontSize: 15, fontWeight: '600' },
   loading: { minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12 },
   heading: { color: colors.text, fontSize: 21, fontWeight: '700' },
   template: { color: colors.secondary, fontSize: 14 },
+  templateRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  templateLogo: { width: 36, height: 40 },
   download: {
     minHeight: 48,
+    flexDirection: 'row',
+    gap: 8,
     borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.accent,

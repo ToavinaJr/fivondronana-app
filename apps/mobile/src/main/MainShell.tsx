@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Brand } from '../access/Brand';
+import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { type AuthSession, changePassword } from '../access/auth-api';
 import { colors } from '../theme/tokens';
 import {
@@ -19,12 +20,12 @@ import { CvEditor } from './CvEditor';
 import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
 import { LeaderCvScreen } from './LeaderCvScreen';
 
-const tabs: { id: MainTab; title: string }[] = [
-  { id: 'archives', title: 'Arisiva' },
-  { id: 'leaders', title: 'Mpiandraikitra' },
-  { id: 'messages', title: 'Hafatra' },
-  { id: 'contacts', title: 'Fifandraisana' },
-  { id: 'settings', title: 'Fikirana' },
+const tabs: { id: MainTab; title: string; icon: BrandIconName }[] = [
+  { id: 'archives', title: 'Arisiva', icon: 'archive' },
+  { id: 'leaders', title: 'Mpiandraikitra', icon: 'leaders' },
+  { id: 'messages', title: 'Hafatra', icon: 'messages' },
+  { id: 'contacts', title: 'Fifandraisana', icon: 'contacts' },
+  { id: 'settings', title: 'Fikirana', icon: 'settings' },
 ];
 
 export function MainShell({ session, onSignOut }: { session: AuthSession; onSignOut: () => void }) {
@@ -60,14 +61,16 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
             onPress={() => dispatch({ type: 'BACK' })}
             style={styles.headerBack}
           >
-            <Text style={styles.backGlyph}>‹</Text>
+            <BrandIcon name="back" />
           </Pressable>
         ) : (
           <Brand compact />
         )}
-        <Text numberOfLines={1} style={styles.brandName}>
-          {flow.detail ? title : 'FIVONDRONANA'}
-        </Text>
+        {flow.detail ? (
+          <Text numberOfLines={1} style={styles.brandName}>
+            {title}
+          </Text>
+        ) : null}
         <View style={styles.headerActions}>
           <Pressable
             accessibilityRole="button"
@@ -76,17 +79,17 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
               dispatch({ type: 'OPEN_NOTIFICATIONS' });
               setFeedback('');
             }}
-            style={styles.headerAction}
+            style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
           >
-            <Text style={styles.headerActionText}>Fampah.</Text>
+            <BrandIcon name="notifications" />
           </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Karoka"
             onPress={() => setSearchOpen((value) => !value)}
-            style={styles.headerAction}
+            style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
           >
-            <Text style={styles.headerActionText}>Tady</Text>
+            <BrandIcon name="search" />
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -94,7 +97,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
             onPress={() => dispatch({ type: 'SELECT_TAB', tab: 'settings' })}
             style={styles.avatar}
           >
-            <Text style={styles.avatarText}>{session.user.accountName.slice(0, 1).toLocaleUpperCase()}</Text>
+            <BrandIcon name="profile" size={24} />
           </Pressable>
         </View>
       </View>
@@ -115,6 +118,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
               setSearchOpen(false);
               setQuery('');
             }}
+            style={({ pressed }) => pressed && styles.pressed}
           >
             <Text style={styles.cancel}>Akatona</Text>
           </Pressable>
@@ -165,8 +169,9 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
                 setFeedback('');
                 dispatch({ type: 'SELECT_TAB', tab: tab.id });
               }}
-              style={[styles.tab, flow.tab === tab.id && styles.tabActive]}
+              style={({ pressed }) => [styles.tab, flow.tab === tab.id && styles.tabActive, pressed && styles.pressed]}
             >
+              <BrandIcon name={tab.icon} color={flow.tab === tab.id ? colors.primary : colors.secondary} size={20} />
               <Text numberOfLines={1} style={[styles.tabText, flow.tab === tab.id && styles.tabTextActive]}>
                 {tab.title}
               </Text>
@@ -221,6 +226,7 @@ function ArchiveRow({ item, onDownload }: { item: ArchiveItem; onDownload: () =>
         onPress={onDownload}
         style={styles.smallAction}
       >
+        <BrandIcon name="download" size={16} color={colors.accent} />
         <Text style={styles.accentText}>Sintomy</Text>
       </Pressable>
     </View>
@@ -473,7 +479,8 @@ function SettingsScreen({ session, onSignOut }: { session: AuthSession; onSignOu
           }}
           style={styles.headerBack}
         >
-          <Text style={styles.accentText}>‹ Fikirana</Text>
+          <BrandIcon name="back" size={18} color={colors.accent} />
+          <Text style={styles.accentText}>Fikirana</Text>
         </Pressable>
         <Text style={styles.pageHeading}>Hanova teny miafina</Text>
         <Text style={styles.subtitle}>Ampidiro aloha ny teny miafina ampiasainao amin’izao fotoana izao.</Text>
@@ -594,7 +601,7 @@ const styles = StyleSheet.create({
   brandName: { color: colors.text, fontSize: 14, fontWeight: '700', flexShrink: 1 },
   headerActions: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 },
   headerAction: { minWidth: 44, minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
-  headerActionText: { color: colors.secondary, fontSize: 12, fontWeight: '600' },
+  pressed: { opacity: 0.65 },
   avatar: {
     width: 40,
     height: 40,
@@ -604,9 +611,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: colors.primary, fontWeight: '700', fontSize: 15 },
-  headerBack: { width: 44, height: 44, justifyContent: 'center' },
-  backGlyph: { color: colors.primary, fontSize: 34 },
+  headerBack: { minWidth: 64, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4 },
   searchWrap: { paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
   search: {
     flex: 1,
@@ -617,7 +622,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     color: colors.text,
   },
-  cancel: { color: colors.primary, fontSize: 14, fontWeight: '600', minHeight: 44, textAlignVertical: 'center' },
+  cancel: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    minHeight: 44,
+    textAlignVertical: 'center',
+    textDecorationLine: 'underline',
+  },
   demoBanner: { backgroundColor: colors.warningSurface, paddingVertical: 8, paddingHorizontal: 16 },
   demoText: { color: colors.warningText, fontSize: 12, lineHeight: 17, textAlign: 'center' },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28, flexGrow: 1 },
@@ -646,7 +658,18 @@ const styles = StyleSheet.create({
   rowBody: { flex: 1, gap: 4 },
   rowTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
   rowMeta: { color: colors.secondary, fontSize: 13, lineHeight: 18 },
-  smallAction: { minWidth: 56, minHeight: 44, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6 },
+  smallAction: {
+    minWidth: 72,
+    minHeight: 44,
+    flexDirection: 'row',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
   accentText: { color: colors.accent, fontSize: 14, fontWeight: '600' },
   filterLabel: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 8 },
   // Horizontal ScrollViews must not absorb space freed by filtering the results.
@@ -721,7 +744,14 @@ const styles = StyleSheet.create({
   },
   contactMarkText: { color: colors.text, fontWeight: '600', fontSize: 16 },
   contactRole: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
-  expandLabel: { maxWidth: 88, color: colors.primary, fontSize: 12, textAlign: 'right' },
+  expandLabel: {
+    maxWidth: 88,
+    color: colors.primary,
+    fontSize: 12,
+    textAlign: 'right',
+    textDecorationLine: 'underline',
+    textDecorationColor: colors.primary,
+  },
   contactDetails: { paddingLeft: 52, paddingBottom: 16, gap: 8 },
   detailLine: { color: colors.text, fontSize: 13 },
   contactDescription: { marginTop: 5, color: colors.secondary, fontSize: 14, lineHeight: 20 },
@@ -732,7 +762,7 @@ const styles = StyleSheet.create({
   noticeBottom: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   noticeTitle: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20 },
   dismiss: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  dismissText: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+  dismissText: { color: colors.primary, fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
   accountBlock: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   avatarLarge: {
     width: 72,
@@ -793,6 +823,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 3,
     paddingHorizontal: 2,
   },
   tabActive: { borderTopColor: colors.primary },

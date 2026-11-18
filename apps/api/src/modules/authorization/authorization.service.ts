@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '../database/prisma.service.js';
 import { Permission } from './permissions.js';
 import { RESPONSIBLE_ROLES, UserRole } from './roles.js';
 

@@ -9,7 +9,8 @@
       "**/*"
     ],
     "plugins": [
-      "expo-sharing"
+      "expo-sharing",
+      "expo-secure-store"
     ]
   }
 }

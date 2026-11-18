@@ -28,5 +28,34 @@ export function createCvHtml(cv: PersonalCv): string {
     .filter(Boolean)
     .map((value, index) => row(`Fifandraisana fanampiny ${index + 1}`, value))
     .join('');
-  return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#171717;padding:28px;line-height:1.45}h1{color:#B8170F;font-size:24px}h2{font-size:17px;border-bottom:1px solid #ddd;padding-bottom:5px;margin-top:22px}p,li{font-size:13px}</style></head><body><h1>FIVONDRONANA — CV</h1><h2>Fampahafantarana ny tena</h2>${row('Anarana', `${cv.firstName} ${cv.lastName}`)}${row('Adiresy', cv.address)}${row('Daty nahaterahana', cv.birthDate)}${row('Toerana nahaterahana', cv.birthPlace)}${extraPersonal}<h2>Fifandraisana</h2>${row('Finday', cv.phone)}${row('Mailaka', cv.email)}${row('Facebook', cv.facebook)}${extraContact}<h2>Fampahafantarana ny maha skoto</h2>${row('Faritany', cv.province)}${row('Faritra', cv.area)}${row('Fivondronana', cv.fivondronana)}<h2>Sampana</h2><ul>${branches}</ul><h2>Hetsika</h2><ul>${activities}</ul></body></html>`;
+  const template = cv.template ? ` — ${escapeHtml(cv.template)}` : '';
+  return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#171717;padding:28px;line-height:1.45}h1{color:#B8170F;font-size:24px}h2{font-size:17px;border-bottom:1px solid #ddd;padding-bottom:5px;margin-top:22px}p,li{font-size:13px}.cv-page{page-break-after:always}.cv-page:last-child{page-break-after:auto}</style></head><body><h1>FIVONDRONANA${template} — CV</h1><h2>Fampahafantarana ny tena</h2>${row('Anarana', `${cv.firstName} ${cv.lastName}`)}${row('Adiresy', cv.address)}${row('Daty nahaterahana', cv.birthDate)}${row('Toerana nahaterahana', cv.birthPlace)}${extraPersonal}<h2>Fifandraisana</h2>${row('Finday', cv.phone)}${row('Mailaka', cv.email)}${row('Facebook', cv.facebook)}${extraContact}<h2>Fampahafantarana ny maha skoto</h2>${row('Faritany', cv.province)}${row('Faritra', cv.area)}${row('Fivondronana', cv.fivondronana)}<h2>Sampana</h2><ul>${branches}</ul><h2>Hetsika</h2><ul>${activities}</ul></body></html>`;
+}
+
+export function createCvCollectionHtml(cvs: PersonalCv[]): string {
+  const pages = cvs.map((cv) => {
+    const document = createCvHtml(cv);
+    const body = document.match(/<body>([\s\S]*)<\/body>/)?.[1];
+    if (!body) throw new Error('Tsy azo amboarina ny CV.');
+    return `<section class="cv-page">${body}</section>`;
+  });
+  const style = createCvHtml({
+    firstName: '',
+    lastName: '',
+    address: '',
+    birthDate: '',
+    birthPlace: null,
+    phone: '',
+    email: '',
+    facebook: null,
+    province: '',
+    area: '',
+    fivondronana: '',
+    extraPersonal: [],
+    extraContact: [],
+    branches: [],
+    activities: [],
+  }).match(/<style>([\s\S]*?)<\/style>/)?.[1];
+  if (!style) throw new Error('Tsy azo amboarina ny endriky ny CV.');
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${style}</style></head><body>${pages.join('')}</body></html>`;
 }

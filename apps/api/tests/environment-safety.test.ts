@@ -41,7 +41,14 @@ describe('demo seed environment safety', () => {
     expect(() => assertDemoSeedAllowed({ APP_ENV: 'production' })).toThrow(
       'The demo account seed is disabled in production.',
     );
-    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'development' })).not.toThrow();
+    expect(() => assertDemoSeedAllowed({ APP_ENV: 'development' })).not.toThrow();
+    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'development' })).toThrow(
+      'The demo account seed is allowed only when APP_ENV=development.',
+    );
+    expect(() => assertDemoSeedAllowed({ APP_ENV: 'staging' })).toThrow(
+      'The demo account seed is allowed only when APP_ENV=development.',
+    );
+    expect(() => assertDemoSeedAllowed({})).toThrow('The demo account seed is allowed only when APP_ENV=development.');
   });
 
   it('requires the database URL before attempting to seed', () => {

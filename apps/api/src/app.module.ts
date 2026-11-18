@@ -8,12 +8,16 @@ import { ArchivesModule } from './modules/archives/archives.module.js';
 import { ConversationsModule } from './modules/conversations/conversations.module.js';
 import { ContactsModule } from './modules/contacts/contacts.module.js';
 import { AdministrationModule } from './modules/administration/administration.module.js';
+import { AuthorizationModule } from './modules/authorization/authorization.module.js';
+import { EntitiesModule } from './modules/entities/entities.module.js';
 
 @Module({
   imports: [
     PrismaModule,
     HealthModule,
     AuthModule,
+    AuthorizationModule,
+    EntitiesModule,
     UsersModule,
     CvsModule,
     ArchivesModule,

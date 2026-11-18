@@ -2,6 +2,8 @@
 
 **Statut :** plan de conception et d’implémentation; les décisions métier signalées « bloquantes » doivent être validées avant les migrations ou permissions qui en dépendent.
 
+**Mise à jour du 18 novembre 2026 :** les décisions propriétaire sur appartenances, cumul des rôles, visibilité/export des CV, responsabilités officielles, portail backoffice, liens temporaires et compatibilité des données sont consignées dans [ADR 0001](../decisions/0001-platform-foundation.md). Cette note prévaut sur les questions historiques de la §3; seules les décisions encore marquées « à préciser » ou « partiel » dans l’ADR restent ouvertes.
+
 **Références :** [audit et plan initial](../plans/2026-11-17-full-platform-audit-plan-tests.md), [règles métier](../../Application%20mobile%20FIVONDRONANA.md), [ADR 0001](../../decisions/0001-platform-foundation.md), [produit mobile](../../../apps/mobile/PRODUCT.md), [design mobile](../../../apps/mobile/DESIGN.md), [captures d’écran](../../screens/).
 
 ## Avancement d’exécution
@@ -13,7 +15,7 @@
 - **Lot 0.4 — socle déjà présent :** le workflow CI contient PostgreSQL jetable, migrations et étapes de format/lint/typecheck/tests/build API; le workflow distant n’a pas été exécuté dans cette session.
 - **Lot 3.1 — partiellement traité :** les dates impossibles du CV et des sections répétées sont désormais rejetées par validation stricte; la vérification transactionnelle sur PostgreSQL reste à exécuter dans le test isolé.
 - **Lot 3.2 — partiellement traité :** l’éditeur mobile suit les changements non enregistrés et demande confirmation avant de quitter; la validation complète des interactions d’édition, des erreurs par champ et des longues valeurs reste à faire.
-- **Décisions métier :** les choix ouverts du lot 0 restent à confirmer avant les migrations des domaines et les permissions qui en dépendent.
+- **Décisions métier :** les décisions confirmées sont consignées dans l’ADR au 18 novembre 2026; les canaux/fournisseurs de récupération, la durée de session, l’hébergement et le stockage restent à préciser avant les comportements qui en dépendent.
 
 ## 1. But et périmètre
 

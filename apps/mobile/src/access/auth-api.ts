@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { getApiErrorMessage } from './api-errors';
+import { SessionExpiredError } from './session';
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 
@@ -22,6 +23,10 @@ function getApiBaseUrl(): string {
 }
 
 const apiBaseUrl = getApiBaseUrl();
+
+export function getConfiguredApiBaseUrl(): string {
+  return apiBaseUrl;
+}
 
 export async function login(identifier: string, password: string): Promise<AuthSession> {
   let response: Response;
@@ -47,6 +52,17 @@ export async function logout(accessToken: string): Promise<void> {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
   }).catch(() => undefined);
+}
+
+export async function getCurrentUser(accessToken: string): Promise<AuthUser> {
+  const response = await fetch(`${apiBaseUrl}/auth/me`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  }).catch(() => {
+    throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
+  });
+  if (response.status === 401) throw new SessionExpiredError();
+  if (!response.ok) throw new Error('Tsy azo hamarinina ny session. Andramo indray.');
+  return response.json() as Promise<AuthUser>;
 }
 
 export async function changePassword(accessToken: string, currentPassword: string, newPassword: string): Promise<void> {
@@ -91,6 +107,7 @@ export type PersonalCv = {
   extraContact: string[];
   branches: CvBranch[];
   activities: CvActivity[];
+  template?: 'Tily' | 'Mpanazava' | null;
 };
 
 export async function getMyCv(accessToken: string): Promise<PersonalCv | null> {

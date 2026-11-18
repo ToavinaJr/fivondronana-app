@@ -32,4 +32,5 @@ COPY --from=build /workspace/apps/api/src/generated/prisma ./apps/api/src/genera
 
 WORKDIR /workspace/apps/api
 EXPOSE 3000
+USER bun
 CMD ["bun", "run", "start"]

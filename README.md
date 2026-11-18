@@ -28,9 +28,9 @@ The package versions are pinned to compatible framework release lines in each wo
 5. Start the API with `bun run dev:api`.
 6. In a second terminal, start Expo with `bun run dev:mobile`. For a physical phone, the mobile client must use the development computer's LAN IP rather than `localhost`.
 
-To run the containerized API with PostgreSQL instead, use `docker compose --env-file .env -f infra/docker-compose.yml up --build` and skip step 5. Ports bind to `127.0.0.1` by default. For a physical phone, set `API_BIND_ADDRESS` and `EXPO_PUBLIC_API_URL` to the development machine's LAN address; leave `POSTGRES_BIND_ADDRESS` on loopback.
+For database deployments, run `bun run db:deploy` as an explicit release step before starting the API; the API container never applies migrations at startup. To run the containerized API with PostgreSQL locally, apply migrations first, then use `docker compose --env-file .env -f infra/docker-compose.yml up --build`. Ports bind to `127.0.0.1` by default. For a physical phone, set `API_BIND_ADDRESS` and `EXPO_PUBLIC_API_URL` to the development machine's LAN address; leave `POSTGRES_BIND_ADDRESS` on loopback.
 
-The API currently exposes `GET /api/health`, login/session routes (`POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`, `POST /api/auth/password`), and the authenticated user's CV routes (`GET /api/cvs/me`, `PUT /api/cvs/me`). Authentication sessions and CV data are persisted with Prisma. Leader directory, admin user management, archives, contacts, conversations, notifications, and the backoffice are not implemented yet. The demo seed is for local development only and is disabled in production; use `bun run db:seed:demo` only with a local development database.
+The API exposes liveness at `GET /api/health` and database readiness at `GET /api/health/ready`. Configure `CORS_ALLOWED_ORIGINS` as a comma-separated HTTPS origin allowlist in production, `API_BODY_LIMIT` (default `100kb`), `AUTH_RATE_LIMIT` (default 10), and `AUTH_RATE_WINDOW_SECONDS` (default 60). Login and password endpoints are throttled in-process per client IP; deploy behind a trusted TLS-terminating proxy and do not enable proxy-IP trust until its trusted hops are configured. Routes include login/session and own-CV services, plus admin-guarded `GET/POST /api/admin/entities`, `POST /api/admin/entities/:entityId/groups`, activation controls, `POST /api/admin/entity-assignments`, and responsibility catalogue/assignment endpoints. Membership is unique per responsible and the database enforces that the selected group belongs to the selected entity. Leader directory, admin user provisioning, archives, contacts, conversations, notifications, and the backoffice are not implemented yet. Demo seed is enabled only with `APP_ENV=development`, requires a local development database, and never prints the password; use `bun run db:seed:demo` only after setting that explicit environment.
 
 ## Checks
 
@@ -45,4 +45,4 @@ The API currently exposes `GET /api/health`, login/session routes (`POST /api/au
 
 ## Product and architecture decisions
 
-The source requirements conflict on whether one leader may belong to multiple entities. That cardinality and the related CV visibility rule must be confirmed before they are encoded in schema constraints or authorization. Other pending decisions and the recommended backoffice direction are recorded in [ADR 0001](./docs/decisions/0001-platform-foundation.md).
+Pending policy and infrastructure decisions are recorded in [ADR 0001](./docs/decisions/0001-platform-foundation.md).

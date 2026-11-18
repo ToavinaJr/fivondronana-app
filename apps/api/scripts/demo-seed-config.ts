@@ -4,6 +4,9 @@ export function assertDemoSeedAllowed(env: DemoSeedEnvironment): void {
   if (env.NODE_ENV === 'production' || env.APP_ENV === 'production') {
     throw new Error('The demo account seed is disabled in production.');
   }
+  if (env.APP_ENV !== 'development') {
+    throw new Error('The demo account seed is allowed only when APP_ENV=development.');
+  }
 }
 
 export function requireDemoDatabaseUrl(env: DemoSeedEnvironment): string {

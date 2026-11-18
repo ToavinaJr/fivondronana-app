@@ -20,6 +20,82 @@ model User {
   updatedAt    DateTime      @updatedAt
   sessions     AuthSession[]
   cv           Cv?
+  membership   EntityMembership?
+  roles        UserRole[]
+  responsibilities UserResponsibility[]
+}
+
+enum Role {
+  ADMINISTRATOR
+  RESPONSIBLE
+  ENTITY_MANAGER
+  GENERAL_MANAGER
+}
+
+model Entity {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  groups      Group[]
+  memberships EntityMembership[]
+}
+
+model Group {
+  id          String             @id @default(cuid())
+  name        String
+  entityId    String
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  entity      Entity             @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  memberships EntityMembership[]
+
+  @@unique([id, entityId])
+  @@unique([entityId, name])
+  @@index([entityId, isActive])
+}
+
+model EntityMembership {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  entityId  String
+  groupId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entity    Entity   @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  group     Group    @relation(fields: [groupId, entityId], references: [id, entityId], onDelete: Restrict)
+
+  @@index([entityId])
+  @@index([groupId])
+}
+
+model UserRole {
+  userId    String
+  role      Role
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, role])
+  @@index([role, userId])
+}
+
+model OfficialResponsibility {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  assignments UserResponsibility[]
+}
+
+model UserResponsibility {
+  userId           String
+  responsibilityId String
+  createdAt        DateTime               @default(now())
+  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responsibility  OfficialResponsibility @relation(fields: [responsibilityId], references: [id], onDelete: Restrict)
+
+  @@id([userId, responsibilityId])
+  @@index([responsibilityId])
 }
 
 model AuthSession {

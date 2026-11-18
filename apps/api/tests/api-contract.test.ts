@@ -1,4 +1,5 @@
 import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { describe, expect, test } from 'bun:test';
 import type { AddressInfo } from 'node:net';
@@ -13,6 +14,14 @@ import {
   PaginationQueryDto,
 } from '../src/common/pagination.js';
 import { createOpenApiConfig, OPENAPI_PREFIX } from '../src/openapi.js';
+import { HealthController } from '../src/modules/health/health.controller.js';
+import { HealthService } from '../src/modules/health/health.service.js';
+
+@Module({
+  controllers: [HealthController],
+  providers: [{ provide: HealthService, useValue: { isDatabaseReady: async () => true } }],
+})
+class OpenApiHealthModule {}
 
 describe('API error contract', () => {
   test('normalizes validation errors to a stable public shape', () => {
@@ -132,9 +141,7 @@ describe('OpenAPI contract version', () => {
   });
 
   test('publishes the shared error and pagination schemas in the HTTP OpenAPI document', async () => {
-    const app = await NestFactory.create((await import('../src/modules/health/health.module.js')).HealthModule, {
-      logger: false,
-    });
+    const app = await NestFactory.create(OpenApiHealthModule, { logger: false });
     configureApiApp(app);
     await app.listen(0, '127.0.0.1');
     const address = app.getHttpServer().address() as AddressInfo;

@@ -16,6 +16,8 @@ import {
 } from './sample-data';
 import { initialMainFlow, type MainTab, mainFlowReducer } from './main-flow';
 import { CvEditor } from './CvEditor';
+import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
+import { LeaderCvScreen } from './LeaderCvScreen';
 
 const tabs: { id: MainTab; title: string }[] = [
   { id: 'archives', title: 'Arisiva' },
@@ -47,9 +49,6 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
       : flow.detail?.type === 'cv'
         ? 'Hijery CV'
         : (tabs.find((tab) => tab.id === flow.tab)?.title ?? 'FIVONDRONANA');
-  const activeCvId = flow.detail?.type === 'cv' ? flow.detail.leaderId : undefined;
-  const activeLeader = activeCvId ? leaders.find((leader) => leader.id === activeCvId) : undefined;
-
   const requestDownload = () => setFeedback('Tsy mbola mifandray amin’ny tahiry ny fisintonana.');
   return (
     <View style={styles.page}>
@@ -121,9 +120,11 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
           </Pressable>
         </View>
       )}
-      <View style={styles.demoBanner}>
-        <Text style={styles.demoText}>Angona santionany · mbola tsy mifandray amin’ny API fakan-kevitra</Text>
-      </View>
+      {flow.detail?.type !== 'cv' && flow.tab !== 'leaders' ? (
+        <View style={styles.demoBanner}>
+          <Text style={styles.demoText}>Angona santionany · mbola tsy mifandray amin’ny API fakan-kevitra</Text>
+        </View>
+      ) : null}
 
       {flow.detail?.type === 'notifications' ? (
         <NotificationsScreen
@@ -131,11 +132,15 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
           onDismiss={(id) => setVisibleNotices((items) => items.filter((item) => item.id !== id))}
         />
       ) : flow.detail?.type === 'cv' ? (
-        <CvScreen leader={activeLeader} onDownload={requestDownload} />
+        <LeaderCvScreen session={session} userId={flow.detail.leaderId} onBack={() => dispatch({ type: 'BACK' })} />
       ) : flow.tab === 'archives' ? (
         <ArchivesScreen query={query} onDownload={requestDownload} />
       ) : flow.tab === 'leaders' ? (
-        <LeadersScreen query={query} onOpenCv={(leaderId) => dispatch({ type: 'OPEN_CV', leaderId })} />
+        <LeaderDirectoryScreen
+          session={session}
+          query={query}
+          onOpenCv={(leaderId) => dispatch({ type: 'OPEN_CV', leaderId })}
+        />
       ) : flow.tab === 'contacts' ? (
         <ContactsScreen query={query} />
       ) : flow.tab === 'messages' ? (

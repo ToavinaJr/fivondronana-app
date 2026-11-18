@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createCvHtml } from '../src/main/cv-pdf';
+import { createCvCollectionHtml, createCvHtml } from '../src/main/cv-pdf';
 import type { PersonalCv } from '../src/access/auth-api';
 
 const cv: PersonalCv = {
@@ -46,5 +46,14 @@ describe('CV PDF HTML generation', () => {
     expect(html).toContain('<ul></ul>');
     expect(html).not.toContain('Fanampiny 1:</p>');
     expect(html).not.toContain('Fifandraisana fanampiny 1:</p>');
+  });
+
+  it('labels Tily and Mpanazava templates and combines every CV into separate PDF pages', () => {
+    const tily = { ...cv, firstName: 'Tiana', template: 'Tily' as const };
+    const mpanazava = { ...cv, firstName: 'Mamy', template: 'Mpanazava' as const };
+    const html = createCvCollectionHtml([tily, mpanazava]);
+    expect(createCvHtml(tily)).toContain('FIVONDRONANA — Tily — CV');
+    expect(html.match(/class="cv-page"/g)).toHaveLength(2);
+    expect(html).toContain('FIVONDRONANA — Mpanazava — CV');
   });
 });

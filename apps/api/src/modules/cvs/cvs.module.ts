@@ -2,7 +2,10 @@ import { BadRequestException, Body, Controller, Get, Module, Put, Req, UseGuards
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard, type AuthenticatedRequest } from '../auth/access-token.guard.js';
 import { AuthModule } from '../auth/auth.module.js';
+import { AuthorizationModule } from '../authorization/authorization.module.js';
 import { PrismaService } from '../database/prisma.service.js';
+import { CvAccessController } from './cv-access.controller.js';
+import { CvAccessService } from './cv-access.service.js';
 import { CvInputDto } from './dto/cv-input.dto.js';
 
 @Controller('cvs/me')
@@ -114,5 +117,9 @@ function normalizeRows(value: unknown, required: string[]): Array<Record<string,
   });
 }
 
-@Module({ imports: [AuthModule], controllers: [MyCvController] })
+@Module({
+  imports: [AuthModule, AuthorizationModule],
+  controllers: [MyCvController, CvAccessController],
+  providers: [CvAccessService],
+})
 export class CvsModule {}

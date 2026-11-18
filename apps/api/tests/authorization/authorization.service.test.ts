@@ -89,6 +89,20 @@ describe('authorization service', () => {
     ).toBe(false);
   });
 
+  it('grants contact reading to responsibles and contact management only to administrators', async () => {
+    const responsible = new AuthorizationService(
+      createPrisma({ isActive: true, roles: [{ role: UserRole.RESPONSIBLE }], membership: activeMembership }) as never,
+    );
+    expect(await responsible.hasPermission('responsible-1', Permission.CONTACTS_READ)).toBe(true);
+    expect(await responsible.hasPermission('responsible-1', Permission.CONTACTS_MANAGE)).toBe(false);
+
+    const admin = new AuthorizationService(
+      createPrisma({ isActive: true, roles: [{ role: UserRole.ADMINISTRATOR }], membership: null }) as never,
+    );
+    expect(await admin.hasPermission('admin-1', Permission.CONTACTS_MANAGE)).toBe(true);
+    expect(await admin.hasPermission('admin-1', Permission.CONTACTS_READ)).toBe(false);
+  });
+
   it('denies unknown users and general permissions to ordinary accounts', async () => {
     const prisma = createPrisma(null);
     const authorization = new AuthorizationService(prisma as never);

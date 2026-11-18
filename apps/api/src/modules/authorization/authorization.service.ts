@@ -38,7 +38,8 @@ export class AuthorizationService {
     if (
       permission === Permission.USERS_MANAGE ||
       permission === Permission.ENTITIES_MANAGE ||
-      permission === Permission.RESPONSIBILITIES_MANAGE
+      permission === Permission.RESPONSIBILITIES_MANAGE ||
+      permission === Permission.CONTACTS_MANAGE
     ) {
       return roles.has(UserRole.ADMINISTRATOR);
     }
@@ -48,7 +49,8 @@ export class AuthorizationService {
     if (
       permission === Permission.LEADERS_READ ||
       permission === Permission.CV_READ_ANY ||
-      permission === Permission.GENERAL_CONVERSATION
+      permission === Permission.GENERAL_CONVERSATION ||
+      permission === Permission.CONTACTS_READ
     ) {
       return true;
     }

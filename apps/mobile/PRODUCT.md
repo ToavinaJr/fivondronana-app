@@ -66,10 +66,10 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 
 ## Current implementation status (18 November 2026)
 
-- Implemented API routes: health/readiness, login/current user/logout/password change, own-CV read/save, authorized paginated responsible directory and CV read/list/export data, administrator entity/group reference management and one-to-one entity/group assignment, and administrator responsibility catalogue/assignment management.
-- Authentication sessions, roles, one entity/group membership per responsible, official responsibilities, and personal CV sections are persisted through Prisma. The local demo seed creates coherent reference data and a responsible account; administrator account provisioning still requires the account-management slice.
-- The mobile directory and individual/all-CV PDF journeys now use authenticated API data, with entity/group/responsibility filters and loading, empty, retry, and refresh states. Archive/contact/notification/message content still includes local demonstration data, and several actions are placeholders.
-- No backoffice application, archive/contact/conversation API, or server-side notification system exists yet. PostgreSQL integration and small-device UI qualification remain outstanding; administrator-only API routes use server-side role and permission guards.
+- Implemented API routes: health/readiness, login/current user/logout/password change, own-CV read/save, authorized paginated responsible directory and CV read/list/export data, authorized paginated contact directory, administrator entity/group reference management and one-to-one entity/group assignment, administrator responsibility catalogue/assignment management, and administrator contact CRUD/publish.
+- Authentication sessions, roles, one entity/group membership per responsible, official responsibilities, personal CV sections, and contacts are persisted through Prisma. The local demo seed creates coherent reference data, two published demo contacts, and a responsible account; administrator account provisioning still requires the account-management slice.
+- The mobile leader directory, individual/all-CV PDF, and contact directory journeys now use authenticated API data, with filters (leaders) or search (contacts) and loading, empty, retry, and refresh states. Archive/notification/message content still includes local demonstration data, and several actions are placeholders.
+- Archive publishing/delivery, the conversation API, a backoffice application, and server-side notifications do not exist yet; the archive file-storage provider/limits are still unresolved in the ADR. PostgreSQL integration and small-device UI qualification remain outstanding; administrator-only API routes use server-side role and permission guards.
 - The detailed execution sequence is in `../../docs/superpowers/plans/2026-11-18-platform-completion.md`; confirmed decisions are in `../../docs/decisions/0001-platform-foundation.md`.
 
 ## Evidence on Hand
@@ -77,7 +77,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 - Product and business requirements: `../../docs/Application mobile FIVONDRONANA.md`.
 - Mobile screen references: `../../docs/screens/` (13 JPEG files; the WhatsApp-named image is byte-identical to `landing-page.jpeg`).
 - Current application shell: `App.tsx` and the mobile screens under `src/`; the product shell exists, while several domain screens still use demonstration data or placeholder behavior.
-- Current API surface: health, authentication/session, password change, and the authenticated user's own CV. User administration, leader directory, archives, conversations, contacts, and administration modules have no product endpoints/data models yet.
+- Current API surface: health, authentication/session, password change, the authenticated user's own CV, the leader directory/CV export, and the contact directory/admin CRUD. Archives, conversations, and account-management/backoffice modules have no product endpoints/data models yet.
 - No standalone logo, icon, font, or illustration assets were found in the application or screen reference directories.
 
 ## Product Principles

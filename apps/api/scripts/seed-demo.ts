@@ -65,6 +65,36 @@ try {
       update: {},
     }),
   ]);
+  const demoContacts = [
+    {
+      name: 'Filoha koto',
+      responsibility: 'Mpitantam-bola foibe',
+      groupLabel: 'Tily foibe',
+      address: 'Antananarivo',
+      phone: '+261 34 20 344 96',
+      email: 'filoha.koto@fivondronana.test',
+      description:
+        'Adraikitra ao (fiangonana na anivon’ny faritany) ka izay dia manolotra ny fiagonana ny zavatra azo atao ny amin’ny tolotanan’amin’ireo.',
+      kind: 'INTERNAL' as const,
+      isPublished: true,
+    },
+    {
+      name: 'Kiriry Mikajy',
+      responsibility: 'Filoha mpanampy',
+      groupLabel: 'Analamanga Avaratra',
+      address: 'Antananarivo',
+      phone: '+261 34 11 223 44',
+      email: 'kiriry.mikajy@fivondronana.test',
+      description: 'Mpiara-miasa avy any ivelany momba ny fandrindrana ny hetsika iraisana.',
+      kind: 'EXTERNAL' as const,
+      isPublished: true,
+    },
+  ];
+  for (const contact of demoContacts) {
+    const existing = await prisma.contact.findFirst({ where: { name: contact.name } });
+    if (existing) await prisma.contact.update({ where: { id: existing.id }, data: contact });
+    else await prisma.contact.create({ data: contact });
+  }
   console.log(`Compte de démonstration prêt : ${email}`);
 } finally {
   await prisma.$disconnect();

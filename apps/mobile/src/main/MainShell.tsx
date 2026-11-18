@@ -1,24 +1,15 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { Alert, BackHandler, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Brand } from '../access/Brand';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { type AuthSession, changePassword } from '../access/auth-api';
 import { colors } from '../theme/tokens';
-import {
-  type ArchiveItem,
-  archives,
-  type Contact,
-  contacts,
-  filterLeaders,
-  type Leader,
-  leaders,
-  type Notice,
-  notices,
-} from './sample-data';
+import { type ArchiveItem, archives, type Notice, notices } from './sample-data';
 import { initialMainFlow, type MainTab, mainFlowReducer } from './main-flow';
 import { CvEditor } from './CvEditor';
 import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
 import { LeaderCvScreen } from './LeaderCvScreen';
+import { ContactDirectoryScreen } from './ContactDirectoryScreen';
 import { getSignOutConfirmation } from './sign-out-confirmation';
 
 const tabs: { id: MainTab; title: string; icon: BrandIconName }[] = [
@@ -46,7 +37,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
   }, [flow.detail]);
 
   const canSearch = !flow.detail && ['archives', 'leaders', 'contacts'].includes(flow.tab);
-  const isDemo = flow.detail?.type === 'notifications' || (!flow.detail && ['archives', 'contacts'].includes(flow.tab));
+  const isDemo = flow.detail?.type === 'notifications' || (!flow.detail && flow.tab === 'archives');
   const requestDownload = () => setFeedback('Tsy mbola mifandray amin’ny tahiry ny fisintonana.');
   return (
     <View style={styles.page}>
@@ -141,7 +132,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
           onOpenCv={(leaderId) => dispatch({ type: 'OPEN_CV', leaderId })}
         />
       ) : flow.tab === 'contacts' ? (
-        <ContactsScreen query={query} />
+        <ContactDirectoryScreen session={session} query={query} />
       ) : flow.tab === 'messages' ? (
         <PlaceholderScreen title="Hafatra" text="Tsy mbola azo ampiasaina ny fandefasana sy fandraisana hafatra." />
       ) : (
@@ -203,213 +194,16 @@ function ArchivesScreen({ query, onDownload }: { query: string; onDownload: () =
 function ArchiveRow({ item, onDownload }: { item: ArchiveItem; onDownload: () => void }) {
   return (
     <View style={styles.archiveRow}>
-      <View style={styles.fileMark}>
-        <BrandIcon name="document" size={22} />
-        <Text style={styles.fileMarkText}>{item.format}</Text>
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={styles.rowTitle}>{item.title}</Text>
-        <Text style={styles.rowMeta}>
-          {item.category}
-          {item.year ? ` · ${item.year}` : ''}
-        </Text>
-      </View>
+      <BrandIcon name="document" size={22} color={item.format === 'PDF' ? colors.primary : colors.accent} />
+      <Text style={[styles.rowTitle, styles.archiveRowTitle]}>{item.title}</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Sintomy ${item.title}`}
         onPress={onDownload}
-        style={styles.smallAction}
+        style={({ pressed }) => [styles.smallAction, pressed && styles.pressed]}
       >
-        <BrandIcon name="download" size={16} color={colors.accent} />
-        <Text style={styles.accentText}>Sintomy</Text>
+        <BrandIcon name="download" size={20} color={colors.accent} />
       </Pressable>
-    </View>
-  );
-}
-
-function LeadersScreen({ query, onOpenCv }: { query: string; onOpenCv: (leaderId: string) => void }) {
-  const [entity, setEntity] = useState('Rehetra');
-  const [group, setGroup] = useState('Rehetra');
-  const filtered = useMemo(() => filterLeaders(leaders, query, entity, group), [query, entity, group]);
-  return (
-    <PageContent>
-      <Text style={styles.pageHeading}>Mpiandraikitra</Text>
-      <Text style={styles.subtitle}>Tadiavo araka ny entité na vondrona.</Text>
-      <Text style={styles.filterLabel}>Entité</Text>
-      <ChoiceRow values={['Rehetra', 'Mavo', 'Maitso', 'Mena', 'Menafify']} selected={entity} onSelect={setEntity} />
-      <Text style={styles.filterLabel}>Vondrona</Text>
-      <ChoiceRow values={['Rehetra', 'Mpanazava', 'Tily']} selected={group} onSelect={setGroup} />
-      {filtered.map((leader) => (
-        <LeaderRow key={leader.id} leader={leader} onPress={() => onOpenCv(leader.id)} />
-      ))}
-      {!filtered.length && <EmptyState text="Tsy misy mpiandraikitra mifanaraka amin’ny fikarohana." />}
-    </PageContent>
-  );
-}
-
-function ChoiceRow({
-  values,
-  selected,
-  onSelect,
-}: {
-  values: string[];
-  selected: string;
-  onSelect: (value: string) => void;
-}) {
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.choiceScroll}
-      contentContainerStyle={styles.choiceRow}
-    >
-      {values.map((value) => (
-        <Pressable
-          key={value}
-          accessibilityRole="button"
-          accessibilityLabel={value}
-          accessibilityState={{ selected: value === selected }}
-          onPress={() => onSelect(value)}
-          style={[styles.choice, value === selected && styles.choiceSelected]}
-        >
-          <Text style={[styles.choiceText, value === selected && styles.choiceTextSelected]}>{value}</Text>
-        </Pressable>
-      ))}
-    </ScrollView>
-  );
-}
-
-function LeaderRow({ leader, onPress }: { leader: Leader; onPress: () => void }) {
-  return (
-    <View style={styles.leaderRow}>
-      <View style={styles.leaderPortrait}>
-        <Text style={styles.portraitInitial}>{leader.name.slice(-1)}</Text>
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={styles.rowTitle}>{leader.name}</Text>
-        <Text style={styles.leaderMeta}>
-          {leader.entity} {leader.group}
-        </Text>
-        <Text style={styles.rowMeta}>{leader.responsibility}</Text>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Hijery ny CV an’i ${leader.name}`}
-        onPress={onPress}
-        style={styles.cvButton}
-      >
-        <Text style={styles.cvButtonText}>Hijery CV</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function CvScreen({ leader, onDownload }: { leader?: Leader; onDownload: () => void }) {
-  if (!leader)
-    return (
-      <PageContent>
-        <EmptyState text="Tsy hita ilay mpiandraikitra." />
-      </PageContent>
-    );
-  return (
-    <PageContent>
-      <Text style={styles.pageHeading}>Hijery CV</Text>
-      <Text style={styles.subtitle}>
-        {leader.name} · {leader.entity} {leader.group}
-      </Text>
-      <View style={styles.cvActions}>
-        <Pressable accessibilityRole="button" onPress={onDownload} style={styles.cvAction}>
-          <Text style={styles.accentText}>Sintomy PDF</Text>
-        </Pressable>
-        <Text style={styles.cvOwner}>{leader.responsibility}</Text>
-      </View>
-      <CvSection
-        title="Fampahafantarana ny tena"
-        rows={['Anarana feno', 'Adiresy', 'Daty nahaterahana', 'Toerana nahaterahana']}
-      />
-      <CvSection title="Fifandraisana" rows={['Finday', 'Mailaka', 'Facebook']} />
-      <CvSection title="Fampahafantarana ny maha skoto" rows={['Faritany', 'Faritra', 'Fivondronana']} />
-      <CvSection title="Sampana sy hetsika" rows={['Anarana', 'Andraikitra', 'Daty']} />
-      <Text style={styles.emptyHint}>Tsy mbola misy antsipirian’ny CV ao amin’ny tahiry.</Text>
-    </PageContent>
-  );
-}
-
-function CvSection({ title, rows }: { title: string; rows: string[] }) {
-  return (
-    <View style={styles.cvSection}>
-      <Text style={styles.cvSectionTitle}>{title}</Text>
-      {rows.map((row) => (
-        <View key={row} style={styles.cvField}>
-          <Text style={styles.cvFieldName}>{row}</Text>
-          <Text style={styles.cvFieldValue}>—</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function ContactsScreen({ query }: { query: string }) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const filtered = contacts.filter((contact) =>
-    `${contact.name} ${contact.group} ${contact.responsibility}`
-      .toLocaleLowerCase()
-      .includes(query.trim().toLocaleLowerCase()),
-  );
-  return (
-    <PageContent>
-      <Text style={styles.pageHeading}>Fifandraisana</Text>
-      <Text style={styles.subtitle}>Ireo tompon’andraikitra sy mpiara-miasa.</Text>
-      {filtered.map((contact) => (
-        <ContactRow
-          key={contact.id}
-          contact={contact}
-          expanded={expandedId === contact.id}
-          onToggle={() => setExpandedId(expandedId === contact.id ? null : contact.id)}
-        />
-      ))}
-      {!filtered.length && <EmptyState text="Tsy misy fifandraisana mifanaraka amin’ny fikarohana." />}
-    </PageContent>
-  );
-}
-
-function ContactRow({ contact, expanded, onToggle }: { contact: Contact; expanded: boolean; onToggle: () => void }) {
-  return (
-    <View style={styles.contactCard}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${expanded ? 'Afenina' : 'Hijery'} ny mombamomba an’i ${contact.name}`}
-        accessibilityState={{ expanded }}
-        onPress={onToggle}
-        style={styles.contactHead}
-      >
-        <View style={styles.contactMark}>
-          <BrandIcon name="contacts" />
-        </View>
-        <View style={styles.rowBody}>
-          <Text style={styles.rowTitle}>{contact.name}</Text>
-          <Text style={styles.contactRole}>{contact.responsibility}</Text>
-          <Text style={styles.rowMeta}>{contact.group}</Text>
-        </View>
-        <Text style={styles.expandLabel}>{expanded ? 'Afenina' : 'Hijery bebe kokoa'}</Text>
-      </Pressable>
-      {expanded && (
-        <View style={styles.contactDetails}>
-          <View style={styles.contactDetailRow}>
-            <BrandIcon name="location" size={18} />
-            <Text style={styles.detailLine}>{contact.address}</Text>
-          </View>
-          <View style={styles.contactDetailRow}>
-            <BrandIcon name="phone" size={18} />
-            <Text style={styles.detailLine}>{contact.phone}</Text>
-          </View>
-          <View style={styles.contactDetailRow}>
-            <BrandIcon name="email" size={18} />
-            <Text style={styles.detailLine}>{contact.email}</Text>
-          </View>
-          <Text style={styles.contactDescription}>{contact.description}</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -621,7 +415,6 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     gap: 12,
   },
-  brandName: { color: colors.text, fontSize: 14, fontWeight: '700', flexShrink: 1 },
   headerActions: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 },
   headerAction: { minWidth: 44, minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.65 },
@@ -659,128 +452,30 @@ const styles = StyleSheet.create({
   pageHeading: { color: colors.text, fontSize: 23, fontWeight: '700', marginBottom: 8 },
   subtitle: { color: colors.secondary, fontSize: 14, lineHeight: 21, marginBottom: 20 },
   archiveRow: {
-    minHeight: 76,
+    minHeight: 56,
     marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     backgroundColor: colors.muted,
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
-  fileMark: {
-    width: 44,
-    height: 44,
-    backgroundColor: colors.page,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fileMarkText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
+  archiveRowTitle: { flex: 1 },
   rowBody: { flex: 1, gap: 4 },
   rowTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
   rowMeta: { color: colors.secondary, fontSize: 13, lineHeight: 18 },
   smallAction: {
-    minWidth: 72,
+    minWidth: 44,
     minHeight: 44,
-    flexDirection: 'row',
-    gap: 5,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 8,
   },
   accentText: { color: colors.accent, fontSize: 14, fontWeight: '600' },
   filterLabel: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  // Horizontal ScrollViews must not absorb space freed by filtering the results.
-  choiceScroll: { flexGrow: 0, flexShrink: 0 },
-  choiceRow: { gap: 8, paddingBottom: 16, alignItems: 'flex-start' },
-  choice: {
-    minHeight: 44,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    justifyContent: 'center',
-  },
-  choiceSelected: { borderColor: colors.primary, backgroundColor: colors.selected },
-  choiceText: { color: colors.secondary, fontSize: 13 },
-  choiceTextSelected: { color: colors.primary, fontWeight: '600' },
-  leaderRow: {
-    minHeight: 84,
-    marginBottom: 8,
-    padding: 12,
-    backgroundColor: colors.muted,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  leaderPortrait: {
-    width: 48,
-    height: 48,
-    backgroundColor: colors.portrait,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 4,
-  },
-  portraitInitial: { color: colors.text, fontSize: 20, fontWeight: '600' },
-  leaderMeta: { color: colors.secondary, fontSize: 13, fontWeight: '500' },
-  cvButton: { minHeight: 44, paddingHorizontal: 8, justifyContent: 'center', alignItems: 'center' },
-  cvButtonText: { color: colors.text, fontSize: 12, fontWeight: '700' },
-  cvActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-  },
-  cvAction: { minHeight: 44, justifyContent: 'center' },
-  cvOwner: { color: colors.secondary, fontSize: 13 },
-  cvSection: { marginTop: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, borderRadius: 8 },
-  cvSectionTitle: { padding: 12, backgroundColor: colors.muted, color: colors.text, fontSize: 15, fontWeight: '600' },
-  cvField: {
-    minHeight: 44,
-    paddingHorizontal: 12,
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cvFieldName: { color: colors.secondary, fontSize: 13 },
-  cvFieldValue: { color: colors.text, fontSize: 13 },
-  emptyHint: { marginTop: 16, color: colors.secondary, fontSize: 13 },
-  contactCard: { marginBottom: 8, paddingHorizontal: 12, backgroundColor: colors.muted, borderRadius: 8 },
-  contactHead: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  contactMark: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.page,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contactMarkText: { color: colors.text, fontWeight: '600', fontSize: 16 },
-  contactRole: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
-  expandLabel: {
-    maxWidth: 88,
-    color: colors.primary,
-    fontSize: 12,
-    textAlign: 'right',
-    textDecorationLine: 'underline',
-    textDecorationColor: colors.primary,
-  },
-  contactDetails: { paddingLeft: 52, paddingBottom: 16, gap: 8 },
-  detailLine: { flex: 1, color: colors.text, fontSize: 13 },
-  contactDetailRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   detailBack: { minHeight: 44, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center' },
   placeholderIcon: { alignItems: 'center', paddingTop: 40 },
-  contactDescription: { marginTop: 5, color: colors.secondary, fontSize: 14, lineHeight: 20 },
   noticeRow: { paddingVertical: 16, borderBottomWidth: 1, borderColor: colors.border },
   noticeTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   noticeCategory: { color: colors.text, fontSize: 14, fontWeight: '700' },
@@ -788,7 +483,6 @@ const styles = StyleSheet.create({
   noticeBottom: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   noticeTitle: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20 },
   dismiss: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 8 },
-  dismissText: { color: colors.primary, fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
   accountBlock: { alignItems: 'center', paddingVertical: 24, gap: 8 },
   avatarLarge: {
     width: 72,

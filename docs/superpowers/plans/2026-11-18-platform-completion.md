@@ -174,10 +174,10 @@ The existing `docs/superpowers/plans/2026-11-17-full-platform-audit-plan-tests.m
 - Contact list uses bounded search and pagination and includes only published/authorized contacts.
 - Telephone/email actions accept only normalized `tel:`/`mailto:` URIs derived from validated fields.
 
-- [ ] **Step 1: Add failing API tests** for internal/external contacts, publication status, search, pagination, visibility projection, and unauthorized detail access.
-- [ ] **Step 2: Implement contact schema, DTO, service, admin CRUD boundary, and migration**; do not expose draft records.
-- [ ] **Step 3: Add mobile tests** for masked details, reveal-on-request, accent-insensitive search, malformed URI rejection, empty/error/retry, and offline state.
-- [ ] **Step 4: Connect contact list/detail UI**, remove its fixture imports, and verify native phone/email actions on device or simulator.
+- [x] **Step 1: Add failing API tests** for internal/external contacts, publication status, search, pagination, visibility projection, and unauthorized detail access.
+- [x] **Step 2: Implement contact schema, DTO, service, admin CRUD boundary, and migration**; do not expose draft records.
+- [x] **Step 3: Add mobile tests** for masked details, reveal-on-request, accent-insensitive search, malformed URI rejection, empty/error/retry, and offline state.
+- [x] **Step 4: Connect contact list/detail UI**, remove its fixture imports, and verify native phone/email actions on device or simulator.
 
 ## Task 6: Conversation domain and server isolation
 

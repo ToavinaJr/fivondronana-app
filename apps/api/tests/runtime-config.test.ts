@@ -15,14 +15,27 @@ test('validates runtime configuration before starting Nest', () => {
   }
   expect(() => validateRuntimeEnvironment({ ...valid, APP_ENV: 'typo' })).toThrow('APP_ENV');
   expect(() => validateRuntimeEnvironment({ ...valid, JWT_SECRET: '' })).toThrow('JWT_SECRET');
-  expect(() => validateRuntimeEnvironment({ ...valid, DATABASE_URL: 'https://private:secret@example.org/db' })).toThrow('DATABASE_URL');
+  expect(() => validateRuntimeEnvironment({ ...valid, DATABASE_URL: 'https://private:secret@example.org/db' })).toThrow(
+    'DATABASE_URL',
+  );
   expect(() => validateRuntimeEnvironment({ ...valid, AUTH_RATE_LIMIT: '0' })).toThrow('AUTH_RATE_LIMIT');
 });
 
 test('production cannot accidentally use development HTTP policy', () => {
-  expect(() => validateRuntimeEnvironment({ ...valid, APP_ENV: 'production', NODE_ENV: 'development' })).toThrow('NODE_ENV');
-  expect(() => validateRuntimeEnvironment({ ...valid, APP_ENV: 'production', NODE_ENV: 'production' })).toThrow('CORS_ALLOWED_ORIGINS');
-  expect(validateRuntimeEnvironment({ ...valid, APP_ENV: 'production', NODE_ENV: 'production', CORS_ALLOWED_ORIGINS: 'https://admin.example.org' }).port).toBe(3000);
+  expect(() => validateRuntimeEnvironment({ ...valid, APP_ENV: 'production', NODE_ENV: 'development' })).toThrow(
+    'NODE_ENV',
+  );
+  expect(() => validateRuntimeEnvironment({ ...valid, APP_ENV: 'production', NODE_ENV: 'production' })).toThrow(
+    'CORS_ALLOWED_ORIGINS',
+  );
+  expect(
+    validateRuntimeEnvironment({
+      ...valid,
+      APP_ENV: 'production',
+      NODE_ENV: 'production',
+      CORS_ALLOWED_ORIGINS: 'https://admin.example.org',
+    }).port,
+  ).toBe(3000);
 });
 
 test('Compose forwards secrets and policy and keeps a non-root runtime', () => {

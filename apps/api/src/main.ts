@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { type NestExpressApplication } from '@nestjs/platform-express';
-import { AppModule } from './app.module.js';
 import { configureApiApp } from './api-bootstrap.js';
+import { AppModule } from './app.module.js';
 import { validateRuntimeEnvironment } from './runtime-config.js';
 
 async function bootstrap(): Promise<void> {

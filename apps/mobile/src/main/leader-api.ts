@@ -1,5 +1,6 @@
-import { SessionExpiredError } from '../access/session';
 import type { PersonalCv } from '../access/auth-api';
+import { SessionExpiredError } from '../access/session';
+import { directoryErrorMessage } from './directory-errors';
 
 export type LeaderSummary = {
   id: string;
@@ -96,7 +97,7 @@ async function request(url: string, token: string): Promise<unknown> {
     throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
   }
   if (response.status === 401) throw new SessionExpiredError();
-  if (!response.ok) throw new Error('Tsy azo vakina ny angona. Andramo indray.');
+  if (!response.ok) throw new Error(directoryErrorMessage(response.status));
   try {
     return await response.json();
   } catch {

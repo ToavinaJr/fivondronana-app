@@ -1,15 +1,14 @@
 import { useEffect, useReducer, useState } from 'react';
 import { Alert, BackHandler, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { type AuthSession, changePassword } from '../access/auth-api';
 import { Brand } from '../access/Brand';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
-import { type AuthSession, changePassword } from '../access/auth-api';
 import { colors } from '../theme/tokens';
-import { type ArchiveItem, archives, type Notice, notices } from './sample-data';
-import { initialMainFlow, type MainTab, mainFlowReducer } from './main-flow';
-import { CvEditor } from './CvEditor';
-import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
-import { LeaderCvScreen } from './LeaderCvScreen';
 import { ContactDirectoryScreen } from './ContactDirectoryScreen';
+import { CvEditor } from './CvEditor';
+import { LeaderCvScreen } from './LeaderCvScreen';
+import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
+import { initialMainFlow, type MainTab, mainFlowReducer } from './main-flow';
 import { getSignOutConfirmation } from './sign-out-confirmation';
 
 const tabs: { id: MainTab; title: string; icon: BrandIconName }[] = [
@@ -24,8 +23,6 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
   const [flow, dispatch] = useReducer(mainFlowReducer, initialMainFlow);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [visibleNotices, setVisibleNotices] = useState(notices);
-  const [feedback, setFeedback] = useState('');
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -36,9 +33,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
     return () => subscription.remove();
   }, [flow.detail]);
 
-  const canSearch = !flow.detail && ['archives', 'leaders', 'contacts'].includes(flow.tab);
-  const isDemo = flow.detail?.type === 'notifications' || (!flow.detail && flow.tab === 'archives');
-  const requestDownload = () => setFeedback('Tsy mbola mifandray amin’ny tahiry ny fisintonana.');
+  const canSearch = !flow.detail && ['leaders', 'contacts'].includes(flow.tab);
   return (
     <View style={styles.page}>
       <View style={styles.topBar}>
@@ -49,7 +44,6 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
             accessibilityLabel="Fampafantarana"
             onPress={() => {
               dispatch({ type: 'OPEN_NOTIFICATIONS' });
-              setFeedback('');
             }}
             style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
           >
@@ -110,21 +104,16 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
           </Pressable>
         </View>
       )}
-      {isDemo ? (
-        <View style={styles.demoBanner}>
-          <Text style={styles.demoText}>Angona santionany</Text>
-        </View>
-      ) : null}
 
       {flow.detail?.type === 'notifications' ? (
-        <NotificationsScreen
-          items={visibleNotices}
-          onDismiss={(id) => setVisibleNotices((items) => items.filter((item) => item.id !== id))}
-        />
+        <PlaceholderScreen title="Fampafantarana" text="Tsy mbola azo ampiasaina ny fampafantarana." />
       ) : flow.detail?.type === 'cv' ? (
         <LeaderCvScreen session={session} userId={flow.detail.leaderId} onBack={() => dispatch({ type: 'BACK' })} />
       ) : flow.tab === 'archives' ? (
-        <ArchivesScreen query={query} onDownload={requestDownload} />
+        <PlaceholderScreen
+          title="Arisiva"
+          text="Tsy mbola azo ampiasaina ny arisiva sy ny fisintonana antontan-taratasy."
+        />
       ) : flow.tab === 'leaders' ? (
         <LeaderDirectoryScreen
           session={session}
@@ -139,11 +128,6 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
         <SettingsScreen session={session} onSignOut={onSignOut} />
       )}
 
-      {feedback ? (
-        <Text accessibilityRole="alert" style={styles.feedback}>
-          {feedback}
-        </Text>
-      ) : null}
       {!flow.detail && (
         <View accessibilityRole="tablist" style={styles.tabBar}>
           {tabs.map((tab) => (
@@ -152,7 +136,6 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
               accessibilityRole="tab"
               accessibilityState={{ selected: flow.tab === tab.id }}
               onPress={() => {
-                setFeedback('');
                 dispatch({ type: 'SELECT_TAB', tab: tab.id });
               }}
               style={({ pressed }) => [styles.tab, flow.tab === tab.id && styles.tabActive, pressed && styles.pressed]}
@@ -172,68 +155,6 @@ function PageContent({ children }: { children: React.ReactNode }) {
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {children}
     </ScrollView>
-  );
-}
-
-function ArchivesScreen({ query, onDownload }: { query: string; onDownload: () => void }) {
-  const filtered = archives.filter((item) =>
-    `${item.title} ${item.category}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
-  );
-  return (
-    <PageContent>
-      <Text style={styles.pageHeading}>Arisiva</Text>
-      <Text style={styles.subtitle}>Tantaran’ny fivondronana sy ny antontan-taratasy ilaina.</Text>
-      {filtered.map((item) => (
-        <ArchiveRow key={item.id} item={item} onDownload={onDownload} />
-      ))}
-      {!filtered.length && <EmptyState text="Tsy misy arisiva mifanaraka amin’ny fikarohana." />}
-    </PageContent>
-  );
-}
-
-function ArchiveRow({ item, onDownload }: { item: ArchiveItem; onDownload: () => void }) {
-  return (
-    <View style={styles.archiveRow}>
-      <BrandIcon name="document" size={22} color={item.format === 'PDF' ? colors.primary : colors.accent} />
-      <Text style={[styles.rowTitle, styles.archiveRowTitle]}>{item.title}</Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Sintomy ${item.title}`}
-        onPress={onDownload}
-        style={({ pressed }) => [styles.smallAction, pressed && styles.pressed]}
-      >
-        <BrandIcon name="download" size={20} color={colors.accent} />
-      </Pressable>
-    </View>
-  );
-}
-
-function NotificationsScreen({ items, onDismiss }: { items: Notice[]; onDismiss: (id: string) => void }) {
-  return (
-    <PageContent>
-      <Text style={styles.pageHeading}>Fampafantarana</Text>
-      {items.map((item) => (
-        <View key={item.id} style={styles.noticeRow}>
-          <View style={styles.noticeTop}>
-            <Text style={styles.noticeCategory}>{item.category}</Text>
-            <Text style={styles.noticeTime}>{item.time}</Text>
-          </View>
-          <View style={styles.noticeBottom}>
-            <BrandIcon name="notifications" size={24} />
-            <Text style={styles.noticeTitle}>{item.title}</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Esory ${item.title}`}
-              onPress={() => onDismiss(item.id)}
-              style={styles.dismiss}
-            >
-              <BrandIcon name="close" size={20} />
-            </Pressable>
-          </View>
-        </View>
-      ))}
-      {!items.length && <EmptyState text="Tsy misy fampafantarana." />}
-    </PageContent>
   );
 }
 
@@ -392,15 +313,6 @@ function PlaceholderScreen({ title, text }: { title: string; text: string }) {
       </View>
       <Text style={styles.emptyText}>{text}</Text>
     </PageContent>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>Tsy misy angona</Text>
-      <Text style={styles.emptyText}>{text}</Text>
-    </View>
   );
 }
 

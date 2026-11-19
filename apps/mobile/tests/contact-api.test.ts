@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
-import { listContacts } from '../src/main/contact-api';
 import { SessionExpiredError } from '../src/access/session';
+import { listContacts } from '../src/main/contact-api';
 
 const originalFetch = globalThis.fetch;
 const baseUrl = 'https://api.example.org/api';
@@ -51,8 +51,8 @@ describe('contact API client', () => {
     await expect(listContacts('token', {}, baseUrl)).rejects.toThrow('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
   });
 
-  test('surfaces a retryable error when the server rejects the request', async () => {
+  test('explains missing permissions when the server rejects the request', async () => {
     globalThis.fetch = (async () => new Response(null, { status: 403 })) as typeof fetch;
-    await expect(listContacts('token', {}, baseUrl)).rejects.toThrow('Tsy azo vakina ny angona. Andramo indray.');
+    await expect(listContacts('token', {}, baseUrl)).rejects.toThrow('Tsy manana alalana');
   });
 });

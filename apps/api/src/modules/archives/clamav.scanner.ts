@@ -32,7 +32,7 @@ export class ClamAvScanner implements VirusScanner {
         resolve(Buffer.concat(chunks).toString('utf8').replace(/\0/g, '').trim());
       });
       socket.connect(port, host, () => {
-        socket.write('zINSTREAM\\0');
+        socket.write('zINSTREAM\0');
         for (let offset = 0; offset < data.byteLength; offset += 64 * 1024) {
           const chunk = Buffer.from(data.subarray(offset, Math.min(offset + 64 * 1024, data.byteLength)));
           const length = Buffer.alloc(4);

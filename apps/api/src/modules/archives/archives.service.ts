@@ -11,6 +11,32 @@ import { FILE_STORAGE, VIRUS_SCANNER, type FileStorage, type VirusScanner } from
 import type { CreateArchiveDto } from './dto/create-archive.dto.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+function isDocx(buffer: Buffer): boolean {
+  if (!buffer.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]))) return false;
+  const searchStart = Math.max(0, buffer.length - 65_557);
+  let endRecord = -1;
+  for (let offset = buffer.length - 22; offset >= searchStart; offset -= 1) {
+    if (buffer.readUInt32LE(offset) === 0x06054b50) {
+      endRecord = offset;
+      break;
+    }
+  }
+  if (endRecord < 0) return false;
+  const entryCount = buffer.readUInt16LE(endRecord + 10);
+  let cursor = buffer.readUInt32LE(endRecord + 16);
+  const entries = new Set<string>();
+  for (let index = 0; index < entryCount; index += 1) {
+    if (cursor + 46 > buffer.length || buffer.readUInt32LE(cursor) !== 0x02014b50) return false;
+    const nameLength = buffer.readUInt16LE(cursor + 28);
+    const extraLength = buffer.readUInt16LE(cursor + 30);
+    const commentLength = buffer.readUInt16LE(cursor + 32);
+    if (cursor + 46 + nameLength + extraLength + commentLength > buffer.length) return false;
+    entries.add(buffer.subarray(cursor + 46, cursor + 46 + nameLength).toString('utf8'));
+    cursor += 46 + nameLength + extraLength + commentLength;
+  }
+  return entries.has('[Content_Types].xml') && entries.has('word/document.xml');
+}
+
 const TYPES = {
   '.pdf': { mime: 'application/pdf', signature: (b: Buffer) => b.subarray(0, 5).toString() === '%PDF-' },
   '.doc': {
@@ -19,7 +45,7 @@ const TYPES = {
   },
   '.docx': {
     mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    signature: (b: Buffer) => b.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04])),
+    signature: isDocx,
   },
 } as const;
 
@@ -107,7 +133,8 @@ export class ArchivesService {
     if (!archive) throw new NotFoundException('Tsy hita ny tahiry.');
     if (isPublished) {
       const file = await this.storage.get(archive.storageKey);
-      if (!file) throw new ServiceUnavailableException('Tsy hita ny rakitra voatahiry.');
+      if (!file || createHash('sha256').update(file.data).digest('hex') !== file.sha256)
+        throw new ServiceUnavailableException('Tsy hita na simba ny rakitra voatahiry.');
       await this.scanner.scan(file.data);
     }
     return this.prisma.archive.update({
@@ -121,9 +148,34 @@ export class ArchivesService {
     const archive = await this.prisma.archive.findFirst({ where: { id, isPublished: true } });
     if (!archive) throw new NotFoundException('Tsy hita ny tahiry.');
     const file = await this.storage.get(archive.storageKey);
-    if (!file || file.size !== archive.size || file.sha256 !== archive.sha256)
+    if (
+      !file ||
+      file.size !== archive.size ||
+      file.sha256 !== archive.sha256 ||
+      createHash('sha256').update(file.data).digest('hex') !== archive.sha256
+    )
       throw new ServiceUnavailableException('Tsy azo vakina na tsy mifanaraka ny rakitra voatahiry.');
     return { archive, data: file.data };
+  }
+
+  listForAdministration() {
+    return this.prisma.archive.findMany({
+      orderBy: [{ isPublished: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        category: true,
+        year: true,
+        fileName: true,
+        contentType: true,
+        size: true,
+        sha256: true,
+        isPublished: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
   async remove(id: string): Promise<void> {

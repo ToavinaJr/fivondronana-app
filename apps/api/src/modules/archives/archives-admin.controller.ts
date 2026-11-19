@@ -1,8 +1,8 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   Param,
   Patch,
@@ -29,6 +29,11 @@ type UploadedArchive = { buffer: Buffer; originalname: string; size: number };
 @RequirePermission(Permission.ARCHIVES_MANAGE)
 export class ArchivesAdminController {
   constructor(private readonly archives: ArchivesService) {}
+
+  @Get()
+  list() {
+    return this.archives.listForAdministration();
+  }
 
   @Post()
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024, files: 1 } }))

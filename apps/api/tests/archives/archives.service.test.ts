@@ -44,6 +44,9 @@ describe('Arisiva file handling', () => {
       service.upload(input, { buffer: Buffer.from('not a PDF'), originalname: 'fake.pdf' }),
     ).rejects.toThrow();
     await expect(
+      service.upload(input, { buffer: Buffer.from([0x50, 0x4b, 0x03, 0x04]), originalname: 'fake.docx' }),
+    ).rejects.toThrow();
+    await expect(
       service.upload(input, { buffer: Buffer.alloc(5 * 1024 * 1024 + 1), originalname: 'large.pdf' }),
     ).rejects.toThrow();
     expect(scanner.scan).not.toHaveBeenCalled();

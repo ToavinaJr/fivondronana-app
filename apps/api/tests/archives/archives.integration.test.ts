@@ -50,12 +50,21 @@ describe.skipIf(!connectionString)('Arisiva PostgreSQL file storage', () => {
     });
     expect(storedBeforePublish?.data).toEqual(data);
     expect((await prisma.archive.findUnique({ where: { id: created.id } }))?.isPublished).toBe(false);
+    expect(
+      (await service.listForAdministration()).some(({ id, isPublished }) => id === created.id && !isPublished),
+    ).toBe(true);
 
     await service.setPublished(created.id, true);
     expect(scanner.scan).toHaveBeenCalledTimes(2);
     const served = await service.getDownload(created.id);
     expect(served.data).toEqual(data);
     expect((await service.list()).some(({ id }) => id === created.id)).toBe(true);
+
+    await prisma.fileObject.update({
+      where: { storageKey: served.archive.storageKey },
+      data: { data: Buffer.from('corrupt') },
+    });
+    await expect(service.getDownload(created.id)).rejects.toThrow('rakitra voatahiry');
 
     await service.remove(created.id);
     archiveIds.splice(archiveIds.indexOf(created.id), 1);

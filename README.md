@@ -39,7 +39,7 @@ The API exposes liveness at `GET /api/health` and database readiness at `GET /ap
 - `bun run lint`: lint API, mobile, and shared scripts.
 - `bun run --filter @fivondronana/api test`: API unit tests.
 - `bun run --filter @fivondronana/mobile test`: mobile unit tests.
-- `bun run test:integration`: run the API/PostgreSQL integration test after setting both `DATABASE_URL` and `DATABASE_URL_TEST` to the same disposable database whose name contains `_test`. This command applies migrations to that database.
+- `bun run test:integration`: starts the isolated, ephemeral `postgres-test` container (`infra/docker-compose.test.yml`, tmpfs-backed, never shares the development volume), applies migrations, runs the API/PostgreSQL integration tests, then tears the container down. Requires `POSTGRES_TEST_PORT` and `POSTGRES_TEST_PASSWORD` set, and `DATABASE_URL_TEST` pointing at that same container with a database name ending in `_test`.
 - `bun run build:api`: generate the Prisma client and build the API.
 - `GET /api/docs`: interactive OpenAPI documentation when the API is running.
 

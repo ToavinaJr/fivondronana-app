@@ -26,8 +26,12 @@ class MyCvController {
   @ApiBody({ type: CvInputDto })
   async saveMine(@Req() request: AuthenticatedRequest, @Body() body: CvInputDto) {
     const birthDate = new Date(body.birthDate);
-    const branches = normalizeRows(body.branches, ['name', 'group']);
-    const activities = normalizeRows(body.activities, []);
+    const branches = normalizeRows(
+      body.branches,
+      ['name', 'group'],
+      ['name', 'group', 'project', 'startedAt', 'endedAt'],
+    );
+    const activities = normalizeRows(body.activities, [], ['name', 'responsibility', 'description', 'date']);
     const strings = (value: unknown) => {
       if (value === undefined) return [];
       if (!Array.isArray(value) || value.some((item) => typeof item !== 'string'))
@@ -86,7 +90,7 @@ function optionalString(value: unknown): string | null {
   return value.trim() || null;
 }
 
-function normalizeRows(value: unknown, required: string[]): Array<Record<string, unknown>> {
+function normalizeRows(value: unknown, required: string[], fields: string[]): Array<Record<string, unknown>> {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw new BadRequestException('Le format des sections répétables est invalide.');
   return value.map((row) => {
@@ -97,7 +101,7 @@ function normalizeRows(value: unknown, required: string[]): Array<Record<string,
       if (typeof input[field] !== 'string' || !input[field].trim())
         throw new BadRequestException(`Le champ ${field} est obligatoire dans une section.`);
     const output: Record<string, unknown> = {};
-    for (const field of ['name', 'group', 'project', 'startedAt', 'endedAt', 'responsibility', 'description', 'date']) {
+    for (const field of fields) {
       const entry = input[field];
       if (entry === undefined || entry === null || entry === '') {
         if (field === 'startedAt' || field === 'endedAt' || field === 'date') output[field] = null;

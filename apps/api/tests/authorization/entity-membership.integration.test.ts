@@ -45,7 +45,9 @@ describe.skipIf(!connectionString)('entity membership constraints', () => {
     users.push(user.id);
 
     await expect(
-      prisma.entityMembership.create({ data: { userId: user.id, entityId: entityA.id, groupId: groupB.id } }),
+      Promise.resolve(
+        prisma.entityMembership.create({ data: { userId: user.id, entityId: entityA.id, groupId: groupB.id } }),
+      ),
     ).rejects.toThrow();
     const outcomes = await Promise.allSettled([
       prisma.entityMembership.create({ data: { userId: user.id, entityId: entityA.id, groupId: groupA.id } }),

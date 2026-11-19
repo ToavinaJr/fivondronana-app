@@ -67,6 +67,6 @@ describe.skipIf(!connectionString)('contacts PostgreSQL integration', () => {
 
     await service.remove(draft.id);
     contactIds.splice(contactIds.indexOf(draft.id), 1);
-    await expect(prisma.contact.findUnique({ where: { id: draft.id } })).resolves.toBeNull();
+    await expect(Promise.resolve(prisma.contact.findUnique({ where: { id: draft.id } }))).resolves.toBeNull();
   });
 });

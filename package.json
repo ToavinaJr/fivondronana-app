@@ -23,6 +23,7 @@
     "db:seed:demo": "bun run --filter @fivondronana/api db:seed:demo"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.8"
+    "@biomejs/biome": "^2.6.8",
+    "@types/bun": "^1.4.4"
   }
 }

@@ -6,7 +6,7 @@ describe('contacts service', () => {
   it('lists only published contacts and projects approved fields', async () => {
     const prisma = {
       contact: {
-        findMany: mock(async () => [
+        findMany: mock(async (_args: { where: Record<string, unknown> }) => [
           {
             id: 'contact-1',
             name: 'Filoha koto',
@@ -57,7 +57,7 @@ describe('contacts service', () => {
     });
     const prisma = {
       contact: {
-        findMany: mock(async () => [
+        findMany: mock(async (_args: { where: Record<string, unknown> }) => [
           contact({ id: 'a', name: 'Filohà koto' }),
           contact({ id: 'b', responsibility: 'TILY FOIBE' }),
           contact({ id: 'c' }),

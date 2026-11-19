@@ -39,7 +39,12 @@ describe('leader directory service', () => {
   });
 
   it('normalizes search and combines entity, group, and responsibility filters', async () => {
-    const prisma = { user: { findMany: mock(async () => []), count: mock(async () => 0) } };
+    const prisma = {
+      user: {
+        findMany: mock(async (_args: { where: { OR?: unknown[] } & Record<string, unknown> }) => []),
+        count: mock(async () => 0),
+      },
+    };
     const service = new LeaderService(prisma as never);
     await service.list({
       page: 1,
@@ -58,6 +63,6 @@ describe('leader directory service', () => {
       responsibilities: { some: { responsibilityId: 'resp-1', responsibility: { isActive: true } } },
     });
     expect(where.OR).toHaveLength(4);
-    expect(where.OR[0]).toEqual({ accountName: { contains: 'Tiana', mode: 'insensitive' } });
+    expect(where.OR?.[0]).toEqual({ accountName: { contains: 'Tiana', mode: 'insensitive' } });
   });
 });

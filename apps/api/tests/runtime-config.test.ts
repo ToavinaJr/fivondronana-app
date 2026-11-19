@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { validateRuntimeEnvironment } from '../src/runtime-config';
+import { validateRuntimeEnvironment } from '../src/runtime-config.js';
 
 const valid = {
   DATABASE_URL: 'postgresql://localhost/example',

@@ -1,4 +1,6 @@
-export function requireDatabaseUrl(env: Readonly<{ DATABASE_URL?: string }>): string {
+export function requireDatabaseUrl(
+  env: Readonly<{ DATABASE_URL?: string } & Record<string, string | undefined>>,
+): string {
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL must be set before starting the API.');
   try {
     const url = new URL(env.DATABASE_URL);

@@ -5,6 +5,7 @@ import { Brand } from '../access/Brand';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
 import { ContactDirectoryScreen } from './ContactDirectoryScreen';
+import { ArchiveDirectoryScreen } from './ArchiveDirectoryScreen';
 import { CvEditor } from './CvEditor';
 import { LeaderCvScreen } from './LeaderCvScreen';
 import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
@@ -110,10 +111,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
       ) : flow.detail?.type === 'cv' ? (
         <LeaderCvScreen session={session} userId={flow.detail.leaderId} onBack={() => dispatch({ type: 'BACK' })} />
       ) : flow.tab === 'archives' ? (
-        <PlaceholderScreen
-          title="Arisiva"
-          text="Tsy mbola azo ampiasaina ny arisiva sy ny fisintonana antontan-taratasy."
-        />
+        <ArchiveDirectoryScreen session={session} onSessionExpired={onSignOut} />
       ) : flow.tab === 'leaders' ? (
         <LeaderDirectoryScreen
           session={session}

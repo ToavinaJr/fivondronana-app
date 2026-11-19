@@ -2,6 +2,7 @@ import { BadRequestException, InternalServerErrorException } from '@nestjs/commo
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { describe, expect, test } from 'bun:test';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { AddressInfo } from 'node:net';
 import { apiValidationPipe } from '../src/api-validation.js';
 import { configureApiApp } from '../src/api-bootstrap.js';
@@ -141,7 +142,7 @@ describe('OpenAPI contract version', () => {
   });
 
   test('publishes the shared error and pagination schemas in the HTTP OpenAPI document', async () => {
-    const app = await NestFactory.create(OpenApiHealthModule, { logger: false });
+    const app = await NestFactory.create<NestExpressApplication>(OpenApiHealthModule, { logger: false });
     configureApiApp(app);
     await app.listen(0, '127.0.0.1');
     const address = app.getHttpServer().address() as AddressInfo;

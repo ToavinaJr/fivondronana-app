@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
-import { createIntegrationEnv } from '../../../scripts/integration-config';
-import { assertDemoSeedAllowed, requireDemoDatabaseUrl } from '../scripts/demo-seed-config';
-import { requireDatabaseUrl } from '../src/modules/database/database-config';
+import { createIntegrationEnv } from '../../../scripts/integration-config.js';
+import { assertDemoSeedAllowed, requireDemoDatabaseUrl } from '../scripts/demo-seed-config.js';
+import { requireDatabaseUrl } from '../src/modules/database/database-config.js';
 
 describe('integration environment safety', () => {
   it('requires a PostgreSQL test URL whose database name ends in _test', () => {

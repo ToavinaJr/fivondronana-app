@@ -19,6 +19,6 @@ Date : 19 novembre 2026
 
 ## Limites restantes
 
-- L'interface admin de gestion et le branchement liste/téléchargement de l'app mobile ne sont pas inclus; les endpoints API sont disponibles.
+- Le portail web d'administration n'est pas inclus; les endpoints de gestion sont disponibles. Le mobile consomme maintenant l'API pour lister les archives publiées et ouvrir leurs fichiers originaux après contrôle de session et de taille des octets.
 - PostgreSQL est l'adaptateur réel de développement. Le fournisseur et la stratégie de stockage en production restent un choix de déploiement.
-- Aucune qualification globale de production, sauvegarde/restauration, ni test natif mobile n'est revendiquée.
+- Aucune qualification globale de production, sauvegarde/restauration, ni qualification d'exécution sur appareil iOS/Android n'est revendiquée.

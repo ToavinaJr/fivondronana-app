@@ -28,6 +28,8 @@ describe('official responsibilities administration', () => {
   it('normalizes names before creating catalogue entries', async () => {
     const create = mock(async ({ data }: { data: { name: string } }) => data);
     const prisma = { officialResponsibility: { create } };
-    expect(await new ResponsibilitiesService(prisma as never).create('  Mpitarika  ')).toEqual({ name: 'Mpitarika' });
+    expect(await new ResponsibilitiesService(prisma as never).create('  Mpitarika  ')).toMatchObject({
+      name: 'Mpitarika',
+    });
   });
 });

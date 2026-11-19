@@ -10,7 +10,13 @@ describe('Arisiva file handling', () => {
     const scanner = { scan: mock(async () => {}) };
     const storage = { put: mock(async () => {}), get: mock(async () => null), delete: mock(async () => {}) };
     const prisma = {
-      archive: { create: mock(async () => ({ id: 'archive-1', title: input.title, isPublished: false })) },
+      archive: {
+        create: mock(async (_args: { data: Record<string, unknown> }) => ({
+          id: 'archive-1',
+          title: input.title,
+          isPublished: false,
+        })),
+      },
     };
     const service = new ArchivesService(prisma as never, storage as never, scanner as never);
     const result = await service.upload(input, { buffer: pdf, originalname: 'reglement.pdf', size: pdf.byteLength });

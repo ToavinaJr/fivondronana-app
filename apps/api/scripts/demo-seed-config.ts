@@ -1,4 +1,7 @@
-type DemoSeedEnvironment = Pick<NodeJS.ProcessEnv, 'NODE_ENV' | 'APP_ENV' | 'DATABASE_URL'>;
+type DemoSeedEnvironment = { NODE_ENV?: string; APP_ENV?: string; DATABASE_URL?: string } & Record<
+  string,
+  string | undefined
+>;
 
 export function assertDemoSeedAllowed(env: DemoSeedEnvironment): void {
   if (env.NODE_ENV === 'production' || env.APP_ENV === 'production') {

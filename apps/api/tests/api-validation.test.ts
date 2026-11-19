@@ -7,13 +7,13 @@ describe('API request validation policy', () => {
   const metadata = { type: 'body' as const, metatype: LoginDto, data: '' };
 
   test('rejects unknown properties instead of silently accepting them', async () => {
-    await expect(
+    expect(
       apiValidationPipe.transform({ identifier: 'user@example.org', password: 'secret', isAdmin: true }, metadata),
     ).rejects.toMatchObject({ status: 400 });
   });
 
   test('rejects values with the wrong runtime type', async () => {
-    await expect(apiValidationPipe.transform({ identifier: 42, password: 'secret' }, metadata)).rejects.toMatchObject({
+    expect(apiValidationPipe.transform({ identifier: 42, password: 'secret' }, metadata)).rejects.toMatchObject({
       status: 400,
     });
   });
@@ -38,11 +38,11 @@ describe('API request validation policy', () => {
     };
     const cvMetadata = { type: 'body' as const, metatype: CvInputDto, data: '' };
 
-    await expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
-    await expect(apiValidationPipe.transform({ ...cv, phone: '0341234567' }, cvMetadata)).rejects.toMatchObject({
+    expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
+    expect(apiValidationPipe.transform({ ...cv, phone: '0341234567' }, cvMetadata)).rejects.toMatchObject({
       status: 400,
     });
-    await expect(
+    expect(
       apiValidationPipe.transform(
         { ...cv, phone: '0341234567', branches: [], extraContact: Array.from({ length: 101 }, () => 'x') },
         cvMetadata,
@@ -64,7 +64,7 @@ describe('API request validation policy', () => {
     };
     const cvMetadata = { type: 'body' as const, metatype: CvInputDto, data: '' };
 
-    await expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
+    expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
   });
 
   test('rejects impossible calendar dates in optional CV sections', async () => {
@@ -82,7 +82,7 @@ describe('API request validation policy', () => {
     };
     const cvMetadata = { type: 'body' as const, metatype: CvInputDto, data: '' };
 
-    await expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
+    expect(apiValidationPipe.transform(cv, cvMetadata)).rejects.toMatchObject({ status: 400 });
   });
 
   test('accepts Malagasy diacritics and text exactly at the documented CV length limit', async () => {
@@ -107,7 +107,7 @@ describe('API request validation policy', () => {
     const result = await apiValidationPipe.transform({ ...cv, firstName: 'T'.repeat(100) }, cvMetadata);
 
     expect(result).toBeInstanceOf(CvInputDto);
-    await expect(apiValidationPipe.transform({ ...cv, firstName: 'T'.repeat(101) }, cvMetadata)).rejects.toMatchObject({
+    expect(apiValidationPipe.transform({ ...cv, firstName: 'T'.repeat(101) }, cvMetadata)).rejects.toMatchObject({
       status: 400,
     });
   });

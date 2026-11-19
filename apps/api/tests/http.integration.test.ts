@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { AddressInfo } from 'node:net';
 import { AppModule } from '../src/app.module.js';
 import { configureApiApp } from '../src/api-bootstrap.js';
@@ -15,7 +16,7 @@ if (testDatabaseUrl && !testDatabaseName.toLowerCase().endsWith('_test')) {
 
 describe.skipIf(!testDatabaseUrl)('NestJS HTTP API with PostgreSQL', () => {
   const testJwtSecret = 'integration-test-secret-that-is-not-used-outside-tests';
-  let app: Awaited<ReturnType<typeof NestFactory.create>> | undefined;
+  let app: NestExpressApplication | undefined;
   let prisma: PrismaService;
   let baseUrl: string;
   let userId: string;
@@ -29,7 +30,7 @@ describe.skipIf(!testDatabaseUrl)('NestJS HTTP API with PostgreSQL', () => {
     process.env.DATABASE_URL = testDatabaseUrl;
     process.env.JWT_SECRET = testJwtSecret;
 
-    app = await NestFactory.create(AppModule, { logger: false });
+    app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: false });
     configureApiApp(app);
     await app.listen(0, '127.0.0.1');
     const address = app.getHttpServer().address() as AddressInfo;

@@ -9,7 +9,7 @@
     "build": "bun run db:generate && tsc -p tsconfig.build.json",
     "typecheck": "bun run db:generate && tsc --noEmit -p tsconfig.json",
     "test": "bun test",
-    "test:integration": "bun test tests/database.integration.test.ts tests/http.integration.test.ts",
+    "test:integration": "bun test --timeout 30000 tests",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",

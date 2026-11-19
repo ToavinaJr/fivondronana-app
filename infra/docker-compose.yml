@@ -16,6 +16,17 @@ services:
       timeout: 5s
       retries: 10
 
+  clamav:
+    image: clamav/clamav:1.5.4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${CLAMAV_HOST_PORT:-3310}:3310"
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
   api:
     build:
       context: ..
@@ -31,10 +42,14 @@ services:
       API_BODY_LIMIT: ${API_BODY_LIMIT:-100kb}
       AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-10}
       AUTH_RATE_WINDOW_SECONDS: ${AUTH_RATE_WINDOW_SECONDS:-60}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
     ports:
       - "${API_BIND_ADDRESS:-127.0.0.1}:${API_HOST_PORT:-3000}:${API_PORT:-3000}"
     depends_on:
       postgres:
+        condition: service_healthy
+      clamav:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:' + process.env.API_PORT + '/api/health/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]

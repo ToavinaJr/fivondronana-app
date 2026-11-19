@@ -60,7 +60,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 
 ### Still genuinely unresolved or underspecified
 
-- The antivirus scanning mechanism for Arisiva uploads (which engine/service to call) — the only remaining open item blocking Task 4 Step 5's completion.
+- Arisiva antivirus scanning uses the private ClamAV 1.5.4 service; uploads fail closed when the scanner is unavailable.
 - Whether Hafatra conversation membership is derived from entity/role or explicitly modeled as its own addable/removable record — shapes the schema and whether the backoffice needs a membership screen.
 - The backoffice's own browser session transport (cookie vs. bearer token) — distinct from mobile's token handling and not covered by the hosting decision.
 - The enumerated list of event sources that generate a notification, and global-search scope — notification storage/semantics are decided, but which events fire one, and what search covers, are not.

@@ -38,7 +38,7 @@ Faire évoluer le prototype actuel vers une plateforme mobile et web fiable pour
 - L'unicité de groupe et d'entité est un invariant serveur et base de données.
 - La récupération de mot de passe offrira le choix email ou SMS, mais fournisseurs et vérification du canal restent à sélectionner.
 - Le comportement exact de « Tsarovy aho » et la durée totale d'une session restent à fixer; le jeton d'accès de 15 minutes actuellement codé est provisoire.
-- Le stockage, les formats/tailles upload, l'antivirus, l'hébergement du backoffice et les objectifs SLO/RPO/RTO restent à décider avant déploiement concerné.
+- Pour Arisiva, le stockage PostgreSQL derrière `FileStorage`, les formats PDF/DOC/DOCX (5 Mio maximum) et ClamAV 1.5.4 sont décidés; l'hébergement définitif de production demeure un choix d'infrastructure ultérieur. L'hébergement du backoffice et les objectifs SLO/RPO/RTO restent ouverts.
 - Le retrait d'une responsabilité affectée nécessite d'abord son retrait/réaffectation des comptes.
 
 ## Current baseline

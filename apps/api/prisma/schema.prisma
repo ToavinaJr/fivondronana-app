@@ -177,3 +177,31 @@ model CvActivity {
   cv          Cv       @relation(fields: [cvId], references: [id], onDelete: Cascade)
   @@index([cvId])
 }
+
+model FileObject {
+  storageKey String   @id
+  data       Bytes
+  size       Int
+  sha256     String
+  createdAt  DateTime @default(now())
+  archive    Archive?
+}
+
+model Archive {
+  id          String     @id @default(cuid())
+  title       String
+  description String     @default("")
+  category    String
+  year        Int?
+  fileName    String
+  contentType String
+  size        Int
+  sha256      String
+  isPublished Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  storageKey  String     @unique
+  file        FileObject @relation(fields: [storageKey], references: [storageKey], onDelete: Restrict)
+
+  @@index([isPublished, category, year, title])
+}

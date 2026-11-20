@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { createIntegrationEnv } from '../../../scripts/integration-config.js';
-import { assertDemoSeedAllowed, requireDemoDatabaseUrl } from '../scripts/demo-seed-config.js';
+import { assertDemoSeedAllowed, getDemoAdminCredentials, requireDemoDatabaseUrl } from '../scripts/demo-seed-config.js';
 import { requireDatabaseUrl } from '../src/modules/database/database-config.js';
 
 describe('integration environment safety', () => {
@@ -34,6 +34,48 @@ describe('integration environment safety', () => {
 });
 
 describe('demo seed environment safety', () => {
+  it('skips the admin when both optional credentials are absent', () => {
+    expect(getDemoAdminCredentials({ APP_ENV: 'development' })).toBeUndefined();
+  });
+
+  it('trims the admin email while preserving the configured password exactly', () => {
+    expect(
+      getDemoAdminCredentials({
+        DEMO_ADMIN_EMAIL: '  Admin@Fivondronana.test  ',
+        DEMO_ADMIN_PASSWORD: '  private password  ',
+      }),
+    ).toEqual({ email: 'Admin@Fivondronana.test', password: '  private password  ' });
+  });
+
+  it('rejects a partial administrator credential pair', () => {
+    expect(() => getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: 'admin@fivondronana.test' })).toThrow(
+      'DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD must be set together.',
+    );
+    expect(() => getDemoAdminCredentials({ DEMO_ADMIN_PASSWORD: 'private' })).toThrow(
+      'DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD must be set together.',
+    );
+  });
+
+  it('rejects a malformed admin email before database work', () => {
+    expect(() => getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: 'not-an-email', DEMO_ADMIN_PASSWORD: 'private' })).toThrow(
+      'DEMO_ADMIN_EMAIL must be a valid email address.',
+    );
+    for (const email of ['a@b..com', 'a@-example.com']) {
+      expect(() => getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: email, DEMO_ADMIN_PASSWORD: 'private' })).toThrow(
+        'DEMO_ADMIN_EMAIL must be a valid email address.',
+      );
+    }
+  });
+
+  it('reserves the demo responsible email for its existing demo account', () => {
+    expect(() =>
+      getDemoAdminCredentials({
+        DEMO_ADMIN_EMAIL: '  DEMO@FIVONDRONANA.TEST  ',
+        DEMO_ADMIN_PASSWORD: 'private',
+      }),
+    ).toThrow('DEMO_ADMIN_EMAIL must not be the demo responsible account.');
+  });
+
   it('refuses production based on either supported environment flag', () => {
     expect(() => assertDemoSeedAllowed({ NODE_ENV: 'production' })).toThrow(
       'The demo account seed is disabled in production.',

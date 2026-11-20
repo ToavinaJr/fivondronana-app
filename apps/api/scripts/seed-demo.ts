@@ -1,9 +1,12 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { hashPassword } from '../src/modules/auth/auth.crypto.js';
-import { assertDemoSeedAllowed, requireDemoDatabaseUrl } from './demo-seed-config.js';
+import { ensureDemoAdministrator } from './demo-admin-seed.js';
+import { UserRole } from '../src/modules/authorization/roles.js';
+import { assertDemoSeedAllowed, getDemoAdminCredentials, requireDemoDatabaseUrl } from './demo-seed-config.js';
 
 assertDemoSeedAllowed(process.env);
+const demoAdminCredentials = getDemoAdminCredentials(process.env);
 const connectionString = requireDemoDatabaseUrl(process.env);
 
 const email = 'demo@fivondronana.test';
@@ -11,6 +14,34 @@ const password = 'FivondronanaDemo2026!';
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 try {
+  if (demoAdminCredentials) {
+    await ensureDemoAdministrator(
+      {
+        findByEmailNormalized: async (emailNormalized) => {
+          const existing = await prisma.user.findUnique({
+            where: { emailNormalized },
+            select: { roles: { select: { role: true } } },
+          });
+          return existing ? { roles: existing.roles.map(({ role }) => role) } : null;
+        },
+        create: async (input) => {
+          await prisma.user.create({
+            data: {
+              accountName: input.accountName,
+              email: input.email,
+              emailNormalized: input.emailNormalized,
+              passwordHash: input.passwordHash,
+              isActive: input.isActive,
+              activatedAt: input.activatedAt,
+              roles: { create: { role: UserRole.ADMINISTRATOR } },
+            },
+          });
+        },
+      },
+      demoAdminCredentials,
+    );
+  }
+
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.upsert({
     where: { emailNormalized: email },

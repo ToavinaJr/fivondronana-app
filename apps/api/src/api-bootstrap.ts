@@ -30,7 +30,10 @@ export function configureApiApp(app: NestExpressApplication): void {
     response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     if (process.env.NODE_ENV === 'production')
       response.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    if (request.method === 'POST' && ['/api/auth/login', '/api/auth/password'].includes(request.path)) {
+    if (
+      request.method === 'POST' &&
+      ['/api/auth/login', '/api/auth/password', '/api/auth/activate'].includes(request.path)
+    ) {
       const decision = limiter.check(`${request.path}:${request.ip ?? request.socket.remoteAddress ?? 'unknown'}`);
       if (!decision.allowed) {
         response.setHeader('Retry-After', String(decision.retryAfterSeconds));

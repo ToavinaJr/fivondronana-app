@@ -3,6 +3,7 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard, type AuthenticatedRequest } from './access-token.guard.js';
 import { AuthService } from './auth.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { ActivateAccountDto } from './dto/activate-account.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 
 @Controller('auth')
@@ -38,5 +39,12 @@ export class AuthController {
   async changePassword(@Req() request: AuthenticatedRequest, @Body() body: ChangePasswordDto) {
     await this.auth.changePassword(request.auth.user.id, body.currentPassword, body.newPassword);
     return { status: 'ok' as const };
+  }
+
+  @Post('activate')
+  @ApiBody({ type: ActivateAccountDto })
+  @HttpCode(204)
+  async activate(@Body() body: ActivateAccountDto): Promise<void> {
+    await this.auth.activateAccount(body.token, body.password);
   }
 }

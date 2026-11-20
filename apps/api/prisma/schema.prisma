@@ -16,6 +16,7 @@ model User {
   phoneNormalized String?    @unique
   passwordHash String
   isActive     Boolean       @default(true)
+  activatedAt  DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   sessions     AuthSession[]
@@ -23,6 +24,36 @@ model User {
   membership   EntityMembership?
   roles        UserRole[]
   responsibilities UserResponsibility[]
+  invitations  AccountInvitation[]
+  auditActions AdminAuditEvent[] @relation("AdminAuditActor")
+  auditTargets AdminAuditEvent[] @relation("AdminAuditSubject")
+}
+
+model AccountInvitation {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  deliveryStatus String   @default("PENDING")
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt, expiresAt])
+}
+
+model AdminAuditEvent {
+  id            String   @id @default(cuid())
+  actorUserId   String?
+  subjectUserId String?
+  action        String
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now())
+  actor         User?    @relation("AdminAuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  subject       User?    @relation("AdminAuditSubject", fields: [subjectUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([subjectUserId, createdAt])
 }
 
 enum Role {

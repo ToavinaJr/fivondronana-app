@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 const passwordBytes = 64;
 const tokenLifetimeSeconds = 15 * 60;
 
@@ -20,6 +20,10 @@ export async function verifyPassword(password: string, encoded: string): Promise
   } catch {
     return false;
   }
+}
+
+export function hashOpaqueToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 export function issueAccessToken(

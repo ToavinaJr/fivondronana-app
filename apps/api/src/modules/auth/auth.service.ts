@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { PrismaService } from '../database/prisma.service.js';
-import { hashPassword, issueAccessToken, validateJwtSecret, verifyPassword } from './auth.crypto.js';
+import { hashOpaqueToken, hashPassword, issueAccessToken, validateJwtSecret, verifyPassword } from './auth.crypto.js';
 
 type Account = {
   id: string;
@@ -67,6 +67,46 @@ export class AuthService {
       this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
       this.prisma.authSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } }),
     ]);
+  }
+
+  async activateAccount(token: string, password: string): Promise<void> {
+    if (password.length < 8) throw new BadRequestException('Le mot de passe doit contenir au moins 8 caractères.');
+    const invitation = await this.prisma.accountInvitation.findUnique({
+      where: { tokenHash: hashOpaqueToken(token) },
+      select: { id: true, userId: true, expiresAt: true, consumedAt: true },
+    });
+    const now = new Date();
+    if (!invitation || invitation.consumedAt || invitation.expiresAt <= now) {
+      throw new BadRequestException('Le lien d’activation est invalide ou expiré.');
+    }
+
+    const passwordHash = await hashPassword(password);
+    await this.prisma.$transaction(async (tx) => {
+      const activated = await tx.user.updateMany({
+        where: { id: invitation.userId, isActive: false },
+        data: { isActive: true, passwordHash, activatedAt: now },
+      });
+      if (activated.count !== 1) throw new BadRequestException('Le lien d’activation est invalide ou expiré.');
+
+      const consumed = await tx.accountInvitation.updateMany({
+        where: { id: invitation.id, consumedAt: null, expiresAt: { gt: now } },
+        data: { consumedAt: now },
+      });
+      if (consumed.count !== 1) throw new BadRequestException('Le lien d’activation est invalide ou expiré.');
+
+      await tx.accountInvitation.updateMany({
+        where: { userId: invitation.userId, consumedAt: null },
+        data: { consumedAt: now },
+      });
+      await tx.adminAuditEvent.create({
+        data: {
+          actorUserId: invitation.userId,
+          subjectUserId: invitation.userId,
+          action: 'USER_ACTIVATED',
+          metadata: {},
+        },
+      });
+    });
   }
 }
 

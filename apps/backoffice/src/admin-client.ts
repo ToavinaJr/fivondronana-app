@@ -7,6 +7,21 @@ export type AdminRequestOptions = {
   fetcher?: typeof fetch;
 };
 
+export type AdminArchive = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  year: number | null;
+  fileName: string;
+  contentType: string;
+  size: number;
+  sha256: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PageResult<T> = {
   data: T[];
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
@@ -40,14 +55,17 @@ export async function adminRequest<T>(path: string, options: AdminRequestOptions
     throw new Error('Chemin API invalide.');
   }
 
+  const isFormData = options.body instanceof FormData;
   const headers = new Headers();
-  if (options.body !== undefined) headers.set('Content-Type', 'application/json');
+  if (options.body !== undefined && !isFormData) headers.set('Content-Type', 'application/json');
   if (options.csrfToken) headers.set('X-CSRF-Token', options.csrfToken);
   const response = await (options.fetcher ?? fetch)(`${import.meta.env.VITE_API_URL ?? ''}/api/admin/${path}`, {
     method: options.method ?? 'GET',
     credentials: 'include',
     headers,
-    ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
+    ...(options.body === undefined
+      ? {}
+      : { body: isFormData ? (options.body as FormData) : JSON.stringify(options.body) }),
   });
 
   if (!response.ok) {

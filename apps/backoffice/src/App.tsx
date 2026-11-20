@@ -1,6 +1,8 @@
 import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
 import logo from '../../mobile/src/assets/vonenina-logo.jpeg';
-import { AccountsWorkspace } from './accounts';
+import { AccountsPage } from './accounts';
+import { type AdminPage } from './admin-shell';
+import { ArchivesPage } from './archives';
 import {
   AuthRequestError,
   authRequest,
@@ -123,7 +125,7 @@ export function App() {
       </main>
     );
   if (user) {
-    return <AccountsWorkspace account={user.accountName} csrfToken={csrfToken} onLogout={() => void logout()} />;
+    return <Workspace account={user.accountName} csrfToken={csrfToken} onLogout={() => void logout()} />;
   }
 
   return (
@@ -161,6 +163,23 @@ export function App() {
         )}
       </section>
     </main>
+  );
+}
+
+function Workspace({ account, csrfToken, onLogout }: { account: string; csrfToken: string; onLogout: () => void }) {
+  const [page, setPage] = useState<AdminPage>('accounts');
+  if (page === 'archives')
+    return (
+      <ArchivesPage
+        account={account}
+        csrfToken={csrfToken}
+        activePage={page}
+        onNavigate={setPage}
+        onLogout={onLogout}
+      />
+    );
+  return (
+    <AccountsPage account={account} csrfToken={csrfToken} activePage={page} onNavigate={setPage} onLogout={onLogout} />
   );
 }
 

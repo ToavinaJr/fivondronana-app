@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { adminRequest, type AdminRequestOptions } from '../src/admin-client';
+import { type AdminRequestOptions, adminRequest } from '../src/admin-client';
 
 describe('backoffice administration API client', () => {
   it('sends same-origin cookie requests with CSRF proof and preserves query strings', async () => {
@@ -57,5 +57,24 @@ describe('backoffice administration API client', () => {
         fetcher: (async () => Response.json({ message: 'Accès refusé.' }, { status: 403 })) as typeof fetch,
       }),
     ).rejects.toThrow('Accès refusé.');
+  });
+
+  it('sends FormData bodies as multipart without a JSON Content-Type header', async () => {
+    let request: Request | undefined;
+    const fetcher = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      request = new Request(new URL(input.toString(), 'http://localhost'), init);
+      return Response.json({ id: 'archive-1' });
+    }) as typeof fetch;
+    const body = new FormData();
+    body.append('title', 'Tantara');
+    body.append('file', new Blob(['%PDF-1.7'], { type: 'application/pdf' }), 'fixture.pdf');
+
+    await adminRequest('archives', { method: 'POST', body, csrfToken: 'csrf-value', fetcher });
+
+    expect(request?.headers.get('Content-Type')).toContain('multipart/form-data');
+    expect(request?.headers.get('X-CSRF-Token')).toBe('csrf-value');
+    const sent = await request?.formData();
+    expect(sent?.get('title')).toBe('Tantara');
+    expect((sent?.get('file') as File)?.name).toBe('fixture.pdf');
   });
 });

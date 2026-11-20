@@ -96,7 +96,7 @@ describe('API request validation policy', () => {
       province: 'Anôsy',
       area: 'Avaradrano',
       fivondronana: 'Antananarivo',
-      extraPersonal: ['Fahaiza-manao amin’ny asa sy fiaraha-monina'],
+      extraPersonal: [{ label: 'Fahaiza-manao', value: 'Fahaiza-manao amin’ny asa sy fiaraha-monina' }],
       branches: [{ name: 'Mpanazava', group: 'Tily', project: 'Fampandrosoana ny tanora' }],
       activities: [
         { name: 'Fanompoana', responsibility: 'Mpitarika', description: 'Fandraisana anjara amin’ny fiaraha-monina' },

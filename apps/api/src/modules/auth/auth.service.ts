@@ -1,9 +1,10 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { RESPONSIBLE_ROLES, type UserRole } from '../authorization/roles.js';
 import type { PrismaService } from '../database/prisma.service.js';
 import { hashOpaqueToken, hashPassword, issueAccessToken, validateJwtSecret, verifyPassword } from './auth.crypto.js';
 
-type Account = {
+export type Account = {
   id: string;
   accountName: string;
   email: string | null;
@@ -13,6 +14,7 @@ type Account = {
   passwordHash: string;
   isActive: boolean;
   avatarKey?: string | null;
+  roles: Array<{ role: UserRole }>;
 };
 export type AuthenticatedUser = {
   id: string;
@@ -20,6 +22,7 @@ export type AuthenticatedUser = {
   email: string | null;
   phone: string | null;
   hasAvatar: boolean;
+  isResponsible: boolean;
 };
 
 @Injectable()
@@ -40,6 +43,7 @@ export class AuthService {
     const normalizedPhone = normalizedEmail ? undefined : normalizePhone(identifier);
     const account = (await this.prisma.user.findFirst({
       where: normalizedEmail ? { emailNormalized: normalizedEmail } : { phoneNormalized: normalizedPhone },
+      include: { roles: { select: { role: true } } },
     })) as Account | null;
     if (!account?.isActive || !(await verifyPassword(password, account.passwordHash))) {
       throw new UnauthorizedException('Identifiants invalides ou compte désactivé.');
@@ -73,7 +77,7 @@ export class AuthService {
     const refreshTokenHash = hashOpaqueToken(refreshToken);
     const session = await this.prisma.authSession.findFirst({
       where: { refreshTokenHash, revokedAt: null, expiresAt: { gt: now } },
-      include: { user: true },
+      include: { user: { include: { roles: { select: { role: true } } } } },
     });
     if (!session?.user.isActive) throw new UnauthorizedException('Session invalide ou expirée.');
 
@@ -91,7 +95,7 @@ export class AuthService {
       tokenType: 'Bearer' as const,
       expiresIn: accessToken.expiresIn,
       refreshExpiresIn: Math.max(0, Math.floor((session.expiresAt.getTime() - now.getTime()) / 1000)),
-      user: toAuthenticatedUser(session.user),
+      user: toAuthenticatedUser(session.user as Account),
     };
   }
 
@@ -103,7 +107,10 @@ export class AuthService {
   }
 
   async getSession(sessionId: string) {
-    return this.prisma.authSession.findUnique({ where: { id: sessionId }, include: { user: true } });
+    return this.prisma.authSession.findUnique({
+      where: { id: sessionId },
+      include: { user: { include: { roles: { select: { role: true } } } } },
+    });
   }
 
   async getBrowserIdentity(userId: string) {
@@ -112,7 +119,7 @@ export class AuthService {
       include: { roles: { select: { role: true } } },
     });
     if (!account) throw new UnauthorizedException('Session invalide ou expirée.');
-    return { ...toAuthenticatedUser(account), roles: account.roles.map(({ role }) => role) };
+    return { ...toAuthenticatedUser(account as Account), roles: account.roles.map(({ role }) => role) };
   }
 
   async logout(sessionId: string): Promise<void> {
@@ -238,7 +245,7 @@ export function normalizeEmail(value: string): string {
 }
 
 export function toAuthenticatedUser(
-  account: Pick<Account, 'id' | 'accountName' | 'email' | 'phone' | 'avatarKey'>,
+  account: Pick<Account, 'id' | 'accountName' | 'email' | 'phone' | 'avatarKey' | 'roles'>,
 ): AuthenticatedUser {
   return {
     id: account.id,
@@ -246,5 +253,6 @@ export function toAuthenticatedUser(
     email: account.email,
     phone: account.phone,
     hasAvatar: Boolean(account.avatarKey),
+    isResponsible: account.roles.some(({ role }) => (RESPONSIBLE_ROLES as readonly UserRole[]).includes(role)),
   };
 }

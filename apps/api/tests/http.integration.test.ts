@@ -78,6 +78,7 @@ describe.skipIf(!testDatabaseUrl)('NestJS HTTP API with PostgreSQL', () => {
       email,
       phone: null,
       hasAvatar: false,
+      isResponsible: false,
     });
     expect(session.user).not.toHaveProperty('passwordHash');
   });

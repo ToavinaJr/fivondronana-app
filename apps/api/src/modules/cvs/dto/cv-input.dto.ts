@@ -71,6 +71,22 @@ export class CvActivityInputDto {
   date?: string | null;
 }
 
+export class CvExtraFieldInputDto {
+  @ApiProperty({ maxLength: 120 })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/\S/)
+  @MaxLength(120)
+  label!: string;
+
+  @ApiProperty({ maxLength: 300 })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/\S/)
+  @MaxLength(300)
+  value!: string;
+}
+
 export class CvInputDto {
   @ApiProperty({ maxLength: 100 })
   @IsString()
@@ -142,21 +158,21 @@ export class CvInputDto {
   @MaxLength(160)
   fivondronana!: string;
 
-  @ApiPropertyOptional({ type: [String], maxItems: 100 })
+  @ApiPropertyOptional({ type: CvExtraFieldInputDto, isArray: true, maxItems: 100 })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(100)
-  @IsString({ each: true })
-  @MaxLength(300, { each: true })
-  extraPersonal?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => CvExtraFieldInputDto)
+  extraPersonal?: CvExtraFieldInputDto[];
 
-  @ApiPropertyOptional({ type: [String], maxItems: 100 })
+  @ApiPropertyOptional({ type: CvExtraFieldInputDto, isArray: true, maxItems: 100 })
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(100)
-  @IsString({ each: true })
-  @MaxLength(300, { each: true })
-  extraContact?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => CvExtraFieldInputDto)
+  extraContact?: CvExtraFieldInputDto[];
 
   @ApiPropertyOptional({ type: CvBranchInputDto, isArray: true, maxItems: 100 })
   @IsOptional()

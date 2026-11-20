@@ -346,16 +346,18 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
           onPress={() => setCv((current) => ({ ...current, activities: [...current.activities, blankActivity()] }))}
         />
       </Section>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => {
-          void exportPdf();
-        }}
-        style={styles.export}
-      >
-        <BrandIcon name="download" color={colors.accent} />
-        <Text style={styles.exportText}>Mamorona sy mizara PDF</Text>
-      </Pressable>
+      {session.user.isResponsible ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            void exportPdf();
+          }}
+          style={styles.export}
+        >
+          <BrandIcon name="download" color={colors.accent} />
+          <Text style={styles.exportText}>Mamorona sy mizara PDF</Text>
+        </Pressable>
+      ) : null}
       {feedback ? (
         <Text
           accessibilityRole="alert"

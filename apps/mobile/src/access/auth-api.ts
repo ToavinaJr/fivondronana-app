@@ -12,6 +12,7 @@ export type AuthUser = {
   email: string | null;
   phone: string | null;
   hasAvatar: boolean;
+  isResponsible: boolean;
 };
 export type AuthSession = { accessToken: string; refreshToken: string; expiresIn: number; user: AuthUser };
 

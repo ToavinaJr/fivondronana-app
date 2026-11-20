@@ -4,6 +4,7 @@ export type SessionUser = {
   email: string | null;
   phone: string | null;
   hasAvatar: boolean;
+  isResponsible: boolean;
 };
 export type Session = {
   accessToken: string;

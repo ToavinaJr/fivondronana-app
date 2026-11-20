@@ -36,7 +36,7 @@ const authService = {
     userId: user.id,
     expiresAt: new Date(Date.now() + 60_000),
     revokedAt: null,
-    user: { ...user, isActive: true },
+    user: { ...user, isActive: true, roles: [] },
   }),
   getBrowserIdentity: async () => ({ ...user, roles: ['ADMINISTRATOR'] }),
   revokeRefreshToken: async () => {

@@ -20,7 +20,14 @@ const sessions = new Map<
     userId: string;
     revokedAt: Date | null;
     expiresAt: Date;
-    user: { id: string; accountName: string; email: string | null; phone: string | null; isActive: boolean };
+    user: {
+      id: string;
+      accountName: string;
+      email: string | null;
+      phone: string | null;
+      isActive: boolean;
+      roles: { role: string }[];
+    };
   }
 >();
 
@@ -74,7 +81,7 @@ describe('authorization HTTP boundary', () => {
         userId,
         revokedAt,
         expiresAt: new Date(Date.now() + 60_000),
-        user: { id: userId, accountName: userId, email: null, phone: null, isActive },
+        user: { id: userId, accountName: userId, email: null, phone: null, isActive, roles: [] },
       });
       return issueAccessToken(userId, id, secret).token;
     };

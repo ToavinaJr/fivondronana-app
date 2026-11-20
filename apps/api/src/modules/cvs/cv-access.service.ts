@@ -50,8 +50,8 @@ export class CvAccessService {
       province: cv.province,
       area: cv.area,
       fivondronana: cv.fivondronana,
-      extraPersonal: cv.extraPersonal,
-      extraContact: cv.extraContact,
+      extraPersonal: parseExtraFields(cv.extraPersonal),
+      extraContact: parseExtraFields(cv.extraContact),
       branches: cv.branches,
       activities: cv.activities,
       template: getTemplate(cv.user.membership?.group.name),
@@ -93,11 +93,31 @@ export class CvAccessService {
       }),
       this.prisma.cv.count({ where }),
     ]);
-    const data = rows.map(({ user, ...cv }) => ({ ...cv, template: getTemplate(user.membership?.group.name) }));
+    const data = rows.map(({ user, ...cv }) => ({
+      ...cv,
+      extraPersonal: parseExtraFields(cv.extraPersonal),
+      extraContact: parseExtraFields(cv.extraContact),
+      template: getTemplate(user.membership?.group.name),
+    }));
     return createPaginatedResponse(data, total, query);
   }
 }
 
 function getTemplate(groupName: string | undefined): 'Tily' | 'Mpanazava' | null {
   return groupName === 'Tily' || groupName === 'Mpanazava' ? groupName : null;
+}
+
+function parseExtraFields(value: unknown): Array<{ label: string; value: string }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (
+      !item ||
+      typeof item !== 'object' ||
+      typeof (item as Record<string, unknown>).label !== 'string' ||
+      typeof (item as Record<string, unknown>).value !== 'string'
+    )
+      return [];
+    const { label, value: fieldValue } = item as { label: string; value: string };
+    return [{ label, value: fieldValue }];
+  });
 }

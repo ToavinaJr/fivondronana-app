@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { getAllowedOrigins } from '../../http-security.js';
 import { type AccessClaims, validateJwtSecret, verifyAccessToken } from './auth.crypto.js';
-import { type AuthenticatedUser, AuthService, toAuthenticatedUser } from './auth.service.js';
+import { type Account, type AuthenticatedUser, AuthService, toAuthenticatedUser } from './auth.service.js';
 import { ACCESS_COOKIE, browserMutationAllowed, readCookie } from './browser-session.js';
 
 export type AuthenticatedRequest = {
@@ -51,7 +51,7 @@ export class AccessTokenGuard implements CanActivate {
     ) {
       throw new UnauthorizedException('Session invalide ou expirée.');
     }
-    request.auth = { user: toAuthenticatedUser(session.user), sessionId: session.id };
+    request.auth = { user: toAuthenticatedUser(session.user as Account), sessionId: session.id };
     return true;
   }
 }

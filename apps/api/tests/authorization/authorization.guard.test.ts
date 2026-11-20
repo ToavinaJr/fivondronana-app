@@ -90,7 +90,7 @@ describe('access token guard session validation', () => {
           userId: 'user-1',
           revokedAt: null,
           expiresAt: new Date(Date.now() + 60_000),
-          user: { id: 'user-1', accountName: 'Admin', email: null, phone: null, isActive: true },
+          user: { id: 'user-1', accountName: 'Admin', email: null, phone: null, isActive: true, roles: [] },
         }),
       } as never);
       const browserRequest = authContext(undefined, {

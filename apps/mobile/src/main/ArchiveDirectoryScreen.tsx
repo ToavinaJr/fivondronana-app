@@ -121,7 +121,7 @@ export function ArchiveDirectoryScreen({ session, onSessionExpired }: Props) {
             style={({ pressed }) => [styles.card, pressed && styles.pressed, downloadingId !== null && styles.disabled]}
           >
             <View style={styles.iconWrap}>
-              <BrandIcon name="archive" color={colors.primary} />
+              <Text style={styles.iconLabel}>{fileTypeLabel(archive.contentType)}</Text>
             </View>
             <View style={styles.details}>
               <Text style={styles.title}>{archive.title}</Text>
@@ -145,6 +145,10 @@ export function ArchiveDirectoryScreen({ session, onSessionExpired }: Props) {
       ) : null}
     </ScrollView>
   );
+}
+
+function fileTypeLabel(contentType: string): string {
+  return contentType === 'application/pdf' ? 'PDF' : 'DOCX';
 }
 
 function extensionFor(archive: ArchiveSummary): string {
@@ -187,13 +191,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 36,
+    borderRadius: 8,
     backgroundColor: colors.page,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconLabel: { color: colors.secondary, fontSize: 10, fontWeight: '700' },
   details: { flex: 1, gap: 4 },
   title: { color: colors.text, fontSize: 15, fontWeight: '700' },
   description: { color: colors.secondary, fontSize: 13, lineHeight: 18 },

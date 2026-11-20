@@ -82,7 +82,42 @@ describe('authentication', () => {
     const result = await auth.login('+261-34-12-345-67', 'password123');
     expect(result.user.id).toBe('user-2');
     expect(result.user.phone).toBe('+261 34 12 345 67');
-    expect(prisma.user.findFirst).toHaveBeenCalledWith({ where: { phoneNormalized: '261341234567' } });
+    expect(prisma.user.findFirst).toHaveBeenCalledWith({
+      where: { phoneNormalized: '261341234567' },
+      include: { roles: { select: { role: true } } },
+    });
+  });
+
+  test('reports isResponsible based on the account’s roles', async () => {
+    const passwordHash = await hashPassword('password123');
+    const findFirst = mock(async () => ({
+      id: 'user-resp',
+      accountName: 'Tiana',
+      email: 'tiana@example.org',
+      emailNormalized: 'tiana@example.org',
+      phone: null,
+      phoneNormalized: null,
+      passwordHash,
+      isActive: true,
+      roles: [{ role: 'ENTITY_MANAGER' }],
+    }));
+    const auth = new AuthService({ user: { findFirst }, authSession: { create: mock(async () => ({})) } } as never, secret);
+    const result = await auth.login('tiana@example.org', 'password123');
+    expect(result.user.isResponsible).toBe(true);
+
+    findFirst.mockImplementationOnce(async () => ({
+      id: 'user-plain',
+      accountName: 'Mamy',
+      email: 'mamy@example.org',
+      emailNormalized: 'mamy@example.org',
+      phone: null,
+      phoneNormalized: null,
+      passwordHash,
+      isActive: true,
+      roles: [],
+    }));
+    const plain = await auth.login('mamy@example.org', 'password123');
+    expect(plain.user.isResponsible).toBe(false);
   });
 
   test('rejects wrong passwords and inactive accounts with the same response', async () => {
@@ -135,7 +170,10 @@ describe('authentication', () => {
     const prisma = createPrisma(user);
     const auth = new AuthService(prisma as never, secret);
     await auth.login(' SOLO@example.org ', 'password123');
-    expect(prisma.user.findFirst).toHaveBeenCalledWith({ where: { emailNormalized: 'solo@example.org' } });
+    expect(prisma.user.findFirst).toHaveBeenCalledWith({
+      where: { emailNormalized: 'solo@example.org' },
+      include: { roles: { select: { role: true } } },
+    });
     expect(prisma.authSession.create).toHaveBeenCalled();
   });
 
@@ -181,6 +219,7 @@ describe('authentication', () => {
         email: 'tiana@example.org',
         phone: null,
         isActive: true,
+        roles: [],
       },
     };
     const prisma = {
@@ -259,7 +298,7 @@ function createPrisma(user: {
     const found =
       (where.emailNormalized && user.emailNormalized === where.emailNormalized) ||
       (where.phoneNormalized && user.phoneNormalized === where.phoneNormalized);
-    return found ? user : null;
+    return found ? { ...user, roles: [] } : null;
   });
   return {
     user: { findFirst },

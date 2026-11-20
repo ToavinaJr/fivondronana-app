@@ -11,8 +11,8 @@ export class CvResponseDto {
   province!: string;
   area!: string;
   fivondronana!: string;
-  extraPersonal!: string[];
-  extraContact!: string[];
+  extraPersonal!: Array<{ label: string; value: string }>;
+  extraContact!: Array<{ label: string; value: string }>;
   branches!: Array<{
     name: string;
     group: string;

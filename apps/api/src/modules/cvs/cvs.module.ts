@@ -32,11 +32,19 @@ class MyCvController {
       ['name', 'group', 'project', 'startedAt', 'endedAt'],
     );
     const activities = normalizeRows(body.activities, [], ['name', 'responsibility', 'description', 'date']);
-    const strings = (value: unknown) => {
+    const extraFields = (value: unknown) => {
       if (value === undefined) return [];
-      if (!Array.isArray(value) || value.some((item) => typeof item !== 'string'))
-        throw new BadRequestException('Les informations supplémentaires sont invalides.');
-      return value.map((item: string) => item.trim()).filter(Boolean);
+      if (!Array.isArray(value)) throw new BadRequestException('Les informations supplémentaires sont invalides.');
+      return value.flatMap((item) => {
+        if (!item || typeof item !== 'object' || Array.isArray(item))
+          throw new BadRequestException('Les informations supplémentaires sont invalides.');
+        const { label, value: fieldValue } = item as Record<string, unknown>;
+        if (typeof label !== 'string' || typeof fieldValue !== 'string')
+          throw new BadRequestException('Les informations supplémentaires sont invalides.');
+        const trimmedLabel = label.trim();
+        const trimmedValue = fieldValue.trim();
+        return trimmedLabel && trimmedValue ? [{ label: trimmedLabel, value: trimmedValue }] : [];
+      });
     };
     const data = {
       firstName: (body.firstName as string).trim(),
@@ -50,8 +58,8 @@ class MyCvController {
       province: (body.province as string).trim(),
       area: (body.area as string).trim(),
       fivondronana: (body.fivondronana as string).trim(),
-      extraPersonal: strings(body.extraPersonal),
-      extraContact: strings(body.extraContact),
+      extraPersonal: extraFields(body.extraPersonal),
+      extraContact: extraFields(body.extraContact),
     };
     const userId = request.auth.user.id;
     return this.prisma.$transaction(async (tx) => {

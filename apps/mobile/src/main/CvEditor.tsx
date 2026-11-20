@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { BrandIcon } from '../access/BrandIcon';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -185,11 +186,10 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
           error={fieldErrors.lastName}
         />
         <Field label="Adiresy *" value={cv.address} onChange={(v) => field('address', v)} error={fieldErrors.address} />
-        <Field
-          label="Daty nahaterahana * (YYYY-MM-DD)"
+        <DateField
+          label="Daty nahaterahana *"
           value={cv.birthDate}
           onChange={(v) => field('birthDate', v)}
-          keyboardType="numbers-and-punctuation"
           error={fieldErrors.birthDate}
         />
         <Field label="Toerana nahaterahana" value={cv.birthPlace ?? ''} onChange={(v) => field('birthPlace', v)} />
@@ -286,13 +286,13 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
               value={row.project}
               onChange={(v) => updateRow<CvBranch>('branches', index, { project: v })}
             />
-            <Field
+            <DateField
               label="Daty nanombohana"
               value={row.startedAt}
               onChange={(v) => updateRow<CvBranch>('branches', index, { startedAt: v })}
               error={fieldErrors[`branches.${index}.startedAt`]}
             />
-            <Field
+            <DateField
               label="Daty namaranana"
               value={row.endedAt}
               onChange={(v) => updateRow<CvBranch>('branches', index, { endedAt: v })}
@@ -328,7 +328,7 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
               value={row.description}
               onChange={(v) => updateRow<CvActivity>('activities', index, { description: v })}
             />
-            <Field
+            <DateField
               label="Daty"
               value={row.date}
               onChange={(v) => updateRow<CvActivity>('activities', index, { date: v })}
@@ -429,6 +429,58 @@ function Field({
     </View>
   );
 }
+function parseIsoDate(value: string): Date {
+  const parsed = value ? new Date(`${value}T00:00:00`) : new Date();
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function toIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function DateField({
+  label,
+  value,
+  onChange,
+  error,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        onPress={() => setOpen(true)}
+        style={[styles.input, styles.dateInput, error && styles.inputError]}
+      >
+        <Text style={value ? styles.dateValue : styles.datePlaceholder}>{value || 'Safidio ny daty'}</Text>
+      </Pressable>
+      {open ? (
+        <RNDateTimePicker
+          value={parseIsoDate(value)}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'inline' : 'default'}
+          onValueChange={(_event, selected) => {
+            setOpen(Platform.OS === 'ios');
+            onChange(toIsoDate(selected));
+          }}
+          onDismiss={() => setOpen(false)}
+        />
+      ) : null}
+      {error ? (
+        <Text accessibilityRole="alert" style={styles.fieldError}>
+          {error}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
 function AddButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.add}>
@@ -467,6 +519,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputError: { borderColor: colors.error, borderWidth: 2 },
+  dateInput: { justifyContent: 'center' },
+  dateValue: { color: colors.text, fontSize: 16 },
+  datePlaceholder: { color: colors.secondary, fontSize: 16 },
   add: {
     minHeight: 44,
     flexDirection: 'row',

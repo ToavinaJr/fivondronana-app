@@ -5,8 +5,15 @@ import { apiValidationPipe } from './api-validation.js';
 import { PaginationQueryDto } from './common/pagination.js';
 import { createOpenApiConfig, OPENAPI_PREFIX } from './openapi.js';
 import { getAllowedOrigins, getPositiveInteger, RequestRateLimiter } from './http-security.js';
+import { REFRESH_COOKIE, browserMutationAllowed, readCookie } from './modules/auth/browser-session.js';
 
-type SecurityRequest = { method: string; path: string; ip?: string; socket: { remoteAddress?: string } };
+type SecurityRequest = {
+  method: string;
+  path: string;
+  ip?: string;
+  socket: { remoteAddress?: string };
+  headers?: { cookie?: string; origin?: string; 'x-csrf-token'?: string };
+};
 type SecurityResponse = {
   setHeader(name: string, value: string): void;
   status(code: number): { json(body: unknown): void };
@@ -15,7 +22,12 @@ type SecurityResponse = {
 export function configureApiApp(app: NestExpressApplication): void {
   const allowedOrigins = getAllowedOrigins(process.env);
   if (allowedOrigins.length > 0)
-    app.enableCors({ origin: allowedOrigins, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] });
+    app.enableCors({
+      origin: allowedOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    });
   const bodyLimit = process.env.API_BODY_LIMIT ?? '100kb';
   app.useBodyParser('json', { limit: bodyLimit });
   app.useBodyParser('urlencoded', { limit: bodyLimit, extended: true });
@@ -30,9 +42,52 @@ export function configureApiApp(app: NestExpressApplication): void {
     response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     if (process.env.NODE_ENV === 'production')
       response.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    const cookieHeader = request.headers?.cookie;
+    const browserAuthEndpoint = [
+      '/api/auth/browser/login',
+      '/api/auth/browser/refresh',
+      '/api/auth/browser/logout',
+    ].includes(request.path);
+    if (
+      browserAuthEndpoint &&
+      request.method !== 'OPTIONS' &&
+      (!request.headers?.origin || !allowedOrigins.includes(request.headers.origin))
+    ) {
+      response.status(403).json({ statusCode: 403, message: 'Origine du navigateur non autorisée.' });
+      return;
+    }
+    const browserCookiesPresent =
+      readCookie(cookieHeader, REFRESH_COOKIE) !== undefined ||
+      readCookie(cookieHeader, '__Host-fivondronana-access') !== undefined;
+    if (
+      browserCookiesPresent &&
+      !browserMutationAllowed(
+        request.method,
+        {
+          cookie: cookieHeader,
+          origin: request.headers?.origin,
+          'x-csrf-token': request.headers?.['x-csrf-token'],
+        },
+        allowedOrigins,
+      )
+    ) {
+      response.status(403).json({ statusCode: 403, message: 'Vérification de sécurité du navigateur échouée.' });
+      return;
+    }
     if (
       request.method === 'POST' &&
-      ['/api/auth/login', '/api/auth/password', '/api/auth/activate'].includes(request.path)
+      [
+        '/api/auth/login',
+        '/api/auth/refresh',
+        '/api/auth/logout',
+        '/api/auth/password',
+        '/api/auth/password-recovery',
+        '/api/auth/password-reset',
+        '/api/auth/activate',
+        '/api/auth/browser/login',
+        '/api/auth/browser/refresh',
+        '/api/auth/browser/logout',
+      ].includes(request.path)
     ) {
       const decision = limiter.check(`${request.path}:${request.ip ?? request.socket.remoteAddress ?? 'unknown'}`);
       if (!decision.allowed) {

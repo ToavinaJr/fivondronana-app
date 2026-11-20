@@ -50,7 +50,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 
 ### Resolved 18 November 2026 (see the ADR for full wording)
 
-- "Tsarovy aho" opens a long-lived session via a refreshed/rotated refresh token with secure revocation; exact numeric duration is set at implementation time, not left unresolved.
+- Session tokens are stored with Expo SecureStore. Access tokens expire after 15 minutes; refresh tokens rotate. Sessions last 24 hours by default or 30 days when "Tsarovy aho" is selected; logout and account deactivation revoke sessions.
 - Password recovery uses email only, via SendGrid, with a short-lived single-use token.
 - Archive files (Arisiva): 5 MB max per file, PostgreSQL-backed `FileStorage` port in development, extension allow-list + real-MIME-sniff + antivirus-scan checks required before a file is servable; production storage host (Neon vs self-hosted Postgres) is an open connection-string choice that does not block implementation.
 - Notifications (Fampafantarana): PostgreSQL-backed, generated from real application events, with read/unread and user-initiated deletion; no demo notifications in production.
@@ -62,7 +62,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 
 - Arisiva antivirus scanning uses the private ClamAV 1.5.4 service; uploads fail closed when the scanner is unavailable.
 - Whether Hafatra conversation membership is derived from entity/role or explicitly modeled as its own addable/removable record — shapes the schema and whether the backoffice needs a membership screen.
-- The backoffice's own browser session transport (cookie vs. bearer token) — distinct from mobile's token handling and not covered by the hosting decision.
+- Password recovery currently sends one-time links by email via SendGrid; SMS recovery is not implemented.
 - The enumerated list of event sources that generate a notification, and global-search scope — notification storage/semantics are decided, but which events fire one, and what search covers, are not.
 - Messaging attachment byte-size/retention specifics beyond the general 5 MB file limit shared with Arisiva.
 - The standalone FIVONDRONANA organization logo and profile photos have not been supplied. Tily/Mpanazava and branch emblem JPEGs exist in `src/assets/`; use only the matching unit emblem when the related unit is known, and keep the organization wordmark until its official logo is provided.
@@ -78,7 +78,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 - Implemented API routes: health/readiness, login/current user/logout/password change/account activation, own-CV read/save, authorized paginated responsible directory and CV read/list/export data, authorized paginated contact directory, administrator entity/group reference management and one-to-one entity/group assignment, administrator responsibility catalogue/assignment management, administrator contact CRUD/publish, and administrator account search/create/update/invitation/deactivation/reactivation.
 - Authentication sessions, roles, one entity/group membership per responsible, official responsibilities, account invitations and their delivery state, admin audit events, personal CV sections, and contacts are persisted through Prisma. New databases receive the approved four-item responsibility catalogue from a versioned migration. Administrator-created accounts remain inactive until a 24-hour single-use SendGrid activation link is redeemed; only a token hash is stored, delivery failures are visible and retryable, and deactivation revokes existing sessions.
 - The mobile leader directory, individual/all-CV PDF, and contact directory journeys use authenticated API data, with filters (leaders) or search (contacts) and loading, empty, retry, and refresh states. The Arisiva tab now lists published API archives and opens the original PDF/DOC/DOCX after an authenticated download; availability, authorization, and server errors are surfaced with retry actions. Notifications and messages remain explicit unavailable states until their APIs are implemented.
-- Archive storage, publication and delivery APIs are implemented; the mobile read/download flow is connected. The conversation API, backoffice application, and server-side notifications are still outstanding. The PostgreSQL integration runner creates and destroys an isolated `_test` database automatically. Small-device UI qualification remains outstanding; administrator-only API routes use server-side role and permission guards.
+- Archive storage, publication and delivery APIs are implemented; the mobile read/download flow is connected. Conversation APIs and server-side notifications remain outstanding. The backoffice now has React/TypeScript authentication, recovery, activation, and password-reset screens, with admin-role gating and `Secure; HttpOnly; SameSite=Lax` cookies plus CSRF checks; account-management screens and production hosting remain outstanding. The PostgreSQL integration runner creates and destroys an isolated `_test` database automatically. Small-device UI qualification remains outstanding; administrator-only API routes use server-side role and permission guards.
 - The detailed execution sequence is in `../../docs/superpowers/plans/2026-11-18-platform-completion.md`; confirmed decisions are in `../../docs/decisions/0001-platform-foundation.md`.
 
 ## Evidence on Hand
@@ -86,7 +86,7 @@ The product preserves and shares FIVONDRONANA's scout history and supports coord
 - Product and business requirements: `../../docs/Application mobile FIVONDRONANA.md`.
 - Mobile screen references: `../../docs/screens/` (13 JPEG files; the WhatsApp-named image is byte-identical to `landing-page.jpeg`).
 - Current application shell: `App.tsx` and the mobile screens under `src/`; the product shell exists, while several domain screens still use demonstration data or placeholder behavior.
-- Current API surface: health, authentication/session/account activation, password change, the authenticated user's own CV, leader directory/CV export, contact directory/admin CRUD, authenticated archive listing/download plus administrator archive management, and administrator user lifecycle/search. Conversations and the backoffice UI have no product endpoints/data models yet.
+- Current API surface: health, mobile and browser authentication/session, password recovery/reset, account activation and password change, the authenticated user's own CV, leader directory/CV export, contact directory/admin CRUD, authenticated archive listing/download plus administrator archive management, and administrator user lifecycle/search. Conversation endpoints/data models and backoffice account-management UI remain outstanding.
 - No standalone logo, icon, font, or illustration assets were found in the application or screen reference directories.
 
 ## Product Principles

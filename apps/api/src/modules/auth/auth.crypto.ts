@@ -2,7 +2,7 @@ import { createHash, createHmac, randomBytes, scrypt as scryptCallback, timingSa
 const passwordBytes = 64;
 const tokenLifetimeSeconds = 15 * 60;
 
-export type AccessClaims = { sub: string; sid: string; iat: number; exp: number };
+export type AccessClaims = { sub: string; sid: string; iat: number; exp: number; jti?: string };
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('base64url');
@@ -35,7 +35,13 @@ export function issueAccessToken(
   const issuedAt = Math.floor(now / 1000);
   const expiresAtSeconds = issuedAt + tokenLifetimeSeconds;
   const header = encodeJson({ alg: 'HS256', typ: 'JWT' });
-  const payload = encodeJson({ sub: subject, sid: sessionId, iat: issuedAt, exp: expiresAtSeconds });
+  const payload = encodeJson({
+    sub: subject,
+    sid: sessionId,
+    jti: randomBytes(16).toString('base64url'),
+    iat: issuedAt,
+    exp: expiresAtSeconds,
+  });
   const unsigned = `${header}.${payload}`;
   const signature = createHmac('sha256', secret).update(unsigned).digest('base64url');
   return {

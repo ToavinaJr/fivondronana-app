@@ -33,6 +33,10 @@ describe('HTTP security policy', () => {
     ).toThrow('Production CORS origins must use HTTPS.');
   });
 
+  it('allows the local backoffice origin by default outside production', () => {
+    expect(getAllowedOrigins({ NODE_ENV: 'development' })).toEqual(['http://localhost:5173']);
+  });
+
   it('limits repeated sensitive requests per key and resets after the window', () => {
     let now = 1000;
     const limiter = new RequestRateLimiter(2, 5000, () => now);
@@ -82,6 +86,35 @@ describe('HTTP security policy', () => {
       restoreEnvironment('AUTH_RATE_LIMIT', originalLimit);
       restoreEnvironment('AUTH_RATE_WINDOW_SECONDS', originalWindow);
       restoreEnvironment('API_BODY_LIMIT', originalBodyLimit);
+    }
+  });
+
+  it('enables credentialed CORS for the configured backoffice origin', async () => {
+    const previousOrigins = process.env.CORS_ALLOWED_ORIGINS;
+    process.env.CORS_ALLOWED_ORIGINS = 'http://localhost:5173';
+    const app = await NestFactory.create<NestExpressApplication>(RateLimitProbeModule, {
+      bodyParser: false,
+      logger: false,
+    });
+    try {
+      configureApiApp(app);
+      await app.listen(0, '127.0.0.1');
+      const address = app.getHttpServer().address() as { port: number };
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/auth/login`, {
+        method: 'OPTIONS',
+        headers: {
+          Origin: 'http://localhost:5173',
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'content-type,x-csrf-token',
+        },
+      });
+
+      expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:5173');
+      expect(response.headers.get('access-control-allow-credentials')).toBe('true');
+      expect(response.headers.get('access-control-allow-headers')?.toLowerCase()).toContain('x-csrf-token');
+    } finally {
+      await app.close();
+      restoreEnvironment('CORS_ALLOWED_ORIGINS', previousOrigins);
     }
   });
 });

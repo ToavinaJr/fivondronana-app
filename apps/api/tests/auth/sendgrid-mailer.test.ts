@@ -54,6 +54,22 @@ describe('SendGrid account activation mailer', () => {
     ).rejects.toMatchObject({ message: 'Impossible d’envoyer le courriel d’activation.' });
   });
 
+  it('sends password reset links with the token only in the URL fragment', async () => {
+    process.env.SENDGRID_API_KEY = 'unit-test-api-key';
+    process.env.SENDGRID_FROM_EMAIL = 'noreply@example.test';
+    process.env.BACKOFFICE_URL = 'https://portal.example.test';
+    let requestBody = '';
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      requestBody = String(init?.body ?? '');
+      return new Response(null, { status: 202 });
+    }) as typeof fetch;
+
+    await new SendGridMailer().sendPasswordReset('leader@example.test', 'Leader', 'opaque-reset-token');
+
+    expect(requestBody).toContain('https://portal.example.test/reset-password#token=opaque-reset-token');
+    expect(requestBody).not.toContain('reset-password?token=');
+  });
+
   it('requires all sender settings before attempting a delivery', async () => {
     delete process.env.SENDGRID_API_KEY;
     process.env.SENDGRID_FROM_EMAIL = 'noreply@example.test';

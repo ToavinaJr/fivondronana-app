@@ -13,13 +13,14 @@ import {
 import { Brand } from './Brand';
 import { BrandIcon } from './BrandIcon';
 import { validateEmail, validateLogin } from './validation';
+import { requestPasswordRecovery } from './auth-api';
 import { colors } from '../theme/tokens';
 
 type WelcomeProps = { onLogin: () => void };
 type LoginProps = {
   onRecovery: () => void;
   onBack: () => void;
-  onAuthenticate: (identifier: string, password: string) => Promise<void>;
+  onAuthenticate: (identifier: string, password: string, rememberMe: boolean) => Promise<void>;
 };
 type RecoveryProps = { onBack: () => void };
 
@@ -124,7 +125,7 @@ export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) 
     if (Object.keys(validation).length) return;
     setIsSubmitting(true);
     try {
-      await onAuthenticate(identifier.trim(), password);
+      await onAuthenticate(identifier.trim(), password, remember);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Tsy tontosa ny fidirana.');
     } finally {
@@ -217,10 +218,23 @@ export function RecoveryScreen({ onBack }: RecoveryProps) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<'required' | 'invalid'>();
   const [notice, setNotice] = useState('');
-  const submit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submit = async () => {
     const validation = validateEmail(email);
     setError(validation);
-    setNotice(validation ? '' : 'Tsy mbola misy ny fanarenana teny miafina. Mifandraisa amin’ny mpitantana.');
+    setNotice('');
+    if (validation) return;
+    setIsSubmitting(true);
+    try {
+      await requestPasswordRecovery(email);
+      setNotice(
+        'Raha mifanaraka amin’ny kaonty ilay mailaka dia handray rohy fanarenana ianao. Jereo koa ny lahatahiry spam.',
+      );
+    } catch (requestError) {
+      setNotice(requestError instanceof Error ? requestError.message : 'Tsy tontosa ny fangatahana. Andramo indray.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -251,7 +265,13 @@ export function RecoveryScreen({ onBack }: RecoveryProps) {
         )}
         {notice ? <Notice>{notice}</Notice> : null}
         <View style={styles.recoveryButton}>
-          <ActionButton label="Alefa" onPress={submit} />
+          <ActionButton
+            label={isSubmitting ? 'Alefa…' : 'Alefa'}
+            onPress={() => {
+              void submit();
+            }}
+            disabled={isSubmitting}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

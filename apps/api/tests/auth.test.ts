@@ -1,5 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { AuthService } from '../src/modules/auth/auth.service.js';
+import { createHash } from 'node:crypto';
 import { hashPassword, issueAccessToken, verifyPassword, verifyAccessToken } from '../src/modules/auth/auth.crypto.js';
 
 const secret = 'this-is-a-test-signing-secret-at-least-32-chars';
@@ -30,6 +31,16 @@ describe('authentication', () => {
     expect(verifyAccessToken(result.accessToken, secret).sub).toBe('user-1');
     const tampered = `${result.accessToken.slice(0, -1)}x`;
     expect(() => verifyAccessToken(tampered, secret)).toThrow();
+  });
+
+  test('issues distinct access tokens even when refreshed within the same second', () => {
+    const now = 1_000_000;
+    const first = issueAccessToken('user-1', 'session-1', secret, now).token;
+    const second = issueAccessToken('user-1', 'session-1', secret, now).token;
+
+    expect(second).not.toBe(first);
+    expect(verifyAccessToken(first, secret, now)).toMatchObject({ sub: 'user-1', sid: 'session-1' });
+    expect(verifyAccessToken(second, secret, now)).toMatchObject({ sub: 'user-1', sid: 'session-1' });
   });
 
   test('rejects a non-canonical Base64URL signature with equivalent trailing bits', () => {
@@ -126,6 +137,81 @@ describe('authentication', () => {
     await auth.login(' SOLO@example.org ', 'password123');
     expect(prisma.user.findFirst).toHaveBeenCalledWith({ where: { emailNormalized: 'solo@example.org' } });
     expect(prisma.authSession.create).toHaveBeenCalled();
+  });
+
+  test('issues a long-lived refresh token only when the responsible selects remember me', async () => {
+    const user = {
+      id: 'user-remember',
+      accountName: 'Solo',
+      email: 'solo@example.org',
+      emailNormalized: 'solo@example.org',
+      phone: null,
+      phoneNormalized: null,
+      passwordHash: await hashPassword('password123'),
+      isActive: true,
+    };
+    const prisma = createPrisma(user);
+    const result = await new AuthService(prisma as never, secret).login('solo@example.org', 'password123', true);
+
+    expect(result.refreshToken).toMatch(/^[A-Za-z0-9_-]{40,}$/);
+    expect(result.expiresIn).toBe(15 * 60);
+    expect(result.refreshExpiresIn).toBe(30 * 24 * 60 * 60);
+    expect(prisma.authSession.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-remember',
+        refreshTokenHash: createHash('sha256').update(result.refreshToken).digest('hex'),
+        expiresAt: expect.any(Date),
+      }),
+    });
+    expect(result).not.toHaveProperty('rememberMe');
+  });
+
+  test('rotates a refresh token once and refuses replay', async () => {
+    const currentHash = createHash('sha256').update('refresh-token-current').digest('hex');
+    let persistedHash = currentHash;
+    const session = {
+      id: 'session-refresh',
+      userId: 'user-refresh',
+      expiresAt: new Date(Date.now() + 60_000),
+      revokedAt: null,
+      refreshTokenHash: currentHash,
+      user: {
+        id: 'user-refresh',
+        accountName: 'Tiana',
+        email: 'tiana@example.org',
+        phone: null,
+        isActive: true,
+      },
+    };
+    const prisma = {
+      authSession: {
+        findFirst: mock(async ({ where }: { where: { refreshTokenHash: string } }) =>
+          where.refreshTokenHash === persistedHash ? session : null,
+        ),
+        updateMany: mock(
+          async ({ where, data }: { where: { refreshTokenHash: string }; data: { refreshTokenHash: string } }) => {
+            if (where.refreshTokenHash !== persistedHash) return { count: 0 };
+            persistedHash = data.refreshTokenHash;
+            return { count: 1 };
+          },
+        ),
+      },
+    };
+    const auth = new AuthService(prisma as never, secret);
+
+    const rotated = await auth.refresh('refresh-token-current');
+    expect(rotated.accessToken).toBeTruthy();
+    expect(rotated.refreshToken).not.toBe('refresh-token-current');
+    expect(prisma.authSession.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'session-refresh',
+        refreshTokenHash: currentHash,
+        revokedAt: null,
+        expiresAt: { gt: expect.any(Date) },
+      },
+      data: { refreshTokenHash: expect.any(String) },
+    });
+    await expect(auth.refresh('refresh-token-current')).rejects.toThrow();
   });
 
   test('changes the password only after verifying the current one and revokes every session', async () => {

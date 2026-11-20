@@ -46,10 +46,11 @@ export class RequestRateLimiter {
 }
 
 export function getAllowedOrigins(env: NodeJS.ProcessEnv): string[] {
-  const origins = (env.CORS_ALLOWED_ORIGINS ?? '')
+  const configured = (env.CORS_ALLOWED_ORIGINS ?? '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+  const origins = configured.length === 0 && env.NODE_ENV !== 'production' ? ['http://localhost:5173'] : configured;
   if (env.NODE_ENV === 'production' && origins.length === 0) {
     throw new Error('CORS_ALLOWED_ORIGINS must be configured in production.');
   }

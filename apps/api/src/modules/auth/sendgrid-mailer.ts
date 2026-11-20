@@ -7,8 +7,37 @@ export class SendGridMailer {
   }
 
   async sendAccountActivation(email: string, accountName: string, token: string): Promise<void> {
+    await this.sendLink(
+      email,
+      accountName,
+      token,
+      '/activate',
+      'Activation de votre compte FIVONDRONANA',
+      'définissez votre mot de passe',
+    );
+  }
+
+  async sendPasswordReset(email: string, accountName: string, token: string): Promise<void> {
+    await this.sendLink(
+      email,
+      accountName,
+      token,
+      '/reset-password',
+      'Réinitialisation de votre mot de passe FIVONDRONANA',
+      'réinitialisez votre mot de passe',
+    );
+  }
+
+  private async sendLink(
+    email: string,
+    accountName: string,
+    token: string,
+    route: string,
+    subject: string,
+    instruction: string,
+  ): Promise<void> {
     const { apiKey, fromEmail, activationBaseUrl } = this.getConfiguration();
-    const activationUrl = new URL('/activate', activationBaseUrl);
+    const activationUrl = new URL(route, activationBaseUrl);
     activationUrl.hash = new URLSearchParams({ token }).toString();
     let response: Response;
     try {
@@ -18,11 +47,11 @@ export class SendGridMailer {
         body: JSON.stringify({
           personalizations: [{ to: [{ email }] }],
           from: { email: fromEmail },
-          subject: 'Activation de votre compte FIVONDRONANA',
+          subject,
           content: [
             {
               type: 'text/plain',
-              value: `Bonjour ${accountName}, définissez votre mot de passe via ce lien à usage unique :\n${activationUrl.toString()}\n`,
+              value: `Bonjour ${accountName}, ${instruction} via ce lien à usage unique :\n${activationUrl.toString()}\n`,
             },
           ],
         }),

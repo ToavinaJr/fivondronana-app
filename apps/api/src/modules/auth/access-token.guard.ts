@@ -1,9 +1,18 @@
-import { type CanActivate, type ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  type CanActivate,
+  type ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { type AuthenticatedUser, AuthService, toAuthenticatedUser } from './auth.service.js';
 import { type AccessClaims, validateJwtSecret, verifyAccessToken } from './auth.crypto.js';
+import { ACCESS_COOKIE, browserMutationAllowed, readCookie } from './browser-session.js';
+import { getAllowedOrigins } from '../../http-security.js';
 
 export type AuthenticatedRequest = {
-  headers: { authorization?: string };
+  method?: string;
+  headers: { authorization?: string; cookie?: string; origin?: string; 'x-csrf-token'?: string };
   auth: { user: AuthenticatedUser; sessionId: string };
 };
 
@@ -15,8 +24,16 @@ export class AccessTokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const [scheme, token] = request.headers.authorization?.split(' ') ?? [];
-    if (scheme !== 'Bearer' || !token) throw new UnauthorizedException('Jeton d’accès manquant.');
+    const [scheme, bearerToken] = request.headers.authorization?.split(' ') ?? [];
+    const cookieToken = readCookie(request.headers.cookie, ACCESS_COOKIE);
+    const token = scheme === 'Bearer' ? bearerToken : cookieToken;
+    if (!token) throw new UnauthorizedException('Jeton d’accès manquant.');
+    if (
+      scheme !== 'Bearer' &&
+      !browserMutationAllowed(request.method ?? 'GET', request.headers, getAllowedOrigins(process.env))
+    ) {
+      throw new ForbiddenException('Vérification de sécurité du navigateur échouée.');
+    }
     let claims: AccessClaims;
     try {
       claims = verifyAccessToken(token, this.secret);

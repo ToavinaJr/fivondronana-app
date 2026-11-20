@@ -76,6 +76,26 @@ describe.skipIf(!testDatabaseUrl)('NestJS HTTP API with PostgreSQL', () => {
     expect(session.user).not.toHaveProperty('passwordHash');
   });
 
+  test('rotates a refresh token and rejects reuse of the old token', async () => {
+    const session = await login();
+    const refreshResponse = await fetch(`${baseUrl}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+    const rotated = (await refreshResponse.json()) as { accessToken: string; refreshToken: string };
+    const replay = await fetch(`${baseUrl}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+
+    expect(refreshResponse.status).toBe(200);
+    expect(rotated.accessToken).not.toBe(session.accessToken);
+    expect(rotated.refreshToken).not.toBe(session.refreshToken);
+    expect(replay.status).toBe(401);
+  });
+
   test('returns the shared error contract for invalid request bodies', async () => {
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
@@ -131,7 +151,8 @@ describe.skipIf(!testDatabaseUrl)('NestJS HTTP API with PostgreSQL', () => {
     const session = await login();
     const logoutResponse = await fetch(`${baseUrl}/api/auth/logout`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${session.accessToken}` },
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
     });
     const meResponse = await fetch(`${baseUrl}/api/auth/me`, {
       headers: { Authorization: `Bearer ${session.accessToken}` },
@@ -142,14 +163,14 @@ describe.skipIf(!testDatabaseUrl)('NestJS HTTP API with PostgreSQL', () => {
     expect(await meResponse.json()).toMatchObject({ statusCode: 401, code: 'UNAUTHORIZED' });
   });
 
-  async function login(): Promise<{ accessToken: string; user: Record<string, unknown> }> {
+  async function login(): Promise<{ accessToken: string; refreshToken: string; user: Record<string, unknown> }> {
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier: email, password: 'integration-password' }),
     });
     expect(response.status).toBe(200);
-    return response.json() as Promise<{ accessToken: string; user: Record<string, unknown> }>;
+    return response.json() as Promise<{ accessToken: string; refreshToken: string; user: Record<string, unknown> }>;
   }
 });
 

@@ -4,38 +4,53 @@ import { readCvResponse } from './cv-response';
 import { SessionExpiredError } from './session';
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
+declare const __DEV__: boolean;
 
 export type AuthUser = { id: string; accountName: string; email: string | null; phone: string | null };
-export type AuthSession = { accessToken: string; user: AuthUser };
+export type AuthSession = { accessToken: string; refreshToken: string; expiresIn: number; user: AuthUser };
 
-function getApiBaseUrl(): string {
-  const url = new URL(process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api');
-  const isLoopback = ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
-  const expoHostUri = Constants.expoConfig?.hostUri;
-  if (isLoopback && expoHostUri) {
+export function resolveApiBaseUrl(
+  configuredUrl = 'http://localhost:3000/api',
+  expoHostUri?: string,
+  allowInsecureRemote = false,
+): string {
+  const url = new URL(configuredUrl);
+  if (!['http:', 'https:'].includes(url.protocol)) throw new Error('The mobile API URL must use HTTP or HTTPS.');
+  if (isLoopbackHost(url.hostname) && expoHostUri) {
     try {
       const expoHost = new URL(`http://${expoHostUri}`).hostname;
-      if (expoHost && !['localhost', '127.0.0.1', '::1'].includes(expoHost)) url.hostname = expoHost;
+      if (expoHost && !isLoopbackHost(expoHost)) url.hostname = expoHost;
     } catch {
       // Keep the configured host when Expo does not expose a usable development host.
     }
   }
+  if (url.protocol === 'http:' && !isLoopbackHost(url.hostname) && !allowInsecureRemote) {
+    throw new Error('The mobile API must use HTTPS outside local development.');
+  }
   return url.toString().replace(/\/$/, '');
 }
 
-const apiBaseUrl = getApiBaseUrl();
+function isLoopbackHost(hostname: string): boolean {
+  return ['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname.toLowerCase());
+}
+
+const apiBaseUrl = resolveApiBaseUrl(
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api',
+  Constants.expoConfig?.hostUri,
+  typeof __DEV__ !== 'undefined' && __DEV__,
+);
 
 export function getConfiguredApiBaseUrl(): string {
   return apiBaseUrl;
 }
 
-export async function login(identifier: string, password: string): Promise<AuthSession> {
+export async function login(identifier: string, password: string, rememberMe: boolean): Promise<AuthSession> {
   let response: Response;
   try {
     response = await fetch(`${apiBaseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier, password }),
+      body: JSON.stringify({ identifier, password, rememberMe }),
     });
   } catch {
     throw new Error(
@@ -48,10 +63,35 @@ export async function login(identifier: string, password: string): Promise<AuthS
   return response.json() as Promise<AuthSession>;
 }
 
-export async function logout(accessToken: string): Promise<void> {
+export async function refreshSession(refreshToken: string): Promise<AuthSession> {
+  const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  }).catch(() => {
+    throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
+  });
+  if (response.status === 401) throw new SessionExpiredError();
+  if (!response.ok) throw new Error('Tsy azo havaozina ny session. Andramo indray.');
+  return response.json() as Promise<AuthSession>;
+}
+
+export async function requestPasswordRecovery(email: string): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/auth/password-recovery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  }).catch(() => {
+    throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
+  });
+  if (!response.ok) throw new Error('Tsy tontosa ny fangatahana. Andramo indray afaka kelikely.');
+}
+
+export async function logout(refreshToken: string): Promise<void> {
   await fetch(`${apiBaseUrl}/auth/logout`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
   }).catch(() => undefined);
 }
 

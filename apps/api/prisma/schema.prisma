@@ -25,6 +25,7 @@ model User {
   roles        UserRole[]
   responsibilities UserResponsibility[]
   invitations  AccountInvitation[]
+  passwordResetTokens PasswordResetToken[]
   auditActions AdminAuditEvent[] @relation("AdminAuditActor")
   auditTargets AdminAuditEvent[] @relation("AdminAuditSubject")
 }
@@ -40,6 +41,19 @@ model AccountInvitation {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, consumedAt, expiresAt])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt, consumedAt])
 }
 
 model AdminAuditEvent {
@@ -130,12 +144,13 @@ model UserResponsibility {
 }
 
 model AuthSession {
-  id        String    @id
-  userId    String
-  createdAt DateTime  @default(now())
-  expiresAt DateTime
-  revokedAt DateTime?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String    @id
+  userId           String
+  refreshTokenHash String?   @unique
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, revokedAt])
   @@index([expiresAt])

@@ -7,6 +7,8 @@
       "apps/api/tests/**",
       "apps/mobile/src/**",
       "apps/mobile/tests/**",
+      "apps/backoffice/src/**",
+      "apps/backoffice/tests/**",
       "scripts/**",
       "!**/generated/**"
     ]

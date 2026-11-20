@@ -10,7 +10,7 @@ Faire évoluer le prototype actuel vers une plateforme mobile et web fiable pour
 - Un administrateur peut également être responsable; les deux rôles peuvent coexister sur un compte.
 - Tous les responsables peuvent consulter les CV des responsables et conserver le téléchargement PDF individuel et global prévu au cahier des charges. Chaque responsable ne peut modifier que son propre CV.
 - Le catalogue initial des responsabilités est : Haim-panahy, Fampitaovana, Mpitantsoratra, Mpitahiry vola. Seul un administrateur peut créer ou retirer une responsabilité; une responsabilité affectée doit être retirée des comptes avant suppression.
-- Le portail web React/TypeScript est validé. L'administrateur s'authentifie avec les mêmes identifiants que les responsables; l'API applique les droits selon les rôles du compte.
+- Le portail web React/TypeScript est validé. L'administrateur s'authentifie avec les mêmes identifiants que les responsables; l'API applique les droits selon les rôles du compte. Le portail utilise des cookies `Secure; HttpOnly; SameSite=Lax` et une protection CSRF; le mobile conserve ses jetons dans Expo SecureStore.
 - Pour chaque nouveau lien temporaire de fichier, l'API revalide les droits. Un lien déjà émis reste valide au plus pendant sa courte expiration; la valeur de 5 minutes est la proposition de conception.
 - Aucune donnée réelle ni version mobile distribuée ne doit être préservée par une exigence de compatibilité. Les migrations restent versionnées et relues.
 
@@ -36,8 +36,8 @@ Faire évoluer le prototype actuel vers une plateforme mobile et web fiable pour
 - Interface mobile Malagasy-first et compatibilité iOS/Android.
 - Le backend est l'autorité pour les permissions et l'accès aux CV, documents, contacts et conversations.
 - L'unicité de groupe et d'entité est un invariant serveur et base de données.
-- La récupération de mot de passe offrira le choix email ou SMS, mais fournisseurs et vérification du canal restent à sélectionner.
-- Le comportement exact de « Tsarovy aho » et la durée totale d'une session restent à fixer; le jeton d'accès de 15 minutes actuellement codé est provisoire.
+- La récupération de mot de passe utilise actuellement l'email via SendGrid; l'ajout du SMS reste à décider séparément.
+- Les sessions ont un jeton d'accès de 15 minutes, une durée de 24 heures par défaut et de 30 jours avec « Tsarovy aho »; les jetons sont rotatifs et révoqués côté serveur.
 - Pour Arisiva, le stockage PostgreSQL derrière `FileStorage`, les formats PDF/DOC/DOCX (5 Mio maximum) et ClamAV 1.5.4 sont décidés; l'hébergement définitif de production demeure un choix d'infrastructure ultérieur. L'hébergement du backoffice et les objectifs SLO/RPO/RTO restent ouverts.
 - Le retrait d'une responsabilité affectée nécessite d'abord son retrait/réaffectation des comptes.
 
@@ -45,7 +45,7 @@ Faire évoluer le prototype actuel vers une plateforme mobile et web fiable pour
 
 - L'API expose health, login, session courante, logout, changement de mot de passe et lecture/sauvegarde du CV personnel.
 - Le schéma Prisma contient `User`, `AuthSession`, `Cv`, `CvBranch` et `CvActivity`.
-- Le mobile possède les écrans d'accès, le shell principal et l'éditeur de CV.
+- Le mobile possède les écrans d'accès, le shell principal et l'éditeur de CV. Les jetons de session y sont protégés par Expo SecureStore.
 - L'annuaire, les archives, contacts, notifications et conversations utilisent encore des fixtures ou des placeholders.
 - Les modules API correspondants sont présents mais ne fournissent pas encore de fonctionnalités métier.
 - Les contrôles statiques, typecheck et tests unitaires passent; les tests PostgreSQL sont encore ignorés lorsque la base de test n'est pas disponible.

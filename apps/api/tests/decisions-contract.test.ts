@@ -45,6 +45,6 @@ describe('ADR decision contract', () => {
     expect(adr).toContain('restent à définir');
     expect(businessRules).toContain('aucune règle contradictoire ne doit être choisie implicitement');
     expect(prismaSchema).toMatch(/^model Archive /m);
-    expect(prismaSchema).not.toMatch(/^model (Notification|Conversation|Message) /m);
+    expect(prismaSchema).not.toMatch(/^model Notification /m);
   });
 });

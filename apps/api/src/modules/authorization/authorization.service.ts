@@ -40,7 +40,8 @@ export class AuthorizationService {
       permission === Permission.ENTITIES_MANAGE ||
       permission === Permission.RESPONSIBILITIES_MANAGE ||
       permission === Permission.CONTACTS_MANAGE ||
-      permission === Permission.ARCHIVES_MANAGE
+      permission === Permission.ARCHIVES_MANAGE ||
+      permission === Permission.CONVERSATIONS_MANAGE
     ) {
       return roles.has(UserRole.ADMINISTRATOR);
     }

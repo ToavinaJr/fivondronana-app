@@ -28,6 +28,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   auditActions AdminAuditEvent[] @relation("AdminAuditActor")
   auditTargets AdminAuditEvent[] @relation("AdminAuditSubject")
+  messages     Message[]
 }
 
 model AccountInvitation {
@@ -78,12 +79,13 @@ enum Role {
 }
 
 model Entity {
-  id          String             @id @default(cuid())
-  name        String             @unique
-  isActive    Boolean            @default(true)
-  createdAt   DateTime           @default(now())
-  groups      Group[]
-  memberships EntityMembership[]
+  id            String             @id @default(cuid())
+  name          String             @unique
+  isActive      Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  groups        Group[]
+  memberships   EntityMembership[]
+  conversation  Conversation?
 }
 
 model Group {
@@ -224,6 +226,40 @@ model CvActivity {
   @@index([cvId])
 }
 
+enum ConversationKind {
+  GENERAL
+  ENTITY
+}
+
+model Conversation {
+  id                 String           @id @default(cuid())
+  kind               ConversationKind
+  title              String
+  entityId           String?          @unique
+  isGeneralSingleton Boolean?         @unique
+  isActive           Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  entity             Entity?          @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  messages           Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String?
+  attachmentKey  String?      @unique
+  attachmentName String?
+  attachmentType String?
+  attachmentSize Int?
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  attachment     FileObject?  @relation(fields: [attachmentKey], references: [storageKey], onDelete: Restrict)
+
+  @@index([conversationId, createdAt])
+}
+
 model FileObject {
   storageKey String   @id
   data       Bytes
@@ -231,6 +267,7 @@ model FileObject {
   sha256     String
   createdAt  DateTime @default(now())
   archive    Archive?
+  message    Message?
 }
 
 model Archive {

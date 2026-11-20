@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import logo from '../../mobile/src/assets/vonenina-logo.jpeg';
 import {
-  adminRequest,
   type AdminEntity,
   type AdminResponsibility,
   type AdminUser,
+  adminRequest,
   type PageResult,
 } from './admin-client';
+import { buttonOutlineClass, buttonPrimaryClass, noticeErrorClass } from './ui-classes';
 
 const PAGE_SIZE = 20;
 const roleLabels: Record<string, string> = {
@@ -15,6 +16,9 @@ const roleLabels: Record<string, string> = {
   ENTITY_MANAGER: 'Responsable d’entité',
   GENERAL_MANAGER: 'Responsable général',
 };
+
+const iconButtonClass =
+  'inline-grid h-[34px] w-[34px] shrink-0 place-items-center rounded-lg border-0 bg-transparent p-0 text-[#747670] enabled:hover:bg-[#fff0ee] enabled:hover:text-[#971710] disabled:cursor-wait disabled:opacity-45';
 
 export function AccountsWorkspace({
   account,
@@ -88,26 +92,34 @@ export function AccountsWorkspace({
   }
 
   return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar">
-        <a className="admin-brand" href="/" aria-label="Fivondronana, accueil du backoffice">
-          <img src={logo} alt="" />
+    <div className="min-h-screen bg-[#f5f6f4] text-[#252525]">
+      <aside className="flex h-[58px] flex-row items-center justify-between border-b border-[#e4e5e1] bg-white px-4 md:fixed md:inset-y-0 md:left-0 md:z-20 md:h-auto md:w-[205px] md:flex-col md:items-stretch md:justify-start md:border-b-0 md:border-r md:px-4 md:pb-[18px] md:pt-7 lg:w-[248px] lg:px-[18px]">
+        <a
+          className="flex items-center gap-2.5 text-[10px] font-extrabold tracking-[0.1em] text-brand-red no-underline md:mx-2.5 md:mb-12 md:text-xs"
+          href="/"
+          aria-label="Fivondronana, accueil du backoffice"
+        >
+          <img src={logo} alt="" className="h-[31px] w-[31px] rounded-full object-cover md:h-[38px] md:w-[38px]" />
           <span>FIVONDRONANA</span>
         </a>
-        <div className="sidebar-caption">Administration</div>
-        <nav aria-label="Navigation principale">
-          <span className="nav-item nav-item-active">
+        <div className="hidden px-[11px] pb-2.5 text-[11px] font-bold tracking-[0.04em] text-[#858782] md:block">
+          Administration
+        </div>
+        <nav className="hidden md:grid md:gap-[5px]" aria-label="Navigation principale">
+          <span className="flex items-center gap-3 rounded-lg bg-[#fff1ef] p-3 text-sm font-semibold text-[#98140e]">
             <Icon name="users" /> Comptes
           </span>
         </nav>
-        <div className="sidebar-bottom">
-          <span className="avatar">{account.trim().charAt(0).toLocaleUpperCase()}</span>
-          <div className="sidebar-identity">
-            <strong>{account}</strong>
-            <small>Administrateur</small>
+        <div className="flex items-center gap-2.5 md:mt-auto md:border-t md:border-[#ecece9] md:pt-3.5">
+          <span className="hidden h-[34px] w-[34px] place-items-center rounded-full bg-[#f8e9e7] text-[13px] font-bold text-[#8f1a14] md:grid">
+            {account.trim().charAt(0).toLocaleUpperCase()}
+          </span>
+          <div className="hidden min-w-0 flex-1 gap-[3px] md:grid">
+            <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-xs">{account}</strong>
+            <small className="text-[11px] text-[#777]">Administrateur</small>
           </div>
           <button
-            className="icon-button"
+            className={iconButtonClass}
             type="button"
             title="Se déconnecter"
             aria-label="Se déconnecter"
@@ -118,32 +130,42 @@ export function AccountsWorkspace({
         </div>
       </aside>
 
-      <main className="admin-main">
-        <header className="admin-topbar">
+      <main className="min-h-screen md:ml-[205px] lg:ml-[248px]">
+        <header className="flex h-11 items-center justify-between bg-[#f5f6f4] px-[17px] text-[10px] text-[#62645f] md:h-16 md:border-b md:border-[#e5e6e2] md:bg-white md:px-[22px] md:text-xs lg:px-[38px]">
           <span>
-            Portail d’administration <span className="crumb-divider">/</span> Comptes
+            Portail d’administration <span className="mx-2.5 text-[#a5a6a1]">/</span> Comptes
           </span>
-          <button className="button button-outline logout-wide" type="button" onClick={onLogout}>
+          <button
+            className={`hidden ${buttonOutlineClass} !min-h-9 text-xs md:inline-flex`}
+            type="button"
+            onClick={onLogout}
+          >
             Se déconnecter
           </button>
         </header>
-        <section className="directory-page">
-          <div className="page-heading">
+        <section className="mx-auto max-w-[1440px] px-[15px] py-6 md:px-5 md:pb-6 md:pt-8 lg:px-[clamp(22px,4vw,58px)] lg:pb-8 lg:pt-11">
+          <div className="mb-[21px] flex flex-col items-start gap-[18px] sm:flex-row sm:items-end sm:justify-between md:mb-[30px]">
             <div>
-              <p className="page-kicker">ANNUAIRE</p>
-              <h1>Comptes</h1>
-              <p className="page-description">Gérez les accès, les rôles et le rattachement des responsables.</p>
+              <p className="mb-2 text-[10px] font-extrabold tracking-[0.1em] text-[#858782]">ANNUAIRE</p>
+              <h1 className="m-0 text-[clamp(30px,3vw,38px)] tracking-[-0.04em]">Comptes</h1>
+              <p className="mt-2 max-w-[330px] text-xs leading-[1.5] text-[#70716d] sm:max-w-none sm:text-sm sm:leading-normal">
+                Gérez les accès, les rôles et le rattachement des responsables.
+              </p>
             </div>
-            <button className="button button-primary add-button" type="button" onClick={() => setEditor('create')}>
+            <button className={buttonPrimaryClass} type="button" onClick={() => setEditor('create')}>
               <Icon name="plus" /> Ajouter un compte
             </button>
           </div>
 
-          <div className="directory-toolbar">
-            <search>
-              <form className="search-form" onSubmit={search}>
-                <Icon name="search" />
+          <div className="mb-[15px] flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <search className="w-full sm:w-[min(100%,650px)]">
+              <form
+                className="flex h-11 w-full items-center gap-2.5 rounded-lg border border-[#dedfdb] bg-white pl-3"
+                onSubmit={search}
+              >
+                <Icon name="search" className="h-[17px] w-[17px] text-[#777a74]" />
                 <input
+                  className="h-full min-w-0 flex-1 border-0 bg-transparent text-[11px] text-[#252525] outline-none sm:text-[13px]"
                   aria-label="Rechercher un compte"
                   value={searchDraft}
                   onChange={(event) => setSearchDraft(event.target.value)}
@@ -151,7 +173,7 @@ export function AccountsWorkspace({
                 />
                 {searchDraft && (
                   <button
-                    className="clear-search"
+                    className="shrink-0 border-0 bg-transparent px-1.5 py-1 text-xl text-[#777]"
                     type="button"
                     aria-label="Effacer la recherche"
                     onClick={() => {
@@ -163,179 +185,55 @@ export function AccountsWorkspace({
                     ×
                   </button>
                 )}
-                <button className="search-submit" type="submit">
+                <button
+                  className="h-full shrink-0 rounded-r-lg border-0 border-l border-[#e5e5e2] px-[9px] text-[10px] font-bold text-[#8f1a14] hover:bg-[#fff5f4] sm:px-[15px] sm:text-xs"
+                  type="submit"
+                >
                   Rechercher
                 </button>
               </form>
             </search>
-            <span className="result-count">
+            <span className="whitespace-nowrap text-xs text-[#747570]">
               {total} {total === 1 ? 'compte' : 'comptes'}
             </span>
           </div>
 
           {notice && (
-            <p className="admin-alert admin-alert-success" role="status">
+            <p className="mb-3 rounded-lg bg-[#eaf5ee] px-3.5 py-2.5 text-xs text-[#075c48]" role="status">
               {notice}
             </p>
           )}
           {error && (
-            <div className="admin-alert admin-alert-error" role="alert">
+            <div
+              className="mb-3 flex items-center justify-between gap-4 rounded-lg bg-[#fff0ee] px-3.5 py-2.5 text-xs text-[#8c1812]"
+              role="alert"
+            >
               <span>{error}</span>
-              <button type="button" onClick={() => void load()}>
+              <button className="p-1 font-bold underline" type="button" onClick={() => void load()}>
                 Réessayer
               </button>
             </div>
           )}
 
-          <div className="accounts-table-wrap">
-            <table className="accounts-table">
-              <thead>
-                <tr>
-                  <th>Compte</th>
-                  <th>Rôle</th>
-                  <th>Entité / groupe</th>
-                  <th>Responsabilités</th>
-                  <th>Statut</th>
-                  <th>
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && (
-                  <tr>
-                    <td colSpan={6} className="table-state">
-                      Chargement des comptes…
-                    </td>
-                  </tr>
-                )}
-                {!loading && !error && users.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="table-state empty-state">
-                      <span className="empty-icon">
-                        <Icon name="users" />
-                      </span>
-                      <strong>{query ? 'Aucun résultat' : 'Aucun compte pour le moment'}</strong>
-                      <span>
-                        {query
-                          ? 'Essayez un autre nom, e-mail ou entité.'
-                          : 'Ajoutez un compte pour inviter un responsable.'}
-                      </span>
-                    </td>
-                  </tr>
-                )}
-                {!loading &&
-                  users.map((user) => (
-                    <tr key={user.id}>
-                      <td>
-                        <div className="user-cell">
-                          <span className="user-avatar">{user.accountName.trim().charAt(0).toLocaleUpperCase()}</span>
-                          <span>
-                            <strong>{user.accountName}</strong>
-                            <small>{user.email ?? user.phone ?? 'Coordonnée absente'}</small>
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="role-list">
-                          {user.roles.map((role) => (
-                            <span className="role-chip" key={role}>
-                              {roleLabels[role] ?? role}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td>
-                        {user.entity ? (
-                          <span>
-                            {user.entity.name}
-                            <small className="table-subline">{user.group?.name ?? '—'}</small>
-                          </span>
-                        ) : (
-                          <span className="muted">Non rattaché</span>
-                        )}
-                      </td>
-                      <td>
-                        <span
-                          className="responsibility-cell"
-                          title={user.responsibilities.map((item) => item.name).join(', ')}
-                        >
-                          {user.responsibilities.length
-                            ? user.responsibilities.map((item) => item.name).join(', ')
-                            : '—'}
-                        </span>
-                      </td>
-                      <td>
-                        <StatusBadge user={user} />
-                      </td>
-                      <td>
-                        <div className="row-actions">
-                          <button
-                            className="icon-button"
-                            type="button"
-                            title="Modifier le compte"
-                            aria-label={`Modifier ${user.accountName}`}
-                            onClick={() => setEditor(user)}
-                          >
-                            <Icon name="edit" />
-                          </button>
-                          {!user.isActive && !user.activatedAt && (
-                            <button
-                              className="icon-button"
-                              type="button"
-                              title="Renvoyer l’invitation"
-                              aria-label={`Renvoyer l’invitation à ${user.accountName}`}
-                              disabled={busyId === user.id}
-                              onClick={() =>
-                                void mutate(
-                                  user.id,
-                                  `users/${user.id}/invitation`,
-                                  'POST',
-                                  undefined,
-                                  'Demande de renvoi d’invitation traitée.',
-                                )
-                              }
-                            >
-                              <Icon name="mail" />
-                            </button>
-                          )}
-                          {(user.isActive || user.activatedAt) && (
-                            <button
-                              className="icon-button"
-                              type="button"
-                              title={user.isActive ? 'Désactiver le compte' : 'Réactiver le compte'}
-                              aria-label={`${user.isActive ? 'Désactiver' : 'Réactiver'} ${user.accountName}`}
-                              disabled={busyId === user.id}
-                              onClick={() =>
-                                void mutate(
-                                  user.id,
-                                  `users/${user.id}/active`,
-                                  'PATCH',
-                                  { isActive: !user.isActive },
-                                  user.isActive ? 'Compte désactivé.' : 'Compte réactivé.',
-                                )
-                              }
-                            >
-                              <Icon name={user.isActive ? 'pause' : 'check'} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+          <AccountsTable
+            users={users}
+            loading={loading}
+            error={error}
+            query={query}
+            busyId={busyId}
+            onEdit={setEditor}
+            onMutate={mutate}
+          />
 
-          <footer className="table-footer">
+          <footer className="flex min-h-[62px] flex-col items-start gap-3 pt-3 text-[11px] text-[#777973] sm:flex-row sm:items-center sm:justify-between sm:pt-0">
             <span>
               {total === 0
                 ? 'Aucun compte'
                 : `Affichage de ${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} sur ${total}`}
             </span>
-            <div className="pagination-controls">
+            <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
               <button
-                className="button button-page"
+                className="min-h-8 rounded-[9px] border border-[#dedfdb] bg-white px-2.5 text-[11px] text-[#4b4c48] disabled:cursor-default disabled:opacity-45"
                 type="button"
                 disabled={page <= 1 || loading}
                 onClick={() => setPage((current) => current - 1)}
@@ -347,7 +245,7 @@ export function AccountsWorkspace({
                 {pageCount ? ` sur ${pageCount}` : ''}
               </span>
               <button
-                className="button button-page"
+                className="min-h-8 rounded-[9px] border border-[#dedfdb] bg-white px-2.5 text-[11px] text-[#4b4c48] disabled:cursor-default disabled:opacity-45"
                 type="button"
                 disabled={pageCount === 0 || page >= pageCount || loading}
                 onClick={() => setPage((current) => current + 1)}
@@ -376,22 +274,285 @@ export function AccountsWorkspace({
   );
 }
 
+function AccountsTable({
+  users,
+  loading,
+  error,
+  query,
+  busyId,
+  onEdit,
+  onMutate,
+}: {
+  users: AdminUser[];
+  loading: boolean;
+  error: string;
+  query: string;
+  busyId: string;
+  onEdit: (user: AdminUser) => void;
+  onMutate: (userId: string, path: string, method: string, body?: unknown, success?: string) => Promise<void>;
+}) {
+  const emptyState = (
+    <>
+      <span className="grid h-10 w-10 place-items-center rounded-full bg-[#fff1ef] text-[#9c211a]">
+        <Icon name="users" className="h-5 w-5" />
+      </span>
+      <strong className="mt-2 block text-sm text-[#393a37]">
+        {query ? 'Aucun résultat' : 'Aucun compte pour le moment'}
+      </strong>
+      <span className="mt-1 block text-xs text-[#777973]">
+        {query ? 'Essayez un autre nom, e-mail ou entité.' : 'Ajoutez un compte pour inviter un responsable.'}
+      </span>
+    </>
+  );
+
+  return (
+    <>
+      <div className="hidden overflow-auto rounded-[10px] border border-[#e2e3df] bg-white sm:block">
+        <table className="w-full min-w-[890px] border-collapse text-left">
+          <thead>
+            <tr>
+              {['Compte', 'Rôle', 'Entité / groupe', 'Responsabilités', 'Statut'].map((heading) => (
+                <th
+                  key={heading}
+                  className="h-11 border-b border-[#ecece9] bg-[#fafaf9] px-4 text-[10px] font-bold tracking-[0.035em] text-[#777973]"
+                >
+                  {heading}
+                </th>
+              ))}
+              <th className="h-11 border-b border-[#ecece9] bg-[#fafaf9] px-4">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={6} className="!h-[170px] !text-center text-[#777973]">
+                  Chargement des comptes…
+                </td>
+              </tr>
+            )}
+            {!loading && !error && users.length === 0 && (
+              <tr>
+                <td colSpan={6} className="!h-[170px] !text-center text-[#777973]">
+                  <div className="mx-auto flex max-w-xs flex-col items-center">{emptyState}</div>
+                </td>
+              </tr>
+            )}
+            {!loading &&
+              users.map((user) => (
+                <tr key={user.id} className="[&:last-child>td]:border-b-0">
+                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                    <div className="flex min-w-[170px] items-center gap-2.5">
+                      <UserAvatar name={user.accountName} />
+                      <span className="grid min-w-0 gap-1">
+                        <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#30312e]">
+                          {user.accountName}
+                        </strong>
+                        <small className="block text-[11px] text-[#858680]">
+                          {user.email ?? user.phone ?? 'Coordonnée absente'}
+                        </small>
+                      </span>
+                    </div>
+                  </td>
+                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                    <RoleList roles={user.roles} />
+                  </td>
+                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                    <EntityCell user={user} />
+                  </td>
+                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                    <span
+                      className="line-clamp-2 max-w-[180px] leading-[1.5]"
+                      title={user.responsibilities.map((item) => item.name).join(', ')}
+                    >
+                      {user.responsibilities.length ? user.responsibilities.map((item) => item.name).join(', ') : '—'}
+                    </span>
+                  </td>
+                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                    <StatusBadge user={user} />
+                  </td>
+                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs">
+                    <div className="flex justify-end gap-0.5">
+                      <RowActions user={user} busyId={busyId} onEdit={onEdit} onMutate={onMutate} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:hidden">
+        {loading && (
+          <div className="rounded-[10px] border border-[#e2e3df] bg-white p-7 text-center text-xs text-[#777973]">
+            Chargement des comptes…
+          </div>
+        )}
+        {!loading && !error && users.length === 0 && (
+          <div className="flex flex-col items-center rounded-[10px] border border-[#e2e3df] bg-white p-7 text-center">
+            {emptyState}
+          </div>
+        )}
+        {!loading &&
+          users.map((user) => (
+            <div key={user.id} className="rounded-[10px] border border-[#e2e3df] bg-white p-4">
+              <div className="flex items-center gap-2.5">
+                <UserAvatar name={user.accountName} />
+                <div className="min-w-0 flex-1">
+                  <strong className="block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#30312e]">
+                    {user.accountName}
+                  </strong>
+                  <small className="block text-[11px] text-[#858680]">
+                    {user.email ?? user.phone ?? 'Coordonnée absente'}
+                  </small>
+                </div>
+                <StatusBadge user={user} />
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+                <div>
+                  <dt className="mb-1 text-[#858782]">Rôle</dt>
+                  <dd>
+                    <RoleList roles={user.roles} />
+                  </dd>
+                </div>
+                <div>
+                  <dt className="mb-1 text-[#858782]">Entité / groupe</dt>
+                  <dd>
+                    <EntityCell user={user} />
+                  </dd>
+                </div>
+                <div className="col-span-2">
+                  <dt className="mb-1 text-[#858782]">Responsabilités</dt>
+                  <dd>
+                    {user.responsibilities.length ? user.responsibilities.map((item) => item.name).join(', ') : '—'}
+                  </dd>
+                </div>
+              </dl>
+              <div className="mt-3 flex justify-end gap-0.5 border-t border-[#eeeeeb] pt-3">
+                <RowActions user={user} busyId={busyId} onEdit={onEdit} onMutate={onMutate} />
+              </div>
+            </div>
+          ))}
+      </div>
+    </>
+  );
+}
+
+function UserAvatar({ name }: { name: string }) {
+  return (
+    <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full bg-[#f8e9e7] text-xs font-bold text-[#8f1a14]">
+      {name.trim().charAt(0).toLocaleUpperCase()}
+    </span>
+  );
+}
+
+function RoleList({ roles }: { roles: string[] }) {
+  return (
+    <div className="flex max-w-[170px] flex-wrap gap-1">
+      {roles.map((role) => (
+        <span key={role} className="whitespace-nowrap rounded bg-[#f0f1ee] px-1.5 py-1 text-[10px] text-[#565a55]">
+          {roleLabels[role] ?? role}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function EntityCell({ user }: { user: AdminUser }) {
+  if (!user.entity) return <span className="text-[#8a8b85]">Non rattaché</span>;
+  return (
+    <span>
+      {user.entity.name}
+      <small className="mt-1 block text-[11px] text-[#858680]">{user.group?.name ?? '—'}</small>
+    </span>
+  );
+}
+
+function RowActions({
+  user,
+  busyId,
+  onEdit,
+  onMutate,
+}: {
+  user: AdminUser;
+  busyId: string;
+  onEdit: (user: AdminUser) => void;
+  onMutate: (userId: string, path: string, method: string, body?: unknown, success?: string) => Promise<void>;
+}) {
+  return (
+    <>
+      <button
+        className={iconButtonClass}
+        type="button"
+        title="Modifier le compte"
+        aria-label={`Modifier ${user.accountName}`}
+        onClick={() => onEdit(user)}
+      >
+        <Icon name="edit" />
+      </button>
+      {!user.isActive && !user.activatedAt && (
+        <button
+          className={iconButtonClass}
+          type="button"
+          title="Renvoyer l’invitation"
+          aria-label={`Renvoyer l’invitation à ${user.accountName}`}
+          disabled={busyId === user.id}
+          onClick={() =>
+            void onMutate(
+              user.id,
+              `users/${user.id}/invitation`,
+              'POST',
+              undefined,
+              'Demande de renvoi d’invitation traitée.',
+            )
+          }
+        >
+          <Icon name="mail" />
+        </button>
+      )}
+      {(user.isActive || user.activatedAt) && (
+        <button
+          className={iconButtonClass}
+          type="button"
+          title={user.isActive ? 'Désactiver le compte' : 'Réactiver le compte'}
+          aria-label={`${user.isActive ? 'Désactiver' : 'Réactiver'} ${user.accountName}`}
+          disabled={busyId === user.id}
+          onClick={() =>
+            void onMutate(
+              user.id,
+              `users/${user.id}/active`,
+              'PATCH',
+              { isActive: !user.isActive },
+              user.isActive ? 'Compte désactivé.' : 'Compte réactivé.',
+            )
+          }
+        >
+          <Icon name={user.isActive ? 'pause' : 'check'} />
+        </button>
+      )}
+    </>
+  );
+}
+
 function StatusBadge({ user }: { user: AdminUser }) {
+  const base = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-bold';
+  const dot = 'inline-block h-1.5 w-1.5 rounded-full bg-current';
   if (user.isActive)
     return (
-      <span className="status-badge status-active">
-        <i /> Actif
+      <span className={`${base} bg-[#eaf5ee] text-[#18704c]`}>
+        <i className={dot} /> Actif
       </span>
     );
   if (!user.activatedAt)
     return (
-      <span className="status-badge status-pending">
-        <i /> Invitation en attente
+      <span className={`${base} bg-[#fff4db] text-[#8a5a0a]`}>
+        <i className={dot} /> Invitation en attente
       </span>
     );
   return (
-    <span className="status-badge status-inactive">
-      <i /> Désactivé
+    <span className={`${base} bg-[#f0f0ee] text-[#777973]`}>
+      <i className={dot} /> Désactivé
     </span>
   );
 }
@@ -421,6 +582,9 @@ function AccountEditor({
   const [error, setError] = useState('');
   const selectedEntity = entities.find((entity) => entity.id === entityId);
   const activeEntities = useMemo(() => entities.filter((entity) => entity.isActive), [entities]);
+  const fieldClass =
+    'h-[42px] w-full rounded-[7px] border border-[#dfe0dc] px-[11px] text-[13px] font-normal text-[#2e2f2b] outline-none focus:border-brand-teal focus:shadow-[0_0_0_3px_rgb(8_127_123/0.11)]';
+  const fieldLabelClass = 'grid gap-[7px] text-xs font-bold text-[#454641]';
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -463,38 +627,68 @@ function AccountEditor({
   }
 
   return (
-    <div className="modal-backdrop">
-      <section className="account-modal" role="dialog" aria-modal="true" aria-labelledby="editor-title">
-        <header className="modal-heading">
+    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[rgb(25,27,24)]/50 p-5 sm:p-6">
+      <section
+        className="max-h-[95vh] w-full max-w-[660px] overflow-auto rounded-xl bg-white shadow-[0_24px_80px_rgb(0_0_0/0.22)] sm:max-h-[min(92vh,900px)]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="editor-title"
+      >
+        <header className="flex items-start justify-between border-b border-[#ededeb] px-[19px] py-[21px] sm:px-7 sm:py-6">
           <div>
-            <p className="page-kicker">GESTION DES ACCÈS</p>
-            <h2 id="editor-title">{account ? 'Modifier le compte' : 'Ajouter un compte'}</h2>
+            <p className="mb-2 text-[10px] font-extrabold tracking-[0.1em] text-[#858782]">GESTION DES ACCÈS</p>
+            <h2 id="editor-title" className="m-0 text-xl tracking-[-0.03em] sm:text-[23px]">
+              {account ? 'Modifier le compte' : 'Ajouter un compte'}
+            </h2>
           </div>
-          <button className="icon-button" type="button" aria-label="Fermer" onClick={onClose}>
+          <button className={iconButtonClass} type="button" aria-label="Fermer" onClick={onClose}>
             <Icon name="close" />
           </button>
         </header>
-        <form className="account-form" onSubmit={submit}>
-          <div className="form-grid">
-            <label>
+        <form
+          className="grid gap-[17px] px-[19px] py-[19px] sm:gap-5 sm:px-7 sm:pb-[26px] sm:pt-[22px]"
+          onSubmit={submit}
+        >
+          <div className="grid grid-cols-1 gap-[13px] sm:grid-cols-2 sm:gap-4">
+            <label className={fieldLabelClass}>
               Nom complet
-              <input name="accountName" defaultValue={account?.accountName ?? ''} maxLength={120} required />
+              <input
+                className={fieldClass}
+                name="accountName"
+                defaultValue={account?.accountName ?? ''}
+                maxLength={120}
+                required
+              />
             </label>
-            <label>
+            <label className={fieldLabelClass}>
               E-mail
-              <input name="email" type="email" defaultValue={account?.email ?? ''} maxLength={320} required />
+              <input
+                className={fieldClass}
+                name="email"
+                type="email"
+                defaultValue={account?.email ?? ''}
+                maxLength={320}
+                required
+              />
             </label>
-            <label>
-              Téléphone <span className="optional-label">Facultatif</span>
-              <input name="phone" type="tel" defaultValue={account?.phone ?? ''} maxLength={40} />
+            <label className={fieldLabelClass}>
+              Téléphone <span className="text-[10px] font-normal text-[#898a84]">Facultatif</span>
+              <input
+                className={fieldClass}
+                name="phone"
+                type="tel"
+                defaultValue={account?.phone ?? ''}
+                maxLength={40}
+              />
             </label>
           </div>
-          <fieldset>
-            <legend>Rattachement</legend>
-            <div className="form-grid">
-              <label>
+          <fieldset className="m-0 border-0 p-0">
+            <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">Rattachement</legend>
+            <div className="grid grid-cols-1 gap-[13px] sm:grid-cols-2 sm:gap-4">
+              <label className={fieldLabelClass}>
                 Entité
                 <select
+                  className={fieldClass}
                   required
                   value={entityId}
                   onChange={(event) => {
@@ -510,9 +704,10 @@ function AccountEditor({
                   ))}
                 </select>
               </label>
-              <label>
+              <label className={fieldLabelClass}>
                 Groupe
                 <select
+                  className={fieldClass}
                   required
                   value={groupId}
                   onChange={(event) => setGroupId(event.target.value)}
@@ -529,67 +724,67 @@ function AccountEditor({
                 </select>
               </label>
             </div>
-            <p className="form-note">Un responsable ne peut être rattaché qu’à une seule entité et à un seul groupe.</p>
+            <p className="mt-[9px] text-[11px] text-[#797a75]">
+              Un responsable ne peut être rattaché qu’à une seule entité et à un seul groupe.
+            </p>
           </fieldset>
-          <fieldset>
-            <legend>Rôles</legend>
-            <div className="choice-grid">
+          <fieldset className="m-0 border-0 p-0">
+            <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">Rôles</legend>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {Object.entries(roleLabels).map(([role, label]) => (
-                <label className="choice" key={role}>
-                  <input
-                    type="checkbox"
-                    checked={roles.includes(role)}
-                    onChange={() =>
-                      setRoles((current) =>
-                        current.includes(role) ? current.filter((item) => item !== role) : [...current, role],
-                      )
-                    }
-                  />
-                  <span>{label}</span>
-                </label>
+                <Choice
+                  key={role}
+                  checked={roles.includes(role)}
+                  onChange={() =>
+                    setRoles((current) =>
+                      current.includes(role) ? current.filter((item) => item !== role) : [...current, role],
+                    )
+                  }
+                >
+                  {label}
+                </Choice>
               ))}
             </div>
-            {roles.length === 0 && <small className="inline-error">Choisissez au moins un rôle.</small>}
+            {roles.length === 0 && (
+              <small className="mt-2 inline-block text-xs text-[#a11a13]">Choisissez au moins un rôle.</small>
+            )}
           </fieldset>
-          <fieldset>
-            <legend>Responsabilités officielles</legend>
+          <fieldset className="m-0 border-0 p-0">
+            <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">Responsabilités officielles</legend>
             {responsibilities.length ? (
-              <div className="choice-grid">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {responsibilities
                   .filter((item) => item.isActive)
                   .map((item) => (
-                    <label className="choice" key={item.id}>
-                      <input
-                        type="checkbox"
-                        checked={responsibilityIds.includes(item.id)}
-                        onChange={() =>
-                          setResponsibilityIds((current) =>
-                            current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id],
-                          )
-                        }
-                      />
-                      <span>{item.name}</span>
-                    </label>
+                    <Choice
+                      key={item.id}
+                      checked={responsibilityIds.includes(item.id)}
+                      onChange={() =>
+                        setResponsibilityIds((current) =>
+                          current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id],
+                        )
+                      }
+                    >
+                      {item.name}
+                    </Choice>
                   ))}
               </div>
             ) : (
-              <p className="form-note">Aucune responsabilité active n’est configurée.</p>
+              <p className="mt-[9px] text-[11px] text-[#797a75]">Aucune responsabilité active n’est configurée.</p>
             )}
             {responsibilityIds.length === 0 && (
-              <small className="inline-error">Choisissez au moins une responsabilité.</small>
+              <small className="mt-2 inline-block text-xs text-[#a11a13]">
+                Choisissez au moins une responsabilité.
+              </small>
             )}
           </fieldset>
-          {error && (
-            <p className="notice error-notice" role="alert">
-              {error}
-            </p>
-          )}
-          <footer className="modal-actions">
-            <button className="button button-outline" type="button" onClick={onClose}>
+          {error && <p className={noticeErrorClass}>{error}</p>}
+          <footer className="sticky -bottom-[19px] -mx-[19px] -mb-[19px] flex justify-end gap-2.5 border-t border-[#ededeb] bg-white px-[19px] py-[13px] sm:static sm:m-0 sm:border-0 sm:bg-transparent sm:p-0 sm:pt-1">
+            <button className={`${buttonOutlineClass} !min-h-10 !text-xs`} type="button" onClick={onClose}>
               Annuler
             </button>
             <button
-              className="button button-primary"
+              className={`${buttonPrimaryClass} !min-h-10 !text-xs`}
               type="submit"
               disabled={busy || roles.length === 0 || responsibilityIds.length === 0 || !entityId || !groupId}
             >
@@ -602,10 +797,21 @@ function AccountEditor({
   );
 }
 
+function Choice({ checked, onChange, children }: { checked: boolean; onChange: () => void; children: ReactNode }) {
+  return (
+    <label className="flex min-h-[38px] items-center gap-2 rounded-md border border-[#e6e7e3] px-2.5 py-[7px] text-[11px] font-medium text-[#555650]">
+      <input className="accent-brand-red" type="checkbox" checked={checked} onChange={onChange} />
+      <span>{children}</span>
+    </label>
+  );
+}
+
 function Icon({
   name,
+  className,
 }: {
   name: 'users' | 'logout' | 'plus' | 'search' | 'edit' | 'mail' | 'pause' | 'check' | 'close';
+  className?: string;
 }) {
   const paths: Record<typeof name, string> = {
     users:
@@ -628,6 +834,7 @@ function Icon({
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
+      className={className ?? 'h-[17px] w-[17px]'}
     >
       <path d={paths[name]} />
     </svg>

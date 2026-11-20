@@ -4,11 +4,12 @@ import { type AuthSession, changePassword } from '../access/auth-api';
 import { Brand } from '../access/Brand';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
-import { ContactDirectoryScreen } from './ContactDirectoryScreen';
 import { ArchiveDirectoryScreen } from './ArchiveDirectoryScreen';
+import { ContactDirectoryScreen } from './ContactDirectoryScreen';
 import { CvEditor } from './CvEditor';
 import { LeaderCvScreen } from './LeaderCvScreen';
 import { LeaderDirectoryScreen } from './LeaderDirectoryScreen';
+import { MessagesScreen } from './MessagesScreen';
 import { initialMainFlow, type MainTab, mainFlowReducer } from './main-flow';
 import { getSignOutConfirmation } from './sign-out-confirmation';
 
@@ -121,7 +122,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
       ) : flow.tab === 'contacts' ? (
         <ContactDirectoryScreen session={session} query={query} />
       ) : flow.tab === 'messages' ? (
-        <PlaceholderScreen title="Hafatra" text="Tsy mbola azo ampiasaina ny fandefasana sy fandraisana hafatra." />
+        <MessagesScreen session={session} onSessionExpired={onSignOut} />
       ) : (
         <SettingsScreen session={session} onSignOut={onSignOut} />
       )}

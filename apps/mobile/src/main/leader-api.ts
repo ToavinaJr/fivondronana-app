@@ -9,6 +9,7 @@ export type LeaderSummary = {
   group: { id: string; name: string };
   responsibilities: string[];
   hasAvatar: boolean;
+  hasCv: boolean;
 };
 export type PageMetadata = { page: number; pageSize: number; total: number; totalPages: number };
 export type Page<T> = { data: T[]; pagination: PageMetadata };
@@ -117,7 +118,8 @@ function parseLeaderSummary(value: unknown): LeaderSummary | null {
     !isString(value.group.id) ||
     !isString(value.group.name) ||
     !value.responsibilities.every(isString) ||
-    typeof value.hasAvatar !== 'boolean'
+    typeof value.hasAvatar !== 'boolean' ||
+    typeof value.hasCv !== 'boolean'
   )
     return null;
   return {
@@ -127,6 +129,7 @@ function parseLeaderSummary(value: unknown): LeaderSummary | null {
     group: { id: value.group.id, name: value.group.name },
     responsibilities: value.responsibilities,
     hasAvatar: value.hasAvatar,
+    hasCv: value.hasCv,
   };
 }
 

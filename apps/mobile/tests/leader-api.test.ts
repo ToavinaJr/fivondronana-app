@@ -23,6 +23,7 @@ describe('leader API client', () => {
             group: { id: 'g1', name: 'Tily' },
             responsibilities: ['Haim-panahy'],
             hasAvatar: false,
+            hasCv: true,
           },
         ],
         pagination: { page: 2, pageSize: 10, total: 11, totalPages: 2 },

@@ -16,6 +16,7 @@ describe('leader directory service', () => {
             },
             responsibilities: [{ responsibility: { name: 'Haim-panahy' } }],
             avatarKey: null,
+            cv: null,
             passwordHash: 'must-not-return',
           },
         ]),
@@ -32,12 +33,36 @@ describe('leader directory service', () => {
           group: { id: 'group-1', name: 'Tily' },
           responsibilities: ['Haim-panahy'],
           hasAvatar: false,
+          hasCv: false,
         },
       ],
       pagination: { page: 2, pageSize: 10, total: 21, totalPages: 3 },
     });
     expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 10, take: 10 }));
     expect(JSON.stringify(result)).not.toContain('must-not-return');
+  });
+
+  it('reports hasCv when the leader has filled in their curriculum vitae', async () => {
+    const prisma = {
+      user: {
+        findMany: mock(async () => [
+          {
+            id: 'leader-2',
+            accountName: 'Responsible B',
+            membership: {
+              entity: { id: 'entity-1', name: 'Mavo' },
+              group: { id: 'group-1', name: 'Tily' },
+            },
+            responsibilities: [],
+            avatarKey: null,
+            cv: { id: 'cv-1' },
+          },
+        ]),
+        count: mock(async () => 1),
+      },
+    };
+    const result = await new LeaderService(prisma as never).list({ page: 1, pageSize: 20 });
+    expect(result.data[0]?.hasCv).toBe(true);
   });
 
   it('normalizes search and combines entity, group, and responsibility filters', async () => {

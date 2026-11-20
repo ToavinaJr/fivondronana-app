@@ -107,13 +107,13 @@ export function AccountsPage({
         </button>
       }
     >
-      <div className="mb-[15px] flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-3.75 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <search className="w-full sm:w-[min(100%,650px)]">
           <form
             className="flex h-11 w-full items-center gap-2.5 rounded-lg border border-[#dedfdb] bg-white pl-3"
             onSubmit={search}
           >
-            <Icon name="search" className="h-[17px] w-[17px] text-[#777a74]" />
+            <Icon name="search" className="h-4.25 w-[17px] text-[#777a74]" />
             <input
               className="h-full min-w-0 flex-1 border-0 bg-transparent text-[11px] text-[#252525] outline-none sm:text-[13px]"
               aria-label="Rechercher un compte"
@@ -175,7 +175,7 @@ export function AccountsPage({
         onMutate={mutate}
       />
 
-      <footer className="flex min-h-[62px] flex-col items-start gap-3 pt-3 text-[11px] text-[#777973] sm:flex-row sm:items-center sm:justify-between sm:pt-0">
+      <footer className="flex min-h-15.5 flex-col items-start gap-3 pt-3 text-[11px] text-[#777973] sm:flex-row sm:items-center sm:justify-between sm:pt-0">
         <span>
           {total === 0
             ? 'Aucun compte'
@@ -320,7 +320,7 @@ function AccountsTable({
                   <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
                     <StatusBadge user={user} />
                   </td>
-                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs">
+                  <td className="h-17.5 border-b border-[#eeeeeb] px-4 align-middle text-xs">
                     <div className="flex justify-end gap-0.5">
                       <RowActions user={user} busyId={busyId} onEdit={onEdit} onMutate={onMutate} />
                     </div>

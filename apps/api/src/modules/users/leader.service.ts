@@ -96,6 +96,7 @@ export class LeaderService {
           id: true,
           accountName: true,
           avatarKey: true,
+          cv: { select: { id: true } },
           membership: {
             select: {
               entity: { select: { id: true, name: true } },
@@ -121,6 +122,7 @@ export class LeaderService {
           group: user.membership.group,
           responsibilities: user.responsibilities.map(({ responsibility }) => responsibility.name),
           hasAvatar: Boolean(user.avatarKey),
+          hasCv: Boolean(user.cv),
         },
       ];
     });

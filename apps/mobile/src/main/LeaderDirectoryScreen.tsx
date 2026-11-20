@@ -179,15 +179,19 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
                   {leader.responsibilities.join(', ') || 'Tsy mbola misy andraikitra'}
                 </Text>
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Hijery CV an’i ${leader.accountName}`}
-                onPress={() => onOpenCv(leader.id)}
-                style={({ pressed }) => [styles.cvButton, pressed && styles.pressed]}
-              >
-                <Text style={styles.cvButtonText}>CV</Text>
-                <BrandIcon name="eye" size={16} color={colors.primary} />
-              </Pressable>
+              {leader.hasCv ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Hijery CV an’i ${leader.accountName}`}
+                  onPress={() => onOpenCv(leader.id)}
+                  style={({ pressed }) => [styles.cvButton, pressed && styles.pressed]}
+                >
+                  <Text style={styles.cvButtonText}>CV</Text>
+                  <BrandIcon name="eye" size={16} color={colors.primary} />
+                </Pressable>
+              ) : (
+                <Text style={styles.noCv}>Tsy mbola misy CV</Text>
+              )}
             </View>
           </View>
         ))}
@@ -389,6 +393,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   cvButtonText: { color: colors.primary, fontSize: 14, fontWeight: '700', flexShrink: 1 },
+  noCv: { color: colors.secondary, fontSize: 12, fontStyle: 'italic', alignSelf: 'flex-start', flexShrink: 1 },
   empty: { color: colors.secondary, textAlign: 'center', paddingVertical: 28, fontSize: 15 },
   errorBox: { padding: 12, borderRadius: 7, backgroundColor: colors.errorSurface, gap: 8 },
   errorText: { color: colors.error, fontSize: 14, lineHeight: 20 },

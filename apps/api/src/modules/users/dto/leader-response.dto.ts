@@ -5,4 +5,5 @@ export class LeaderResponseDto {
   group!: { id: string; name: string };
   responsibilities!: string[];
   hasAvatar!: boolean;
+  hasCv!: boolean;
 }

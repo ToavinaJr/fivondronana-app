@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import type { AddressInfo } from 'node:net';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import type { AddressInfo } from 'node:net';
-import { AppModule } from '../src/app.module.js';
 import { configureApiApp } from '../src/api-bootstrap.js';
+import { AppModule } from '../src/app.module.js';
 import { hashPassword } from '../src/modules/auth/auth.crypto.js';
 import { PrismaService } from '../src/modules/database/prisma.service.js';
 
@@ -72,7 +72,13 @@ describe.skipIf(!testDatabaseUrl)('NestJS HTTP API with PostgreSQL', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ id: userId, accountName: 'HTTP Integration', email, phone: null });
+    expect(await response.json()).toEqual({
+      id: userId,
+      accountName: 'HTTP Integration',
+      email,
+      phone: null,
+      hasAvatar: false,
+    });
     expect(session.user).not.toHaveProperty('passwordHash');
   });
 

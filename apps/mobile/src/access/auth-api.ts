@@ -6,7 +6,13 @@ import { SessionExpiredError } from './session';
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 declare const __DEV__: boolean;
 
-export type AuthUser = { id: string; accountName: string; email: string | null; phone: string | null };
+export type AuthUser = {
+  id: string;
+  accountName: string;
+  email: string | null;
+  phone: string | null;
+  hasAvatar: boolean;
+};
 export type AuthSession = { accessToken: string; refreshToken: string; expiresIn: number; user: AuthUser };
 
 export function resolveApiBaseUrl(
@@ -120,6 +126,62 @@ export async function changePassword(accessToken: string, currentPassword: strin
     throw new Error(getApiErrorMessage(body, 'Tsy ekena ilay teny miafina vaovao.'));
   }
   if (!response.ok) throw new Error('Tsy voaova ny teny miafina. Andramo indray.');
+}
+
+export async function updateAccountName(accessToken: string, accountName: string): Promise<AuthUser> {
+  const response = await fetch(`${apiBaseUrl}/users/me`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accountName }),
+  }).catch(() => {
+    throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
+  });
+  if (response.status === 401) throw new SessionExpiredError();
+  if (response.status === 400) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(getApiErrorMessage(body, 'Tsy ekena ilay anarana.'));
+  }
+  if (!response.ok) throw new Error('Tsy voaova ny anarana. Andramo indray.');
+  return response.json() as Promise<AuthUser>;
+}
+
+export type PickedAvatar = { uri: string; name: string; mimeType: string };
+
+export async function uploadAvatar(accessToken: string, avatar: PickedAvatar): Promise<void> {
+  const form = new FormData();
+  form.append('file', { uri: avatar.uri, name: avatar.name, type: avatar.mimeType } as unknown as Blob);
+  const response = await fetch(`${apiBaseUrl}/users/me/avatar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  }).catch(() => {
+    throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
+  });
+  if (response.status === 401) throw new SessionExpiredError();
+  if (response.status === 400) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(getApiErrorMessage(body, 'Sary JPEG na PNG ihany no azo ampiasaina.'));
+  }
+  if (!response.ok) throw new Error('Tsy voatahiry ny sary. Andramo indray.');
+}
+
+export async function removeAvatar(accessToken: string): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/users/me/avatar`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  }).catch(() => {
+    throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
+  });
+  if (response.status === 401) throw new SessionExpiredError();
+  if (!response.ok) throw new Error('Tsy voaesotra ny sary. Andramo indray.');
+}
+
+export function myAvatarUrl(): string {
+  return `${apiBaseUrl}/users/me/avatar`;
+}
+
+export function leaderAvatarUrl(leaderId: string): string {
+  return `${apiBaseUrl}/leaders/${encodeURIComponent(leaderId)}/avatar`;
 }
 
 export type CvBranch = {

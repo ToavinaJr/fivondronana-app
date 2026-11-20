@@ -12,6 +12,8 @@ import {
   isAdministrator,
   tokenFromLocationHash,
 } from './auth-client';
+import { ContactsPage } from './contacts';
+import { ConversationsPage } from './conversations';
 import { buttonPrimaryClass, formClass, inputClass, labelClass, noticeErrorClass, textButtonClass } from './ui-classes';
 
 type View = 'login' | 'forgot' | 'activate' | 'reset';
@@ -171,6 +173,26 @@ function Workspace({ account, csrfToken, onLogout }: { account: string; csrfToke
   if (page === 'archives')
     return (
       <ArchivesPage
+        account={account}
+        csrfToken={csrfToken}
+        activePage={page}
+        onNavigate={setPage}
+        onLogout={onLogout}
+      />
+    );
+  if (page === 'conversations')
+    return (
+      <ConversationsPage
+        account={account}
+        csrfToken={csrfToken}
+        activePage={page}
+        onNavigate={setPage}
+        onLogout={onLogout}
+      />
+    );
+  if (page === 'contacts')
+    return (
+      <ContactsPage
         account={account}
         csrfToken={csrfToken}
         activePage={page}

@@ -1,6 +1,26 @@
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useReducer, useState } from 'react';
-import { Alert, BackHandler, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { type AuthSession, changePassword } from '../access/auth-api';
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import {
+  type AuthSession,
+  type AuthUser,
+  changePassword,
+  myAvatarUrl,
+  removeAvatar,
+  updateAccountName,
+  uploadAvatar,
+} from '../access/auth-api';
 import { Brand } from '../access/Brand';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
@@ -21,7 +41,15 @@ const tabs: { id: MainTab; title: string; icon: BrandIconName }[] = [
   { id: 'settings', title: 'Fikirana', icon: 'settings' },
 ];
 
-export function MainShell({ session, onSignOut }: { session: AuthSession; onSignOut: () => void }) {
+export function MainShell({
+  session,
+  onSignOut,
+  onSessionUpdate,
+}: {
+  session: AuthSession;
+  onSignOut: () => void;
+  onSessionUpdate: (user: AuthUser) => void;
+}) {
   const [flow, dispatch] = useReducer(mainFlowReducer, initialMainFlow);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -124,7 +152,7 @@ export function MainShell({ session, onSignOut }: { session: AuthSession; onSign
       ) : flow.tab === 'messages' ? (
         <MessagesScreen session={session} onSessionExpired={onSignOut} />
       ) : (
-        <SettingsScreen session={session} onSignOut={onSignOut} />
+        <SettingsScreen session={session} onSignOut={onSignOut} onSessionUpdate={onSessionUpdate} />
       )}
 
       {!flow.detail && (
@@ -157,13 +185,103 @@ function PageContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SettingsScreen({ session, onSignOut }: { session: AuthSession; onSignOut: () => void }) {
-  const [screen, setScreen] = useState<'home' | 'cv' | 'password'>('home');
+function SettingsScreen({
+  session,
+  onSignOut,
+  onSessionUpdate,
+}: {
+  session: AuthSession;
+  onSignOut: () => void;
+  onSessionUpdate: (user: AuthUser) => void;
+}) {
+  const [screen, setScreen] = useState<'home' | 'cv' | 'password' | 'profile'>('home');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
+  const [accountName, setAccountName] = useState(session.user.accountName);
+  const [nameBusy, setNameBusy] = useState(false);
+  const [nameMessage, setNameMessage] = useState('');
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState('');
+  const [avatarVersion, setAvatarVersion] = useState(0);
+
+  const saveName = async () => {
+    setNameMessage('');
+    const trimmed = accountName.trim();
+    if (!trimmed) {
+      setNameMessage('Tsy maintsy misy ny anarana.');
+      return;
+    }
+    setNameBusy(true);
+    try {
+      const updated = await updateAccountName(session.accessToken, trimmed);
+      onSessionUpdate(updated);
+      setScreen('home');
+    } catch (error) {
+      setNameMessage(error instanceof Error ? error.message : 'Tsy voaova ny anarana.');
+    } finally {
+      setNameBusy(false);
+    }
+  };
+
+  const changeAvatar = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    setAvatarBusy(true);
+    setAvatarMessage('');
+    try {
+      await uploadAvatar(session.accessToken, {
+        uri: asset.uri,
+        name: asset.fileName ?? 'avatar.jpg',
+        mimeType: asset.mimeType ?? 'image/jpeg',
+      });
+      onSessionUpdate({ ...session.user, hasAvatar: true });
+      setAvatarVersion((value) => value + 1);
+    } catch (error) {
+      setAvatarMessage(error instanceof Error ? error.message : 'Tsy voatahiry ny sary.');
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const removePhoto = async () => {
+    setAvatarBusy(true);
+    setAvatarMessage('');
+    try {
+      await removeAvatar(session.accessToken);
+      onSessionUpdate({ ...session.user, hasAvatar: false });
+      setAvatarVersion((value) => value + 1);
+    } catch (error) {
+      setAvatarMessage(error instanceof Error ? error.message : 'Tsy voaesotra ny sary.');
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const onAvatarPress = () => {
+    const options = session.user.hasAvatar
+      ? [
+          { text: 'Hisafidy sary vaovao', onPress: () => void changeAvatar() },
+          { text: 'Hanala ny sary', style: 'destructive' as const, onPress: () => void removePhoto() },
+          { text: 'Hanafoana', style: 'cancel' as const },
+        ]
+      : [
+          { text: 'Hisafidy sary', onPress: () => void changeAvatar() },
+          { text: 'Hanafoana', style: 'cancel' as const },
+        ];
+    Alert.alert('Sary profily', undefined, options, { cancelable: true });
+  };
+
   const updatePassword = async () => {
     setMessage('');
     if (newPassword !== confirmPassword) {
@@ -186,6 +304,48 @@ function SettingsScreen({ session, onSignOut }: { session: AuthSession; onSignOu
     }
   };
   if (screen === 'cv') return <CvEditor session={session} onBack={() => setScreen('home')} />;
+  if (screen === 'profile')
+    return (
+      <PageContent>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            setScreen('home');
+            setNameMessage('');
+            setAccountName(session.user.accountName);
+          }}
+          style={styles.headerBack}
+        >
+          <BrandIcon name="back" size={18} color={colors.accent} />
+          <Text style={styles.accentText}>Fikirana</Text>
+        </Pressable>
+        <Text style={styles.pageHeading}>Hanova ny anarana</Text>
+        <Text style={styles.subtitle}>Ity no anarana hita amin’ny mpiandraikitra hafa.</Text>
+        <Text style={styles.filterLabel}>Anarana feno</Text>
+        <TextInput
+          accessibilityLabel="Anarana feno"
+          value={accountName}
+          onChangeText={setAccountName}
+          style={styles.settingsInput}
+          maxLength={120}
+        />
+        {nameMessage ? (
+          <Text accessibilityRole="alert" style={styles.feedback}>
+            {nameMessage}
+          </Text>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          disabled={nameBusy}
+          onPress={() => {
+            void saveName();
+          }}
+          style={[styles.signOut, nameBusy && styles.disabled]}
+        >
+          <Text style={styles.signOutText}>{nameBusy ? 'Tehirizina…' : 'Tehirizo'}</Text>
+        </Pressable>
+      </PageContent>
+    );
   if (screen === 'password')
     return (
       <PageContent>
@@ -248,16 +408,61 @@ function SettingsScreen({ session, onSignOut }: { session: AuthSession; onSignOu
     <PageContent>
       <Text style={styles.pageHeading}>Fikirana</Text>
       <View style={styles.accountBlock}>
-        <View style={styles.avatarLarge}>
-          <Text style={styles.avatarLargeText}>{name.slice(0, 1).toLocaleUpperCase()}</Text>
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Hanova sary profily"
+          disabled={avatarBusy}
+          onPress={onAvatarPress}
+          style={styles.avatarLarge}
+        >
+          {session.user.hasAvatar ? (
+            <Image
+              source={{
+                uri: `${myAvatarUrl()}?v=${avatarVersion}`,
+                headers: { Authorization: `Bearer ${session.accessToken}` },
+              }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <Text style={styles.avatarLargeText}>{name.slice(0, 1).toLocaleUpperCase()}</Text>
+          )}
+          <View style={styles.avatarEditBadge}>
+            {avatarBusy ? (
+              <ActivityIndicator size="small" color={colors.onPrimary} />
+            ) : (
+              <BrandIcon name="camera" size={14} color={colors.onPrimary} />
+            )}
+          </View>
+        </Pressable>
         <Text style={styles.rowTitle}>{name}</Text>
         <Text style={styles.rowMeta}>{session.user.email ?? session.user.phone ?? 'Kaonty mpiandraikitra'}</Text>
       </View>
+      {avatarMessage ? (
+        <Text accessibilityRole="alert" style={styles.feedback}>
+          {avatarMessage}
+        </Text>
+      ) : null}
       <Text style={styles.sectionLabel}>Kaonty</Text>
       <Text style={styles.settingHint}>
-        Ny anarana, adiresy mailaka, laharana, vondrona ary andraikitra ofisialy dia tantanin’ny mpitantana.
+        Azonao ovaina ny anaranao sy ny sarinao. Ny adiresy mailaka, ny laharana, ny vondrona ary ny andraikitra
+        ofisialy dia tantanin’ny mpitantana.
       </Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          setNameMessage('');
+          setAccountName(session.user.accountName);
+          setScreen('profile');
+        }}
+        style={styles.settingAction}
+      >
+        <BrandIcon name="profile" size={24} />
+        <View style={styles.rowBody}>
+          <Text style={styles.settingActionTitle}>Hanova ny anarana</Text>
+          <Text style={styles.rowMeta}>Ovay ny anarana feno hita amin’ny mpiandraikitra hafa</Text>
+        </View>
+        <BrandIcon name="forward" size={18} color={colors.secondary} />
+      </Pressable>
       <Pressable
         accessibilityRole="button"
         onPress={() => {
@@ -400,6 +605,21 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
     backgroundColor: colors.portrait,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
+  avatarImage: { width: 72, height: 72, borderRadius: 36 },
+  avatarEditBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    borderWidth: 2,
+    borderColor: colors.page,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -6,6 +6,7 @@ import { Permission } from '../authorization/permissions.js';
 import { RequirePermissionsGuard } from '../authorization/require-permissions.guard.js';
 import { ConversationsService } from './conversations.service.js';
 import { CreateConversationDto } from './dto/create-conversation.dto.js';
+import { CreateCustomConversationDto } from './dto/create-custom-conversation.dto.js';
 import { SetConversationActiveDto } from './dto/set-conversation-active.dto.js';
 
 @Controller('admin/conversations')
@@ -23,6 +24,16 @@ export class ConversationsAdminController {
   @Post()
   create(@Body() body: CreateConversationDto) {
     return this.conversations.createEntityConversation(body.title, body.entityId);
+  }
+
+  @Post('custom')
+  createCustom(@Body() body: CreateCustomConversationDto) {
+    return this.conversations.createCustomConversation(body.title, body.entityIds, body.memberUserIds);
+  }
+
+  @Patch(':conversationId/custom')
+  updateCustom(@Param('conversationId') id: string, @Body() body: CreateCustomConversationDto) {
+    return this.conversations.updateCustomConversation(id, body.title, body.entityIds, body.memberUserIds);
   }
 
   @Patch(':conversationId/active')

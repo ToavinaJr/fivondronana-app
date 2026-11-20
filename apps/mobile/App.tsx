@@ -85,7 +85,15 @@ export default function App() {
     <SafeAreaProvider>
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: colors.page }}>
         <StatusBar barStyle="dark-content" />
-        {!restoring && session ? <MainShell session={session} onSignOut={() => { void signOut(); }} /> : null}
+        {!restoring && session ? (
+          <MainShell
+            session={session}
+            onSignOut={() => {
+              void signOut();
+            }}
+            onSessionUpdate={(user) => setSession((current) => (current ? { ...current, user } : current))}
+          />
+        ) : null}
         {!restoring && !session && flow.screen === 'welcome' ? <WelcomeScreen onLogin={() => dispatch((current) => accessFlowReducer(current, { type: 'OPEN_LOGIN' }))} /> : null}
         {!restoring && !session && flow.screen === 'login' ? <LoginScreen onBack={() => dispatch((current) => accessFlowReducer(current, { type: 'BACK' }))} onRecovery={() => dispatch((current) => accessFlowReducer(current, { type: 'OPEN_RECOVERY' }))} onAuthenticate={authenticate} /> : null}
         {!restoring && !session && flow.screen === 'recovery' ? <RecoveryScreen onBack={() => dispatch((current) => accessFlowReducer(current, { type: 'BACK' }))} /> : null}

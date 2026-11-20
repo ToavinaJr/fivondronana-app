@@ -1,7 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { type AdminArchive, adminArchiveDownloadUrl, adminRequest } from './admin-client';
 import { type AdminPage, AdminShell, Icon, iconButtonClass, Required } from './admin-shell';
-import { buttonOutlineClass, buttonPrimaryClass, noticeErrorClass } from './ui-classes';
+import { buttonOutlineClass, buttonPrimaryClass, fieldClass, fieldLabelClass, noticeErrorClass } from './ui-classes';
 
 const ACCEPTED_EXTENSIONS = '.pdf,.docx';
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -388,9 +388,6 @@ function ArchiveUploadModal({
   const [error, setError] = useState('');
   const [fileName, setFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const fieldClass =
-    'h-[42px] w-full rounded-[7px] border border-[#dfe0dc] px-[11px] text-[13px] font-normal text-[#2e2f2b] outline-none focus:border-brand-teal focus:shadow-[0_0_0_3px_rgb(8_127_123/0.11)]';
-  const fieldLabelClass = 'grid gap-[7px] text-xs font-bold text-[#454641]';
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

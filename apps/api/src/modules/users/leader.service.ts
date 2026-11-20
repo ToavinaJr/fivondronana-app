@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { createPaginatedResponse } from '../../common/pagination.js';
-import { PrismaService } from '../database/prisma.service.js';
 import { RESPONSIBLE_ROLES } from '../authorization/roles.js';
+import { PrismaService } from '../database/prisma.service.js';
 import type { LeaderQueryDto } from './dto/leader-query.dto.js';
 import type { LeaderResponseDto } from './dto/leader-response.dto.js';
 
@@ -95,6 +95,7 @@ export class LeaderService {
         select: {
           id: true,
           accountName: true,
+          avatarKey: true,
           membership: {
             select: {
               entity: { select: { id: true, name: true } },
@@ -119,9 +120,23 @@ export class LeaderService {
           entity: user.membership.entity,
           group: user.membership.group,
           responsibilities: user.responsibilities.map(({ responsibility }) => responsibility.name),
+          hasAvatar: Boolean(user.avatarKey),
         },
       ];
     });
     return { data, pagination: createPaginatedResponse(data, total, query).pagination };
+  }
+
+  async assertVisible(userId: string): Promise<void> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        isActive: true,
+        roles: { some: { role: { in: [...RESPONSIBLE_ROLES] } } },
+        membership: { is: { entity: { isActive: true }, group: { isActive: true } } },
+      },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('Tsy hita ny mpiandraikitra.');
   }
 }

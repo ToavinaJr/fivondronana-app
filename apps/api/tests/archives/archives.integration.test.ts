@@ -1,6 +1,6 @@
-import { PrismaPg } from '@prisma/adapter-pg';
 import { afterAll, beforeAll, describe, expect, it, mock } from 'bun:test';
 import { randomUUID } from 'node:crypto';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../src/generated/prisma/client.js';
 import { ArchivesService } from '../../src/modules/archives/archives.service.js';
 import { PostgresFileStorage } from '../../src/modules/archives/postgres-file-storage.js';

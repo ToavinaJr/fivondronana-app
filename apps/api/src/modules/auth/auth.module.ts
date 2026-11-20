@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service.js';
 import { AccessTokenGuard } from './access-token.guard.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
-import { PrismaService } from '../database/prisma.service.js';
 import { SendGridMailer } from './sendgrid-mailer.js';
 
 @Module({

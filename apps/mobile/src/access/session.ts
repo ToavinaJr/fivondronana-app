@@ -1,4 +1,10 @@
-export type SessionUser = { id: string; accountName: string; email: string | null; phone: string | null };
+export type SessionUser = {
+  id: string;
+  accountName: string;
+  email: string | null;
+  phone: string | null;
+  hasAvatar: boolean;
+};
 export type Session = {
   accessToken: string;
   refreshToken: string;

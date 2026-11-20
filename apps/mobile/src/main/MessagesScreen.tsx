@@ -103,7 +103,13 @@ export function MessagesScreen({ session, onSessionExpired }: Props) {
               <BrandIcon name="messages" size={22} color={colors.primary} />
               <View style={styles.rowBody}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
-                <Text style={styles.rowMeta}>{item.kind === 'GENERAL' ? 'Resaka ankapobeny' : 'Resaka vondrona'}</Text>
+                <Text style={styles.rowMeta}>
+                  {item.kind === 'GENERAL'
+                    ? 'Resaka ankapobeny'
+                    : item.kind === 'ENTITY'
+                      ? 'Resaka vondrona'
+                      : 'Resaka miaraka'}
+                </Text>
               </View>
               <BrandIcon name="forward" size={18} color={colors.secondary} />
             </Pressable>

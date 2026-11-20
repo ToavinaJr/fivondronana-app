@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { initialLeaderListState, leaderListReducer, type LeaderListState } from '../src/main/leader-list-state';
+import { initialLeaderListState, type LeaderListState, leaderListReducer } from '../src/main/leader-list-state';
 
 const leader = {
   id: 'l1',

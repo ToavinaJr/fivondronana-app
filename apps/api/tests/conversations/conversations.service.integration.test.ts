@@ -143,4 +143,47 @@ describe.skipIf(!connectionString)('Hafatra conversations', () => {
       'Efa manana resaka ity vondrona ity.',
     );
   });
+
+  it('creates a custom conversation visible to members of its entities and to directly added people', async () => {
+    const a = await makeResponsible('Entity J');
+    const b = await makeResponsible('Entity K');
+    const outsider = await makeResponsible('Entity L');
+
+    const custom = await service.createCustomConversation('Komity manokana', [a.entity.id], [b.user.id]);
+    conversationIds.push(custom.id);
+
+    const visibleToA = await service.listForUser(a.user.id);
+    expect(visibleToA.some((c) => c.id === custom.id)).toBe(true);
+    const visibleToB = await service.listForUser(b.user.id);
+    expect(visibleToB.some((c) => c.id === custom.id)).toBe(true);
+    const visibleToOutsider = await service.listForUser(outsider.user.id);
+    expect(visibleToOutsider.some((c) => c.id === custom.id)).toBe(false);
+
+    await expect(service.sendMessage(custom.id, outsider.user.id, 'hello')).rejects.toThrow(
+      'Cette action n’est pas autorisée.',
+    );
+    const sent = await service.sendMessage(custom.id, b.user.id, 'hello from a direct member');
+    expect(sent.sender.id).toBe(b.user.id);
+  });
+
+  it('rejects creating a custom conversation with no entity and no member', async () => {
+    await expect(service.createCustomConversation('Vide', [], [])).rejects.toThrow(
+      'Tsy maintsy misafidy vondrona na olona iray farafahakeliny.',
+    );
+  });
+
+  it('replaces the entities and members of a custom conversation on update', async () => {
+    const a = await makeResponsible('Entity M');
+    const b = await makeResponsible('Entity N');
+
+    const custom = await service.createCustomConversation('A manage avant', [a.entity.id], []);
+    conversationIds.push(custom.id);
+    expect(await service.listForUser(a.user.id)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: custom.id })]),
+    );
+
+    await service.updateCustomConversation(custom.id, 'Après', [], [b.user.id]);
+    expect((await service.listForUser(a.user.id)).some((c) => c.id === custom.id)).toBe(false);
+    expect((await service.listForUser(b.user.id)).some((c) => c.id === custom.id)).toBe(true);
+  });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from 'bun:test';
-import { AuthService } from '../src/modules/auth/auth.service.js';
 import { createHash } from 'node:crypto';
-import { hashPassword, issueAccessToken, verifyPassword, verifyAccessToken } from '../src/modules/auth/auth.crypto.js';
+import { hashPassword, issueAccessToken, verifyAccessToken, verifyPassword } from '../src/modules/auth/auth.crypto.js';
+import { AuthService } from '../src/modules/auth/auth.service.js';
 
 const secret = 'this-is-a-test-signing-secret-at-least-32-chars';
 

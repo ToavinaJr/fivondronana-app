@@ -50,6 +50,29 @@ export type AdminEntity = {
 
 export type AdminResponsibility = { id: string; name: string; isActive: boolean };
 
+export type AdminContact = {
+  id: string;
+  name: string;
+  responsibility: string;
+  groupLabel: string;
+  address: string;
+  phone: string;
+  email: string;
+  description: string;
+  kind: 'INTERNAL' | 'EXTERNAL';
+  isPublished: boolean;
+};
+
+export type AdminConversation = {
+  id: string;
+  kind: 'GENERAL' | 'ENTITY' | 'CUSTOM';
+  title: string;
+  entityId: string | null;
+  isActive: boolean;
+  entities: { entity: { id: string; name: string } }[];
+  members: { user: { id: string; accountName: string } }[];
+};
+
 export function adminArchiveDownloadUrl(archiveId: string): string {
   return `${import.meta.env.VITE_API_URL ?? ''}/api/admin/archives/${encodeURIComponent(archiveId)}/download`;
 }

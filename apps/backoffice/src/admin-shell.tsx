@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import logo from '../../mobile/src/assets/vonenina-logo.jpeg';
 import { buttonOutlineClass } from './ui-classes';
 
-export type AdminPage = 'accounts' | 'archives';
+export type AdminPage = 'accounts' | 'archives' | 'conversations' | 'contacts';
 
 export const iconButtonClass =
   'inline-grid h-[34px] w-[34px] shrink-0 place-items-center rounded-lg border-0 bg-transparent p-0 text-[#747670] enabled:hover:bg-[#fff0ee] enabled:hover:text-[#971710] disabled:cursor-wait disabled:opacity-45';
@@ -19,6 +19,8 @@ export function Required() {
 const navItems: { id: AdminPage; label: string; icon: IconName }[] = [
   { id: 'accounts', label: 'Comptes', icon: 'users' },
   { id: 'archives', label: 'Arisiva', icon: 'archive' },
+  { id: 'conversations', label: 'Hafatra', icon: 'messages' },
+  { id: 'contacts', label: 'Fifandraisana', icon: 'contacts' },
 ];
 
 export function AdminShell({
@@ -156,7 +158,9 @@ type IconName =
   | 'download'
   | 'trash'
   | 'eye'
-  | 'eye-off';
+  | 'eye-off'
+  | 'messages'
+  | 'contacts';
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {
   const paths: Record<IconName, string> = {
@@ -177,6 +181,9 @@ export function Icon({ name, className }: { name: IconName; className?: string }
     eye: 'M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Zm9.5 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z',
     'eye-off':
       'M3 3l18 18M10.6 10.6a3.5 3.5 0 0 0 4.8 4.8M6.6 6.7C4.3 8.2 2.5 12 2.5 12S6 19 12 19c1.6 0 3-.4 4.2-1M9.9 5.2A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a15 15 0 0 1-2.1 3',
+    messages: 'M21 11.5a8.38 8.38 0 0 1-9 8.4A9 9 0 1 1 20.6 10a8.5 8.5 0 0 1 .4 1.5Z',
+    contacts:
+      'M6 2h12a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm6 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-3.5 9c.4-2 1.8-3 3.5-3s3.1 1 3.5 3',
   };
   return (
     <svg

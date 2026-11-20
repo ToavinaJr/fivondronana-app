@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, HttpException, Logger, type ExceptionFilter } from '@nestjs/common';
+import { ArgumentsHost, Catch, type ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 
 export type ApiErrorResponse = {

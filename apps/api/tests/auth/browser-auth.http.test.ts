@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import type { AddressInfo } from 'node:net';
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import type { AddressInfo } from 'node:net';
 import { configureApiApp } from '../../src/api-bootstrap.js';
 import { AccessTokenGuard } from '../../src/modules/auth/access-token.guard.js';
 import { AuthController } from '../../src/modules/auth/auth.controller.js';
-import { AuthService } from '../../src/modules/auth/auth.service.js';
 import { issueAccessToken } from '../../src/modules/auth/auth.crypto.js';
+import { AuthService } from '../../src/modules/auth/auth.service.js';
 
 const secret = 'browser-auth-http-test-secret-with-more-than-32-characters';
 const user = { id: 'admin-1', accountName: 'Admin', email: 'admin@example.test', phone: null };

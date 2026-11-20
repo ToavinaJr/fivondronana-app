@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { createCvCollectionHtml, createCvHtml } from '../src/main/cv-pdf';
 import type { PersonalCv } from '../src/access/auth-api';
+import { createCvCollectionHtml, createCvHtml } from '../src/main/cv-pdf';
 
 const cv: PersonalCv = {
   firstName: 'Soa <script>alert("x")</script>',

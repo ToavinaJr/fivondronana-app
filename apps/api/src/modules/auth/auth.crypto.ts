@@ -1,4 +1,5 @@
 import { createHash, createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
+
 const passwordBytes = 64;
 const tokenLifetimeSeconds = 15 * 60;
 

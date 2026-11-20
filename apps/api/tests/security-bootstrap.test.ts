@@ -1,8 +1,8 @@
 import 'reflect-metadata';
+import { describe, expect, it } from 'bun:test';
 import { Controller, Module, Post } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { describe, expect, it } from 'bun:test';
 import { configureApiApp } from '../src/api-bootstrap.js';
 import { getAllowedOrigins, getPositiveInteger, RequestRateLimiter } from '../src/http-security.js';
 

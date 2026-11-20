@@ -1,22 +1,22 @@
+import { randomBytes } from 'node:crypto';
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { randomBytes } from 'node:crypto';
 import { AccessTokenGuard, type AuthenticatedRequest } from './access-token.guard.js';
 import { AuthService } from './auth.service.js';
-import { ChangePasswordDto } from './dto/change-password.dto.js';
-import { ActivateAccountDto } from './dto/activate-account.dto.js';
-import { LoginDto } from './dto/login.dto.js';
-import { RefreshSessionDto } from './dto/refresh-session.dto.js';
-import { RequestPasswordResetDto } from './dto/request-password-reset.dto.js';
-import { CompletePasswordResetDto } from './dto/complete-password-reset.dto.js';
 import {
   ACCESS_COOKIE,
   CSRF_COOKIE,
-  REFRESH_COOKIE,
   clearSessionCookies,
+  REFRESH_COOKIE,
   readCookie,
   serializeSessionCookie,
 } from './browser-session.js';
+import { ActivateAccountDto } from './dto/activate-account.dto.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { CompletePasswordResetDto } from './dto/complete-password-reset.dto.js';
+import { LoginDto } from './dto/login.dto.js';
+import { RefreshSessionDto } from './dto/refresh-session.dto.js';
+import { RequestPasswordResetDto } from './dto/request-password-reset.dto.js';
 
 type BrowserResponse = { setHeader(name: string, value: string | string[]): void };
 type BrowserRequest = { headers: { cookie?: string }; auth: { user: { id: string } } };

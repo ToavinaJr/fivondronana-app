@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { AuthenticatedRequest } from '../auth/access-token.guard.js';
-import { AuthorizationService } from './authorization.service.js';
 import { REQUIRED_PERMISSION } from './authorization.decorator.js';
+import { AuthorizationService } from './authorization.service.js';
 import type { Permission } from './permissions.js';
 
 type PermissionRequest = AuthenticatedRequest & {

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { AuthSession, PersonalCv } from '../access/auth-api';
 import { getConfiguredApiBaseUrl } from '../access/auth-api';
 import { BrandIcon } from '../access/BrandIcon';

@@ -4,4 +4,5 @@ export class LeaderResponseDto {
   entity!: { id: string; name: string };
   group!: { id: string; name: string };
   responsibilities!: string[];
+  hasAvatar!: boolean;
 }

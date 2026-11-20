@@ -1,7 +1,12 @@
 import { SessionExpiredError } from '../access/session';
 import { directoryErrorMessage } from './directory-errors';
 
-export type ConversationSummary = { id: string; kind: 'GENERAL' | 'ENTITY'; title: string; entityId: string | null };
+export type ConversationSummary = {
+  id: string;
+  kind: 'GENERAL' | 'ENTITY' | 'CUSTOM';
+  title: string;
+  entityId: string | null;
+};
 
 export type MessageAttachment = { name: string; contentType: string; size: number };
 export type MessageItem = {
@@ -101,7 +106,7 @@ async function request(url: string, token: string): Promise<unknown> {
 function parseConversation(value: unknown): ConversationSummary | null {
   if (!isRecord(value)) return null;
   const { id, kind, title, entityId } = value;
-  if (!isString(id) || (kind !== 'GENERAL' && kind !== 'ENTITY') || !isString(title)) return null;
+  if (!isString(id) || (kind !== 'GENERAL' && kind !== 'ENTITY' && kind !== 'CUSTOM') || !isString(title)) return null;
   if (entityId !== null && !isString(entityId)) return null;
   return { id, kind, title, entityId: entityId ?? null };
 }

@@ -1,9 +1,9 @@
 import { describe, expect, it, mock } from 'bun:test';
 import 'reflect-metadata';
 import { AuthorizationService } from '../../src/modules/authorization/authorization.service.js';
-import { PrismaService } from '../../src/modules/database/prisma.service.js';
 import { Permission } from '../../src/modules/authorization/permissions.js';
 import { UserRole } from '../../src/modules/authorization/roles.js';
+import { PrismaService } from '../../src/modules/database/prisma.service.js';
 
 function createPrisma(user: unknown) {
   return { user: { findUnique: mock(async () => user) } };

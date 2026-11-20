@@ -15,6 +15,7 @@ describe('leader directory service', () => {
               group: { id: 'group-1', name: 'Tily' },
             },
             responsibilities: [{ responsibility: { name: 'Haim-panahy' } }],
+            avatarKey: null,
             passwordHash: 'must-not-return',
           },
         ]),
@@ -30,6 +31,7 @@ describe('leader directory service', () => {
           entity: { id: 'entity-1', name: 'Mavo' },
           group: { id: 'group-1', name: 'Tily' },
           responsibilities: ['Haim-panahy'],
+          hasAvatar: false,
         },
       ],
       pagination: { page: 2, pageSize: 10, total: 21, totalPages: 3 },
@@ -64,5 +66,15 @@ describe('leader directory service', () => {
     });
     expect(where.OR).toHaveLength(4);
     expect(where.OR?.[0]).toEqual({ accountName: { contains: 'Tiana', mode: 'insensitive' } });
+  });
+
+  it('only treats an active responsible with an active membership as a visible leader', async () => {
+    const found = mock(async (): Promise<{ id: string } | null> => ({ id: 'leader-1' }));
+    const service = new LeaderService({ user: { findFirst: found } } as never);
+
+    await expect(service.assertVisible('leader-1')).resolves.toBeUndefined();
+
+    found.mockImplementationOnce(async () => null);
+    await expect(service.assertVisible('missing')).rejects.toThrow('Tsy hita ny mpiandraikitra.');
   });
 });

@@ -1,6 +1,6 @@
+import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'bun:test';
 
 const adrPath = resolve(import.meta.dir, '../../../docs/decisions/0001-platform-foundation.md');
 const adr = readFileSync(adrPath, 'utf8');

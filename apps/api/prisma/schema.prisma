@@ -17,6 +17,7 @@ model User {
   passwordHash String
   isActive     Boolean       @default(true)
   activatedAt  DateTime?
+  avatarKey    String?       @unique
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   sessions     AuthSession[]
@@ -29,6 +30,8 @@ model User {
   auditActions AdminAuditEvent[] @relation("AdminAuditActor")
   auditTargets AdminAuditEvent[] @relation("AdminAuditSubject")
   messages     Message[]
+  avatar       FileObject?   @relation(fields: [avatarKey], references: [storageKey], onDelete: Restrict)
+  conversationMemberships ConversationMember[]
 }
 
 model AccountInvitation {
@@ -86,6 +89,7 @@ model Entity {
   groups        Group[]
   memberships   EntityMembership[]
   conversation  Conversation?
+  conversationLinks ConversationEntity[]
 }
 
 model Group {
@@ -229,6 +233,7 @@ model CvActivity {
 enum ConversationKind {
   GENERAL
   ENTITY
+  CUSTOM
 }
 
 model Conversation {
@@ -241,6 +246,26 @@ model Conversation {
   createdAt          DateTime         @default(now())
   entity             Entity?          @relation(fields: [entityId], references: [id], onDelete: Restrict)
   messages           Message[]
+  entities           ConversationEntity[]
+  members            ConversationMember[]
+}
+
+model ConversationEntity {
+  conversationId String
+  entityId       String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  entity         Entity       @relation(fields: [entityId], references: [id], onDelete: Restrict)
+
+  @@id([conversationId, entityId])
+}
+
+model ConversationMember {
+  conversationId String
+  userId         String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
 }
 
 model Message {
@@ -268,6 +293,7 @@ model FileObject {
   createdAt  DateTime @default(now())
   archive    Archive?
   message    Message?
+  userAvatar User?
 }
 
 model Archive {

@@ -5,9 +5,9 @@ import { RequirePermission } from '../authorization/authorization.decorator.js';
 import { Permission } from '../authorization/permissions.js';
 import { RequirePermissionsGuard } from '../authorization/require-permissions.guard.js';
 import { CreateUserAdminDto } from './dto/create-user-admin.dto.js';
-import { UserAdminQueryDto } from './dto/user-admin-query.dto.js';
 import { SetUserActiveDto } from './dto/set-user-active.dto.js';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto.js';
+import { UserAdminQueryDto } from './dto/user-admin-query.dto.js';
 import { UsersAdminService } from './users-admin.service.js';
 
 @Controller('admin/users')

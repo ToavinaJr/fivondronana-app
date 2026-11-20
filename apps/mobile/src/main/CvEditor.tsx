@@ -1,3 +1,6 @@
+import RNDateTimePicker from '@react-native-community/datetimepicker';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -10,10 +13,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import RNDateTimePicker from '@react-native-community/datetimepicker';
-import { BrandIcon } from '../access/BrandIcon';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
 import {
   type AuthSession,
   type CvActivity,
@@ -22,6 +21,7 @@ import {
   type PersonalCv,
   saveMyCv,
 } from '../access/auth-api';
+import { BrandIcon } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
 import { isCvDirty } from './cv-dirty';
 import { createCvHtml } from './cv-pdf';

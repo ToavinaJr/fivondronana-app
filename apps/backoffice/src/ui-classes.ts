@@ -11,3 +11,6 @@ export const buttonOutlineClass = `${buttonBaseClass} border-[#e8bfbc] bg-white 
 export const noticeClass = 'mb-4 rounded-lg px-3.5 py-3 text-[13px] leading-[1.5]';
 export const noticeErrorClass = `${noticeClass} bg-[#fff1f0] text-[#8c1812]`;
 export const noticeSuccessClass = `${noticeClass} bg-[#eaf7f5] text-[#075c56]`;
+export const fieldClass =
+  'h-[42px] w-full rounded-[7px] border border-[#dfe0dc] px-[11px] text-[13px] font-normal text-[#2e2f2b] outline-none focus:border-brand-teal focus:shadow-[0_0_0_3px_rgb(8_127_123/0.11)]';
+export const fieldLabelClass = 'grid gap-[7px] text-xs font-bold text-[#454641]';

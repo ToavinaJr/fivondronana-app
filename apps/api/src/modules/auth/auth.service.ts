@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import type { PrismaService } from '../database/prisma.service.js';
 import { hashOpaqueToken, hashPassword, issueAccessToken, validateJwtSecret, verifyPassword } from './auth.crypto.js';
 
@@ -12,8 +12,15 @@ type Account = {
   phoneNormalized?: string | null;
   passwordHash: string;
   isActive: boolean;
+  avatarKey?: string | null;
 };
-export type AuthenticatedUser = { id: string; accountName: string; email: string | null; phone: string | null };
+export type AuthenticatedUser = {
+  id: string;
+  accountName: string;
+  email: string | null;
+  phone: string | null;
+  hasAvatar: boolean;
+};
 
 @Injectable()
 export class AuthService {
@@ -231,7 +238,13 @@ export function normalizeEmail(value: string): string {
 }
 
 export function toAuthenticatedUser(
-  account: Pick<Account, 'id' | 'accountName' | 'email' | 'phone'>,
+  account: Pick<Account, 'id' | 'accountName' | 'email' | 'phone' | 'avatarKey'>,
 ): AuthenticatedUser {
-  return { id: account.id, accountName: account.accountName, email: account.email, phone: account.phone };
+  return {
+    id: account.id,
+    accountName: account.accountName,
+    email: account.email,
+    phone: account.phone,
+    hasAvatar: Boolean(account.avatarKey),
+  };
 }

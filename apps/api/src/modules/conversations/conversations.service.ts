@@ -19,7 +19,7 @@ const GENERAL_TITLE = 'Fifandraisana ankapobeny';
 
 type ConversationRecord = {
   id: string;
-  kind: 'GENERAL' | 'ENTITY';
+  kind: 'GENERAL' | 'ENTITY' | 'CUSTOM';
   title: string;
   entityId: string | null;
   isActive: boolean;
@@ -155,7 +155,13 @@ export class ConversationsService implements OnModuleInit {
   }
 
   listForAdministration() {
-    return this.prisma.conversation.findMany({ orderBy: [{ kind: 'asc' }, { title: 'asc' }] });
+    return this.prisma.conversation.findMany({
+      orderBy: [{ kind: 'asc' }, { title: 'asc' }],
+      include: {
+        entities: { include: { entity: { select: { id: true, name: true } } } },
+        members: { include: { user: { select: { id: true, accountName: true } } } },
+      },
+    });
   }
 
   async createEntityConversation(title: string, entityId: string) {
@@ -164,6 +170,70 @@ export class ConversationsService implements OnModuleInit {
     const existing = await this.prisma.conversation.findUnique({ where: { entityId } });
     if (existing) throw new ConflictException('Efa manana resaka ity vondrona ity.');
     return this.prisma.conversation.create({ data: { kind: 'ENTITY', title: title.trim(), entityId } });
+  }
+
+  async createCustomConversation(title: string, entityIds: string[], memberUserIds: string[]) {
+    const { cleanTitle, uniqueEntityIds, uniqueMemberIds } = await this.validateCustomConversation(
+      title,
+      entityIds,
+      memberUserIds,
+    );
+    return this.prisma.conversation.create({
+      data: {
+        kind: 'CUSTOM',
+        title: cleanTitle,
+        entities: { create: uniqueEntityIds.map((id) => ({ entityId: id })) },
+        members: { create: uniqueMemberIds.map((id) => ({ userId: id })) },
+      },
+      include: {
+        entities: { include: { entity: { select: { id: true, name: true } } } },
+        members: { include: { user: { select: { id: true, accountName: true } } } },
+      },
+    });
+  }
+
+  async updateCustomConversation(id: string, title: string, entityIds: string[], memberUserIds: string[]) {
+    const conversation = await this.prisma.conversation.findUnique({ where: { id } });
+    if (!conversation || conversation.kind !== 'CUSTOM') throw new NotFoundException('Tsy hita ny Hafatra.');
+    const { cleanTitle, uniqueEntityIds, uniqueMemberIds } = await this.validateCustomConversation(
+      title,
+      entityIds,
+      memberUserIds,
+    );
+    return this.prisma.$transaction(async (tx) => {
+      await tx.conversationEntity.deleteMany({ where: { conversationId: id } });
+      await tx.conversationMember.deleteMany({ where: { conversationId: id } });
+      return tx.conversation.update({
+        where: { id },
+        data: {
+          title: cleanTitle,
+          entities: { create: uniqueEntityIds.map((entityId) => ({ entityId })) },
+          members: { create: uniqueMemberIds.map((userId) => ({ userId })) },
+        },
+        include: {
+          entities: { include: { entity: { select: { id: true, name: true } } } },
+          members: { include: { user: { select: { id: true, accountName: true } } } },
+        },
+      });
+    });
+  }
+
+  private async validateCustomConversation(title: string, entityIds: string[], memberUserIds: string[]) {
+    const cleanTitle = title.trim();
+    if (!cleanTitle) throw new BadRequestException('Tsy maintsy misy lohateny.');
+    const uniqueEntityIds = [...new Set(entityIds)];
+    const uniqueMemberIds = [...new Set(memberUserIds)];
+    if (uniqueEntityIds.length === 0 && uniqueMemberIds.length === 0)
+      throw new BadRequestException('Tsy maintsy misafidy vondrona na olona iray farafahakeliny.');
+    if (uniqueEntityIds.length) {
+      const count = await this.prisma.entity.count({ where: { id: { in: uniqueEntityIds } } });
+      if (count !== uniqueEntityIds.length) throw new NotFoundException('Tsy hita ny vondrona iray na maromaro.');
+    }
+    if (uniqueMemberIds.length) {
+      const count = await this.prisma.user.count({ where: { id: { in: uniqueMemberIds } } });
+      if (count !== uniqueMemberIds.length) throw new NotFoundException('Tsy hita ny olona iray na maromaro.');
+    }
+    return { cleanTitle, uniqueEntityIds, uniqueMemberIds };
   }
 
   async setActive(id: string, isActive: boolean) {
@@ -179,6 +249,7 @@ export class ConversationsService implements OnModuleInit {
   }
 
   private canRead(userId: string, conversation: ConversationRecord): Promise<boolean> {
+    if (conversation.kind === 'CUSTOM') return this.canAccessCustom(userId, conversation.id);
     return conversation.kind === 'GENERAL'
       ? this.authorization.hasPermission(userId, Permission.GENERAL_CONVERSATION)
       : this.authorization.hasPermission(userId, Permission.ENTITY_CONVERSATION_READ, {
@@ -187,11 +258,34 @@ export class ConversationsService implements OnModuleInit {
   }
 
   private canWrite(userId: string, conversation: ConversationRecord): Promise<boolean> {
+    if (conversation.kind === 'CUSTOM') return this.canAccessCustom(userId, conversation.id);
     return conversation.kind === 'GENERAL'
       ? this.authorization.hasPermission(userId, Permission.GENERAL_CONVERSATION)
       : this.authorization.hasPermission(userId, Permission.ENTITY_CONVERSATION_WRITE, {
           entityId: conversation.entityId ?? undefined,
         });
+  }
+
+  private async canAccessCustom(userId: string, conversationId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        isActive: true,
+        membership: {
+          select: { entityId: true, entity: { select: { isActive: true } }, group: { select: { isActive: true } } },
+        },
+      },
+    });
+    if (!user?.isActive) return false;
+    const directMember = await this.prisma.conversationMember.findUnique({
+      where: { conversationId_userId: { conversationId, userId } },
+    });
+    if (directMember) return true;
+    if (!user.membership) return false;
+    const entityLink = await this.prisma.conversationEntity.findUnique({
+      where: { conversationId_entityId: { conversationId, entityId: user.membership.entityId } },
+    });
+    return Boolean(entityLink) && user.membership.entity.isActive && user.membership.group.isActive;
   }
 
   private async storeAttachment(file: UploadedAttachment) {

@@ -64,7 +64,10 @@ describe('demo seed environment safety', () => {
 
   it('returns the trimmed email and the exact password when both are configured', () => {
     expect(
-      getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: '  admin@fivondronana.test  ', DEMO_ADMIN_PASSWORD: ' not-trimmed ' }),
+      getDemoAdminCredentials({
+        DEMO_ADMIN_EMAIL: '  admin@fivondronana.test  ',
+        DEMO_ADMIN_PASSWORD: ' not-trimmed ',
+      }),
     ).toEqual({ email: 'admin@fivondronana.test', password: ' not-trimmed ' });
   });
 
@@ -78,9 +81,9 @@ describe('demo seed environment safety', () => {
   });
 
   it('rejects a malformed administrator email', () => {
-    expect(() =>
-      getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: 'not-an-email', DEMO_ADMIN_PASSWORD: 'secret' }),
-    ).toThrow('DEMO_ADMIN_EMAIL must be a valid email address.');
+    expect(() => getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: 'not-an-email', DEMO_ADMIN_PASSWORD: 'secret' })).toThrow(
+      'DEMO_ADMIN_EMAIL must be a valid email address.',
+    );
   });
 });
 

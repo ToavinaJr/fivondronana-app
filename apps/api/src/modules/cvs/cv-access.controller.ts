@@ -1,11 +1,11 @@
 import { Controller, Get, NotFoundException, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../../common/pagination.js';
 import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { RequirePermission } from '../authorization/authorization.decorator.js';
 import { Permission } from '../authorization/permissions.js';
 import { RequirePermissionsGuard } from '../authorization/require-permissions.guard.js';
 import { CvAccessService } from './cv-access.service.js';
-import { PaginationQueryDto } from '../../common/pagination.js';
 
 @Controller('cvs/responsibles')
 @ApiTags('curriculum vitae')

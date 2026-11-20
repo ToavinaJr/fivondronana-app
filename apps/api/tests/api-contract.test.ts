@@ -1,12 +1,11 @@
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { Module } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
 import { describe, expect, test } from 'bun:test';
-import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { AddressInfo } from 'node:net';
-import { apiValidationPipe } from '../src/api-validation.js';
+import { BadRequestException, InternalServerErrorException, Module } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { configureApiApp } from '../src/api-bootstrap.js';
 import { ApiExceptionFilter, normalizeApiError } from '../src/api-errors.js';
+import { apiValidationPipe } from '../src/api-validation.js';
 import {
   createPaginatedResponse,
   getPaginationOffset,
@@ -14,9 +13,9 @@ import {
   MAX_PAGE_SIZE,
   PaginationQueryDto,
 } from '../src/common/pagination.js';
-import { createOpenApiConfig, OPENAPI_PREFIX } from '../src/openapi.js';
 import { HealthController } from '../src/modules/health/health.controller.js';
 import { HealthService } from '../src/modules/health/health.service.js';
+import { createOpenApiConfig, OPENAPI_PREFIX } from '../src/openapi.js';
 
 @Module({
   controllers: [HealthController],

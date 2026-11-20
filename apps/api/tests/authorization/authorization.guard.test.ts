@@ -1,9 +1,9 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import { RequirePermissionsGuard } from '../../src/modules/authorization/require-permissions.guard.js';
-import { Permission } from '../../src/modules/authorization/permissions.js';
 import { AccessTokenGuard } from '../../src/modules/auth/access-token.guard.js';
 import { issueAccessToken } from '../../src/modules/auth/auth.crypto.js';
+import { Permission } from '../../src/modules/authorization/permissions.js';
+import { RequirePermissionsGuard } from '../../src/modules/authorization/require-permissions.guard.js';
 
 function context(params: Record<string, string> = {}) {
   return {

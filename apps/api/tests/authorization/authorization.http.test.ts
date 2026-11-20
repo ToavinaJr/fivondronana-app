@@ -1,14 +1,14 @@
 import 'reflect-metadata';
+import { afterEach, describe, expect, it } from 'bun:test';
 import { Controller, Get, Module, UseGuards } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { afterEach, describe, expect, it } from 'bun:test';
 import { configureApiApp } from '../../src/api-bootstrap.js';
 import { AccessTokenGuard } from '../../src/modules/auth/access-token.guard.js';
-import { AuthService } from '../../src/modules/auth/auth.service.js';
 import { issueAccessToken } from '../../src/modules/auth/auth.crypto.js';
-import { AuthorizationService } from '../../src/modules/authorization/authorization.service.js';
+import { AuthService } from '../../src/modules/auth/auth.service.js';
 import { RequirePermission } from '../../src/modules/authorization/authorization.decorator.js';
+import { AuthorizationService } from '../../src/modules/authorization/authorization.service.js';
 import { Permission } from '../../src/modules/authorization/permissions.js';
 import { RequirePermissionsGuard } from '../../src/modules/authorization/require-permissions.guard.js';
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { createPaginatedResponse, type PaginationQueryDto } from '../../common/pagination.js';
-import { PrismaService } from '../database/prisma.service.js';
 import { RESPONSIBLE_ROLES } from '../authorization/roles.js';
+import { PrismaService } from '../database/prisma.service.js';
 import type { CvResponseDto } from './dto/cv-response.dto.js';
 
 @Injectable()

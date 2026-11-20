@@ -4,8 +4,8 @@ import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { RequirePermission } from '../authorization/authorization.decorator.js';
 import { Permission } from '../authorization/permissions.js';
 import { RequirePermissionsGuard } from '../authorization/require-permissions.guard.js';
-import { ContactQueryDto } from './dto/contact-query.dto.js';
 import { ContactsService } from './contacts.service.js';
+import { ContactQueryDto } from './dto/contact-query.dto.js';
 
 @Controller('contacts')
 @ApiTags('contacts')

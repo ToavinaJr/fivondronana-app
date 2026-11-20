@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import type { AuthSession } from '../access/auth-api';
-import { getConfiguredApiBaseUrl } from '../access/auth-api';
+import { getConfiguredApiBaseUrl, leaderAvatarUrl } from '../access/auth-api';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
 import { getLeaderFacets, type LeaderFacets, listLeaders } from './leader-api';
@@ -147,7 +147,17 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
             >
-              <Text style={styles.initial}>{leader.accountName.trim().slice(0, 1).toLocaleUpperCase()}</Text>
+              {leader.hasAvatar ? (
+                <Image
+                  source={{
+                    uri: leaderAvatarUrl(leader.id),
+                    headers: { Authorization: `Bearer ${session.accessToken}` },
+                  }}
+                  style={styles.portraitImage}
+                />
+              ) : (
+                <Text style={styles.initial}>{leader.accountName.trim().slice(0, 1).toLocaleUpperCase()}</Text>
+              )}
             </View>
             <View style={[styles.leaderBody, stackedActions && styles.leaderBodyStacked]}>
               <View style={[styles.leaderCopy, stackedActions && styles.leaderCopyStacked]}>
@@ -349,7 +359,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.portrait,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  portraitImage: { width: 54, height: 64 },
   groupContext: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   groupLogo: { width: 20, height: 24 },
   initial: { color: colors.secondary, fontSize: 23, fontWeight: '600' },

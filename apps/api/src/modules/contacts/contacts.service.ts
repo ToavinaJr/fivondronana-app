@@ -64,6 +64,10 @@ export class ContactsService {
     return createPaginatedResponse(matches.slice(skip, skip + take), matches.length, query);
   }
 
+  listForAdministration() {
+    return this.prisma.contact.findMany({ orderBy: [{ name: 'asc' }, { id: 'asc' }] });
+  }
+
   async create(input: CreateContactDto) {
     return this.prisma.contact.create({ data: input });
   }

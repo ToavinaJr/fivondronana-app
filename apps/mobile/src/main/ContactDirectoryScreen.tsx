@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import type { AuthSession } from '../access/auth-api';
 import { getConfiguredApiBaseUrl } from '../access/auth-api';
-import { colors } from '../theme/tokens';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
-import { listContacts, type ContactSummary } from './contact-api';
-import { contactListReducer, initialContactListState } from './contact-list-state';
+import { colors } from '../theme/tokens';
+import { type ContactSummary, listContacts } from './contact-api';
 import { buildMailUri, buildTelUri } from './contact-links';
+import { contactListReducer, initialContactListState } from './contact-list-state';
 
 type Props = { session: AuthSession; query: string };
 

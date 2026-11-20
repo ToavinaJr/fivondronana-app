@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service.js';
 import { RESPONSIBLE_ROLES } from '../authorization/roles.js';
+import { PrismaService } from '../database/prisma.service.js';
 
 const initialResponsibilities = ['Haim-panahy', 'Fampitaovana', 'Mpitantsoratra', 'Mpitahiry vola'] as const;
 

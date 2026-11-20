@@ -10,11 +10,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { colors } from '../theme/tokens';
+import { requestPasswordRecovery } from './auth-api';
 import { Brand } from './Brand';
 import { BrandIcon } from './BrandIcon';
 import { validateEmail, validateLogin } from './validation';
-import { requestPasswordRecovery } from './auth-api';
-import { colors } from '../theme/tokens';
 
 type WelcomeProps = { onLogin: () => void };
 type LoginProps = {
@@ -181,7 +181,7 @@ export function LoginScreen({ onRecovery, onBack, onAuthenticate }: LoginProps) 
             onPress={() => setShowPassword((value) => !value)}
             hitSlop={8}
           >
-            <Text style={styles.showPassword}>{showPassword ? 'Afeno' : 'Asehoy'}</Text>
+            <BrandIcon name={showPassword ? 'eyeOff' : 'eye'} size={20} color={colors.primary} />
           </Pressable>
         </View>
         {errors.password && <Text style={styles.errorText}>Ampidiro ny teny miafina.</Text>}
@@ -334,14 +334,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   passwordInput: { flex: 1, paddingVertical: 12, color: colors.text, fontSize: 16 },
-  showPassword: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '600',
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    textDecorationLine: 'underline',
-  },
   optionsRow: {
     marginTop: 18,
     marginBottom: 24,

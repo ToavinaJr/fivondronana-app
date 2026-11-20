@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
 import { describe, expect, mock, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { AuthService } from '../../src/modules/auth/auth.service.js';
 
 const secret = 'password-recovery-test-secret-with-more-than-32-characters';

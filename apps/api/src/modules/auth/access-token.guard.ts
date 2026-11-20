@@ -5,10 +5,10 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { type AuthenticatedUser, AuthService, toAuthenticatedUser } from './auth.service.js';
-import { type AccessClaims, validateJwtSecret, verifyAccessToken } from './auth.crypto.js';
-import { ACCESS_COOKIE, browserMutationAllowed, readCookie } from './browser-session.js';
 import { getAllowedOrigins } from '../../http-security.js';
+import { type AccessClaims, validateJwtSecret, verifyAccessToken } from './auth.crypto.js';
+import { type AuthenticatedUser, AuthService, toAuthenticatedUser } from './auth.service.js';
+import { ACCESS_COOKIE, browserMutationAllowed, readCookie } from './browser-session.js';
 
 export type AuthenticatedRequest = {
   method?: string;

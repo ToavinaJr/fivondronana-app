@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { SessionExpiredError } from '../src/access/session';
+import * as archiveApi from '../src/main/archive-api';
 import { downloadArchive, listArchives } from '../src/main/archive-api';
 import { formatArchiveSize } from '../src/main/archive-format';
-import * as archiveApi from '../src/main/archive-api';
 
 const originalFetch = globalThis.fetch;
 

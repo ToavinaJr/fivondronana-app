@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { RequirePermission } from '../authorization/authorization.decorator.js';
@@ -15,6 +15,11 @@ import { UpdateContactDto } from './dto/update-contact.dto.js';
 @RequirePermission(Permission.CONTACTS_MANAGE)
 export class ContactsAdminController {
   constructor(private readonly contacts: ContactsService) {}
+
+  @Get()
+  list() {
+    return this.contacts.listForAdministration();
+  }
 
   @Post()
   create(@Body() body: CreateContactDto) {

@@ -24,8 +24,10 @@ export type BrandIconName =
   | 'plus'
   | 'check'
   | 'eye'
+  | 'eyeOff'
   | 'menu'
-  | 'filter';
+  | 'filter'
+  | 'camera';
 
 type NativeSymbol = NonNullable<ComponentProps<typeof SymbolView>['name']>;
 
@@ -51,8 +53,10 @@ const symbols: Record<BrandIconName, NativeSymbol> = {
   close: { ios: 'xmark', android: 'close', web: 'close' },
   plus: { ios: 'plus', android: 'add', web: 'add' },
   eye: { ios: 'eye', android: 'visibility', web: 'visibility' },
+  eyeOff: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
   menu: { ios: 'line.3.horizontal', android: 'menu', web: 'menu' },
   filter: { ios: 'line.3.horizontal.decrease', android: 'filter_list', web: 'filter_list' },
+  camera: { ios: 'camera', android: 'photo_camera', web: 'photo_camera' },
 };
 
 export function BrandIcon({

@@ -3,9 +3,9 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { ApiErrorResponseDto, ApiExceptionFilter } from './api-errors.js';
 import { apiValidationPipe } from './api-validation.js';
 import { PaginationQueryDto } from './common/pagination.js';
-import { createOpenApiConfig, OPENAPI_PREFIX } from './openapi.js';
 import { getAllowedOrigins, getPositiveInteger, RequestRateLimiter } from './http-security.js';
-import { REFRESH_COOKIE, browserMutationAllowed, readCookie } from './modules/auth/browser-session.js';
+import { browserMutationAllowed, REFRESH_COOKIE, readCookie } from './modules/auth/browser-session.js';
+import { createOpenApiConfig, OPENAPI_PREFIX } from './openapi.js';
 
 type SecurityRequest = {
   method: string;

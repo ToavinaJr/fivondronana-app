@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { AuthorizationModule } from '../authorization/authorization.module.js';
 import { EntitiesController } from './entities.controller.js';
-import { EntitiesAdminController } from './entities-admin.controller.js';
 import { EntitiesService } from './entities.service.js';
+import { EntitiesAdminController } from './entities-admin.controller.js';
 
 @Module({
   imports: [AuthModule, AuthorizationModule],

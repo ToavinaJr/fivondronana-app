@@ -72,6 +72,15 @@ describe('contacts service', () => {
     expect(prisma.contact.findMany.mock.calls[0]?.[0].where).toEqual({ isPublished: true });
   });
 
+  it('lists every contact for administration, including drafts', async () => {
+    const findMany = mock(async (_args: { orderBy: unknown }) => [{ id: 'a', isPublished: false }]);
+    const prisma = { contact: { findMany } };
+    const service = new ContactsService(prisma as never);
+    const result = await service.listForAdministration();
+    expect(result).toEqual([{ id: 'a', isPublished: false }] as never);
+    expect(findMany.mock.calls[0]?.[0]).toEqual({ orderBy: [{ name: 'asc' }, { id: 'asc' }] });
+  });
+
   it('rejects updates and publish toggles for a contact that does not exist', async () => {
     const prisma = { contact: { findUnique: mock(async () => null) } };
     const service = new ContactsService(prisma as never);

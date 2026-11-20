@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
-import { getLeaderCv, getLeaderFacets, listLeaders, listResponsibleCvs } from '../src/main/leader-api';
 import { SessionExpiredError } from '../src/access/session';
+import { getLeaderCv, getLeaderFacets, listLeaders, listResponsibleCvs } from '../src/main/leader-api';
 
 const originalFetch = globalThis.fetch;
 const baseUrl = 'https://api.example.org/api';
@@ -22,6 +22,7 @@ describe('leader API client', () => {
             entity: { id: 'e1', name: 'Mavo' },
             group: { id: 'g1', name: 'Tily' },
             responsibilities: ['Haim-panahy'],
+            hasAvatar: false,
           },
         ],
         pagination: { page: 2, pageSize: 10, total: 11, totalPages: 2 },

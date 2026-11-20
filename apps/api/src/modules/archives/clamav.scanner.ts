@@ -1,5 +1,5 @@
-import { Injectable, ServiceUnavailableException, UnprocessableEntityException } from '@nestjs/common';
 import { Socket } from 'node:net';
+import { Injectable, ServiceUnavailableException, UnprocessableEntityException } from '@nestjs/common';
 import type { VirusScanner } from './file-storage.js';
 
 const MAX_SCAN_BYTES = 5 * 1024 * 1024;

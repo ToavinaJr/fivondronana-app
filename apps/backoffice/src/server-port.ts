@@ -1,4 +1,16 @@
 const DEFAULT_BACKOFFICE_PORT = 5173;
+const DEFAULT_API_PORT = 3000;
+
+export function resolveApiProxyTarget(apiPort: string | undefined): string {
+  const value = apiPort?.trim();
+  if (!value) return `http://localhost:${DEFAULT_API_PORT}`;
+  if (!/^\d+$/u.test(value)) throw new Error('API_PORT doit être un entier valide.');
+
+  const port = Number(value);
+  if (!Number.isSafeInteger(port) || port < 1 || port > 65535)
+    throw new Error('API_PORT doit être compris entre 1 et 65535.');
+  return `http://localhost:${port}`;
+}
 
 export function resolveBackofficePort(backofficeUrl: string | undefined): number {
   const value = backofficeUrl?.trim();

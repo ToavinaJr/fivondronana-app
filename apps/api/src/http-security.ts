@@ -50,7 +50,10 @@ export function getAllowedOrigins(env: NodeJS.ProcessEnv): string[] {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
-  const origins = configured.length === 0 && env.NODE_ENV !== 'production' ? ['http://localhost:5173'] : configured;
+  const origins =
+    configured.length > 0 || env.NODE_ENV === 'production'
+      ? configured
+      : [getBackofficeOrigin(env.BACKOFFICE_URL) ?? 'http://localhost:5173'];
   if (env.NODE_ENV === 'production' && origins.length === 0) {
     throw new Error('CORS_ALLOWED_ORIGINS must be configured in production.');
   }
@@ -67,6 +70,19 @@ export function getAllowedOrigins(env: NodeJS.ProcessEnv): string[] {
     }
   }
   return origins;
+}
+
+function getBackofficeOrigin(backofficeUrl: string | undefined): string | undefined {
+  if (!backofficeUrl?.trim()) return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(backofficeUrl);
+  } catch {
+    throw new Error('BACKOFFICE_URL must be a valid HTTP(S) URL.');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
+    throw new Error('BACKOFFICE_URL must be a valid HTTP(S) URL.');
+  return parsed.origin;
 }
 
 export function getPositiveInteger(value: string | undefined, fallback: number, setting: string): number {

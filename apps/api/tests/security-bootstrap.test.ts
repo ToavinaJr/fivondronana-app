@@ -37,6 +37,22 @@ describe('HTTP security policy', () => {
     expect(getAllowedOrigins({ NODE_ENV: 'development' })).toEqual(['http://localhost:5173']);
   });
 
+  it('uses the configured backoffice URL origin when no explicit CORS origins are set', () => {
+    expect(getAllowedOrigins({ NODE_ENV: 'development', BACKOFFICE_URL: 'http://localhost:9631/admin' })).toEqual([
+      'http://localhost:9631',
+    ]);
+  });
+
+  it('keeps explicit CORS origins authoritative over the backoffice URL', () => {
+    expect(
+      getAllowedOrigins({
+        NODE_ENV: 'development',
+        BACKOFFICE_URL: 'http://localhost:9631',
+        CORS_ALLOWED_ORIGINS: 'http://localhost:5173',
+      }),
+    ).toEqual(['http://localhost:5173']);
+  });
+
   it('limits repeated sensitive requests per key and resets after the window', () => {
     let now = 1000;
     const limiter = new RequestRateLimiter(2, 5000, () => now);

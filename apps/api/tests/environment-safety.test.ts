@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { createIntegrationEnv } from '../../../scripts/integration-config.js';
-import { assertDemoSeedAllowed, requireDemoDatabaseUrl } from '../scripts/demo-seed-config.js';
+import { assertDemoSeedAllowed, getDemoAdminCredentials, requireDemoDatabaseUrl } from '../scripts/demo-seed-config.js';
 import { requireDatabaseUrl } from '../src/modules/database/database-config.js';
 
 describe('integration environment safety', () => {
@@ -56,6 +56,31 @@ describe('demo seed environment safety', () => {
     expect(requireDemoDatabaseUrl({ DATABASE_URL: 'postgresql://localhost/fivondronana' })).toBe(
       'postgresql://localhost/fivondronana',
     );
+  });
+
+  it('returns no admin credentials when both variables are absent', () => {
+    expect(getDemoAdminCredentials({})).toBeUndefined();
+  });
+
+  it('returns the trimmed email and the exact password when both are configured', () => {
+    expect(
+      getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: '  admin@fivondronana.test  ', DEMO_ADMIN_PASSWORD: ' not-trimmed ' }),
+    ).toEqual({ email: 'admin@fivondronana.test', password: ' not-trimmed ' });
+  });
+
+  it('rejects a partial admin configuration', () => {
+    expect(() => getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: 'admin@fivondronana.test' })).toThrow(
+      'DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD must both be set to seed a development administrator.',
+    );
+    expect(() => getDemoAdminCredentials({ DEMO_ADMIN_PASSWORD: 'secret' })).toThrow(
+      'DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD must both be set to seed a development administrator.',
+    );
+  });
+
+  it('rejects a malformed administrator email', () => {
+    expect(() =>
+      getDemoAdminCredentials({ DEMO_ADMIN_EMAIL: 'not-an-email', DEMO_ADMIN_PASSWORD: 'secret' }),
+    ).toThrow('DEMO_ADMIN_EMAIL must be a valid email address.');
   });
 });
 

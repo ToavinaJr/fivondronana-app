@@ -1,10 +1,11 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { hashPassword } from '../src/modules/auth/auth.crypto.js';
-import { assertDemoSeedAllowed, requireDemoDatabaseUrl } from './demo-seed-config.js';
+import { assertDemoSeedAllowed, getDemoAdminCredentials, requireDemoDatabaseUrl } from './demo-seed-config.js';
 
 assertDemoSeedAllowed(process.env);
 const connectionString = requireDemoDatabaseUrl(process.env);
+const adminCredentials = getDemoAdminCredentials(process.env);
 
 const email = 'demo@fivondronana.test';
 const password = 'FivondronanaDemo2026!';
@@ -95,6 +96,35 @@ try {
     if (existing) await prisma.contact.update({ where: { id: existing.id }, data: contact });
     else await prisma.contact.create({ data: contact });
   }
+  if (adminCredentials) {
+    const existingAdmin = await prisma.user.findUnique({
+      where: { emailNormalized: adminCredentials.email },
+      include: { roles: true },
+    });
+    if (!existingAdmin) {
+      const adminPasswordHash = await hashPassword(adminCredentials.password);
+      const admin = await prisma.user.create({
+        data: {
+          accountName: 'Administrateur démo',
+          email: adminCredentials.email,
+          emailNormalized: adminCredentials.email,
+          phone: null,
+          phoneNormalized: null,
+          passwordHash: adminPasswordHash,
+          isActive: true,
+        },
+      });
+      await prisma.userRole.create({ data: { userId: admin.id, role: 'ADMINISTRATOR' } });
+      console.log(`Compte administrateur de démonstration créé : ${adminCredentials.email}`);
+    } else if (!existingAdmin.roles.some((role) => role.role === 'ADMINISTRATOR')) {
+      throw new Error(
+        `DEMO_ADMIN_EMAIL (${adminCredentials.email}) is already used by a non-administrator account; refusing to modify it.`,
+      );
+    } else {
+      console.log(`Compte administrateur de démonstration déjà présent : ${adminCredentials.email}`);
+    }
+  }
+
   console.log(`Compte de démonstration prêt : ${email}`);
 } finally {
   await prisma.$disconnect();

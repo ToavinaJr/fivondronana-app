@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import logo from '../../mobile/src/assets/vonenina-logo.jpeg';
+import { AccountsWorkspace } from './accounts';
 import {
   authRequest,
   AuthRequestError,
@@ -121,23 +122,7 @@ export function App() {
       </main>
     );
   if (user) {
-    return (
-      <main className="workspace">
-        <header className="workspace-header">
-          <Brand compact />
-          <button className="button button-outline" type="button" onClick={() => void logout()}>
-            Se déconnecter
-          </button>
-        </header>
-        <section className="welcome-card">
-          <span className="eyebrow">ESPACE ADMINISTRATEUR</span>
-          <h1>Salama, {user.accountName}</h1>
-          <p>
-            Votre identité administrateur est confirmée. La session est protégée par des cookies sécurisés HttpOnly.
-          </p>
-        </section>
-      </main>
-    );
+    return <AccountsWorkspace account={user.accountName} csrfToken={csrfToken} onLogout={() => void logout()} />;
   }
 
   return (

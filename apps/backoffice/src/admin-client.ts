@@ -50,6 +50,10 @@ export type AdminEntity = {
 
 export type AdminResponsibility = { id: string; name: string; isActive: boolean };
 
+export function adminArchiveDownloadUrl(archiveId: string): string {
+  return `${import.meta.env.VITE_API_URL ?? ''}/api/admin/archives/${encodeURIComponent(archiveId)}/download`;
+}
+
 export async function adminRequest<T>(path: string, options: AdminRequestOptions = {}): Promise<T> {
   if (!/^[a-zA-Z0-9/_-]+(?:\?[a-zA-Z0-9%&=+_-]*)?$/.test(path) || path.startsWith('/')) {
     throw new Error('Chemin API invalide.');

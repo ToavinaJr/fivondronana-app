@@ -1,10 +1,14 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { type AdminArchive, adminRequest } from './admin-client';
-import { type AdminPage, AdminShell, Icon, iconButtonClass } from './admin-shell';
+import { type AdminArchive, adminArchiveDownloadUrl, adminRequest } from './admin-client';
+import { type AdminPage, AdminShell, Icon, iconButtonClass, Required } from './admin-shell';
 import { buttonOutlineClass, buttonPrimaryClass, noticeErrorClass } from './ui-classes';
 
 const ACCEPTED_EXTENSIONS = '.pdf,.docx';
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+function viewArchive(archive: AdminArchive) {
+  window.open(adminArchiveDownloadUrl(archive.id), '_blank', 'noopener');
+}
 
 export function ArchivesPage({
   account,
@@ -196,17 +200,22 @@ function ArchivesTable({
               archives.map((archive) => (
                 <tr key={archive.id} className="[&:last-child>td]:border-b-0">
                   <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
-                    <div className="flex min-w-[170px] items-center gap-2.5">
+                    <button
+                      type="button"
+                      title="Consulter le document"
+                      onClick={() => viewArchive(archive)}
+                      className="flex min-w-[170px] items-center gap-2.5 border-0 bg-transparent p-0 text-left"
+                    >
                       <ArchiveIcon contentType={archive.contentType} />
                       <span className="grid min-w-0 gap-1">
-                        <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#30312e]">
+                        <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#30312e] hover:underline">
                           {archive.title}
                         </strong>
                         <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#858680]">
                           {archive.fileName}
                         </small>
                       </span>
-                    </div>
+                    </button>
                   </td>
                   <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
                     {archive.category}
@@ -250,7 +259,12 @@ function ArchivesTable({
         {!loading &&
           archives.map((archive) => (
             <div key={archive.id} className="rounded-[10px] border border-[#e2e3df] bg-white p-4">
-              <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                title="Consulter le document"
+                onClick={() => viewArchive(archive)}
+                className="flex w-full items-center gap-2.5 border-0 bg-transparent p-0 text-left"
+              >
                 <ArchiveIcon contentType={archive.contentType} />
                 <div className="min-w-0 flex-1">
                   <strong className="block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#30312e]">
@@ -261,7 +275,7 @@ function ArchivesTable({
                   </small>
                 </div>
                 <PublishedBadge isPublished={archive.isPublished} />
-              </div>
+              </button>
               <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-2 text-[11px]">
                 <div>
                   <dt className="mb-1 text-[#858782]">Catégorie</dt>
@@ -328,6 +342,15 @@ function RowActions({
   const busy = busyId === archive.id;
   return (
     <>
+      <button
+        className={iconButtonClass}
+        type="button"
+        title="Consulter le document"
+        aria-label={`Consulter ${archive.title}`}
+        onClick={() => viewArchive(archive)}
+      >
+        <Icon name="download" />
+      </button>
       <button
         className={iconButtonClass}
         type="button"
@@ -425,21 +448,27 @@ function ArchiveUploadModal({
           onSubmit={submit}
         >
           <label className={fieldLabelClass}>
-            Titre
+            <span>
+              Titre
+              <Required />
+            </span>
             <input className={fieldClass} name="title" maxLength={160} required />
           </label>
           <div className="grid grid-cols-1 gap-[13px] sm:grid-cols-2 sm:gap-4">
             <label className={fieldLabelClass}>
-              Catégorie
+              <span>
+                Catégorie
+                <Required />
+              </span>
               <input className={fieldClass} name="category" maxLength={80} required />
             </label>
             <label className={fieldLabelClass}>
-              Année <span className="text-[10px] font-normal text-[#898a84]">Facultatif</span>
+              Année
               <input className={fieldClass} name="year" type="number" min={1900} max={2200} />
             </label>
           </div>
           <label className={fieldLabelClass}>
-            Description <span className="text-[10px] font-normal text-[#898a84]">Facultatif</span>
+            Description
             <textarea
               className="min-h-[84px] w-full resize-y rounded-[7px] border border-[#dfe0dc] px-[11px] py-2.5 text-[13px] text-[#2e2f2b] outline-none focus:border-brand-teal focus:shadow-[0_0_0_3px_rgb(8_127_123/0.11)]"
               name="description"
@@ -447,7 +476,10 @@ function ArchiveUploadModal({
             />
           </label>
           <label className={fieldLabelClass}>
-            Fichier (PDF ou Word, 5 Mo maximum)
+            <span>
+              Fichier (PDF ou Word, 5 Mo maximum)
+              <Required />
+            </span>
             <input
               ref={fileInputRef}
               className="text-[13px] text-[#2e2f2b] file:mr-3 file:rounded-md file:border-0 file:bg-[#f0f1ee] file:px-3 file:py-2 file:text-xs file:font-bold file:text-[#565a55]"

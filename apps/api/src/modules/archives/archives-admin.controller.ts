@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -17,6 +18,7 @@ import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { RequirePermission } from '../authorization/authorization.decorator.js';
 import { Permission } from '../authorization/permissions.js';
 import { RequirePermissionsGuard } from '../authorization/require-permissions.guard.js';
+import { type DownloadResponse, sendArchiveFile } from './archive-download.js';
 import { ArchivesService } from './archives.service.js';
 import { CreateArchiveDto } from './dto/create-archive.dto.js';
 import { SetArchivePublishedDto } from './dto/set-archive-published.dto.js';
@@ -39,6 +41,12 @@ export class ArchivesAdminController {
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024, files: 1 } }))
   upload(@Body() body: CreateArchiveDto, @UploadedFile() file?: UploadedArchive) {
     return this.archives.upload(body, file);
+  }
+
+  @Get(':archiveId/download')
+  async download(@Param('archiveId') id: string, @Res() response: DownloadResponse): Promise<void> {
+    const { archive, data } = await this.archives.getDownloadForAdmin(id);
+    sendArchiveFile(response, archive, data);
   }
 
   @Patch(':archiveId/published')

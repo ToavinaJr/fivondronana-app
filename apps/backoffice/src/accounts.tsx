@@ -6,7 +6,7 @@ import {
   adminRequest,
   type PageResult,
 } from './admin-client';
-import { type AdminPage, AdminShell, Icon, iconButtonClass } from './admin-shell';
+import { type AdminPage, AdminShell, Icon, iconButtonClass, Required } from './admin-shell';
 import { buttonOutlineClass, buttonPrimaryClass, noticeErrorClass } from './ui-classes';
 
 const PAGE_SIZE = 20;
@@ -549,23 +549,26 @@ function AccountEditor({
       roles,
     };
     try {
-      const result = await adminRequest<{ invitationPending?: boolean; invitationDeliveryStatus?: string }>(
-        account ? `users/${account.id}` : 'users',
-        {
-          method: account ? 'PATCH' : 'POST',
-          body,
-          csrfToken,
-        },
-      );
-      const message = result.invitationPending
-        ? result.invitationDeliveryStatus === 'SENT'
-          ? account
-            ? 'Compte mis à jour. L’invitation de réactivation a été envoyée.'
-            : 'Compte créé. L’invitation a été envoyée par e-mail.'
-          : 'Compte enregistré, mais l’e-mail d’invitation n’a pas pu être envoyé. Vous pourrez le renvoyer.'
-        : account
-          ? 'Compte mis à jour.'
-          : 'Compte créé.';
+      const result = await adminRequest<{
+        invitationPending?: boolean;
+        invitationDeliveryStatus?: string;
+        initialPassword?: string;
+      }>(account ? `users/${account.id}` : 'users', {
+        method: account ? 'PATCH' : 'POST',
+        body,
+        csrfToken,
+      });
+      const message = result.initialPassword
+        ? `${account ? 'Compte mis à jour' : 'Compte créé'}. Mot de passe initial à communiquer vous-même au responsable (ne sera plus jamais affiché) : ${result.initialPassword}`
+        : result.invitationPending
+          ? result.invitationDeliveryStatus === 'SENT'
+            ? account
+              ? 'Compte mis à jour. L’invitation de réactivation a été envoyée.'
+              : 'Compte créé. L’invitation a été envoyée par e-mail.'
+            : 'Compte enregistré, mais l’e-mail d’invitation n’a pas pu être envoyé. Vous pourrez le renvoyer.'
+          : account
+            ? 'Compte mis à jour.'
+            : 'Compte créé.';
       await onSaved(message);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Impossible d’enregistrer ce compte.');
@@ -599,7 +602,10 @@ function AccountEditor({
         >
           <div className="grid grid-cols-1 gap-[13px] sm:grid-cols-2 sm:gap-4">
             <label className={fieldLabelClass}>
-              Nom complet
+              <span>
+                Nom complet
+                <Required />
+              </span>
               <input
                 className={fieldClass}
                 name="accountName"
@@ -609,7 +615,10 @@ function AccountEditor({
               />
             </label>
             <label className={fieldLabelClass}>
-              E-mail
+              <span>
+                E-mail
+                <Required />
+              </span>
               <input
                 className={fieldClass}
                 name="email"
@@ -620,7 +629,7 @@ function AccountEditor({
               />
             </label>
             <label className={fieldLabelClass}>
-              Téléphone <span className="text-[10px] font-normal text-[#898a84]">Facultatif</span>
+              Téléphone
               <input
                 className={fieldClass}
                 name="phone"
@@ -634,7 +643,10 @@ function AccountEditor({
             <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">Rattachement</legend>
             <div className="grid grid-cols-1 gap-[13px] sm:grid-cols-2 sm:gap-4">
               <label className={fieldLabelClass}>
-                Entité
+                <span>
+                  Entité
+                  <Required />
+                </span>
                 <select
                   className={fieldClass}
                   required
@@ -653,7 +665,10 @@ function AccountEditor({
                 </select>
               </label>
               <label className={fieldLabelClass}>
-                Groupe
+                <span>
+                  Groupe
+                  <Required />
+                </span>
                 <select
                   className={fieldClass}
                   required
@@ -677,7 +692,10 @@ function AccountEditor({
             </p>
           </fieldset>
           <fieldset className="m-0 border-0 p-0">
-            <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">Rôles</legend>
+            <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">
+              Rôles
+              <Required />
+            </legend>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {Object.entries(roleLabels).map(([role, label]) => (
                 <Choice
@@ -698,7 +716,10 @@ function AccountEditor({
             )}
           </fieldset>
           <fieldset className="m-0 border-0 p-0">
-            <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">Responsabilités officielles</legend>
+            <legend className="mb-[11px] text-[13px] font-bold text-[#333430]">
+              Responsabilités officielles
+              <Required />
+            </legend>
             {responsibilities.length ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {responsibilities

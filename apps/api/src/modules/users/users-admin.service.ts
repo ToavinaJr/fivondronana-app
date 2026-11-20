@@ -1,8 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { createPaginatedResponse, getPaginationOffset } from '../../common/pagination.js';
 import { hashOpaqueToken, hashPassword } from '../auth/auth.crypto.js';
 import { normalizeEmail, normalizePhone } from '../auth/auth.service.js';
+import { isMailingActive } from '../auth/mailing-config.js';
 import { SendGridMailer } from '../auth/sendgrid-mailer.js';
 import { UserRole } from '../authorization/roles.js';
 import { PrismaService } from '../database/prisma.service.js';
@@ -11,6 +12,10 @@ import type { UpdateUserAdminDto } from './dto/update-user-admin.dto.js';
 import type { UserAdminQueryDto } from './dto/user-admin-query.dto.js';
 
 const invitationLifetimeMs = 24 * 60 * 60 * 1000;
+
+function generateInitialPassword(): string {
+  return randomBytes(12).toString('base64url');
+}
 
 @Injectable()
 export class UsersAdminService {
@@ -100,8 +105,10 @@ export class UsersAdminService {
     const phoneNormalized = phone ? normalizePhone(phone) : null;
     if (phone && (!phoneNormalized || phoneNormalized.length < 7))
       throw new BadRequestException('Le numéro de téléphone est invalide.');
-    this.mailer.validateConfiguration();
+    const mailingActive = isMailingActive();
+    if (mailingActive) this.mailer.validateConfiguration();
     const token = randomBytes(32).toString('base64url');
+    const initialPassword = mailingActive ? randomBytes(32).toString('base64url') : generateInitialPassword();
     const now = new Date();
 
     const user = await this.prisma
@@ -129,22 +136,25 @@ export class UsersAdminService {
             emailNormalized,
             phone,
             phoneNormalized,
-            passwordHash: await hashPassword(randomBytes(32).toString('base64url')),
-            isActive: false,
+            passwordHash: await hashPassword(initialPassword),
+            isActive: !mailingActive,
+            activatedAt: mailingActive ? null : now,
             roles: { create: input.roles.map((role) => ({ role })) },
             membership: { create: { entityId: input.entityId, groupId: input.groupId } },
             responsibilities: { create: input.responsibilityIds.map((responsibilityId) => ({ responsibilityId })) },
           },
           select: { id: true, accountName: true, email: true },
         });
-        const invitation = await tx.accountInvitation.create({
-          data: {
-            userId: created.id,
-            tokenHash: hashOpaqueToken(token),
-            expiresAt: new Date(now.getTime() + invitationLifetimeMs),
-          },
-          select: { id: true },
-        });
+        const invitation = mailingActive
+          ? await tx.accountInvitation.create({
+              data: {
+                userId: created.id,
+                tokenHash: hashOpaqueToken(token),
+                expiresAt: new Date(now.getTime() + invitationLifetimeMs),
+              },
+              select: { id: true },
+            })
+          : null;
         await tx.adminAuditEvent.create({
           data: {
             actorUserId,
@@ -153,7 +163,7 @@ export class UsersAdminService {
             metadata: { fields: ['accountName', 'email', 'phone', 'roles', 'membership', 'responsibilities'] },
           },
         });
-        return { user: created, invitationId: invitation.id };
+        return { user: created, invitationId: invitation?.id };
       })
       .catch((error: unknown) => {
         if (isPrismaCode(error, 'P2002'))
@@ -161,9 +171,12 @@ export class UsersAdminService {
         throw error;
       });
 
+    if (!mailingActive) {
+      return { ...(await this.getAdminUser(user.user.id)), invitationPending: false, initialPassword };
+    }
     const invitationDeliveryStatus = await this.deliverInvitation(
       user.user.id,
-      user.invitationId,
+      user.invitationId as string,
       actorUserId,
       email,
       user.user.accountName,
@@ -200,8 +213,10 @@ export class UsersAdminService {
     if (hasEntity !== hasGroup) throw new BadRequestException('L’entité et le groupe doivent être fournis ensemble.');
 
     const changedFields = Object.keys(input);
-    const token = emailChanged ? randomBytes(32).toString('base64url') : undefined;
-    if (emailChanged) this.mailer.validateConfiguration();
+    const mailingActive = isMailingActive();
+    const token = emailChanged && mailingActive ? randomBytes(32).toString('base64url') : undefined;
+    const initialPassword = emailChanged && !mailingActive ? generateInitialPassword() : undefined;
+    if (emailChanged && mailingActive) this.mailer.validateConfiguration();
     const now = new Date();
     let invitationId: string | undefined;
     try {
@@ -253,13 +268,20 @@ export class UsersAdminService {
           where: { id: userId },
           data: {
             ...(input.accountName !== undefined ? { accountName: input.accountName.trim() } : {}),
-            ...(emailChanged ? { email, emailNormalized, isActive: false, activatedAt: null } : {}),
+            ...(emailChanged ? { email, emailNormalized } : {}),
+            ...(emailChanged && mailingActive ? { isActive: false, activatedAt: null } : {}),
             ...(phone !== undefined ? { phone, phoneNormalized } : {}),
-            ...(emailChanged ? { passwordHash: await hashPassword(randomBytes(32).toString('base64url')) } : {}),
+            ...(emailChanged
+              ? {
+                  passwordHash: await hashPassword(
+                    mailingActive ? randomBytes(32).toString('base64url') : (initialPassword as string),
+                  ),
+                }
+              : {}),
           },
         });
 
-        if (emailChanged && token) {
+        if (emailChanged && mailingActive && token) {
           await tx.accountInvitation.updateMany({ where: { userId, consumedAt: null }, data: { consumedAt: now } });
           const invitation = await tx.accountInvitation.create({
             data: {
@@ -270,6 +292,8 @@ export class UsersAdminService {
             select: { id: true },
           });
           invitationId = invitation.id;
+          await tx.authSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: now } });
+        } else if (emailChanged && !mailingActive) {
           await tx.authSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: now } });
         }
 
@@ -290,6 +314,9 @@ export class UsersAdminService {
     }
 
     const updated = await this.getAdminUser(userId);
+    if (emailChanged && !mailingActive && initialPassword) {
+      return { ...updated, invitationPending: false, initialPassword };
+    }
     if (emailChanged && token && email && invitationId) {
       const invitationDeliveryStatus = await this.deliverInvitation(
         userId,
@@ -340,6 +367,8 @@ export class UsersAdminService {
     if (user.isActive) throw new ConflictException('Ce compte est déjà activé.');
     if (user.activatedAt)
       throw new ConflictException('Ce compte a déjà été activé; réactivez-le sans renvoyer d’invitation.');
+    if (!isMailingActive())
+      throw new ConflictException('L’envoi de courriels est désactivé (IS_MAILING_ACTIVE=false).');
 
     this.mailer.validateConfiguration();
     const token = randomBytes(32).toString('base64url');

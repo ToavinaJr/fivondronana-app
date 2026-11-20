@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { randomUUID } from 'node:crypto';
+import type { AddressInfo } from 'node:net';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import type { AddressInfo } from 'node:net';
 import { configureApiApp } from '../../src/api-bootstrap.js';
 import { AppModule } from '../../src/app.module.js';
 import { hashPassword } from '../../src/modules/auth/auth.crypto.js';
@@ -31,6 +31,7 @@ describe.skipIf(!connectionString)('administrator user management HTTP API', () 
   let previousSendGridApiKey: string | undefined;
   let previousSendGridFromEmail: string | undefined;
   let previousBackofficeUrl: string | undefined;
+  let previousIsMailingActive: string | undefined;
   const suffix = randomUUID();
   const adminEmail = `admin-${suffix}@example.test`;
 
@@ -40,11 +41,15 @@ describe.skipIf(!connectionString)('administrator user management HTTP API', () 
     previousSendGridApiKey = process.env.SENDGRID_API_KEY;
     previousSendGridFromEmail = process.env.SENDGRID_FROM_EMAIL;
     previousBackofficeUrl = process.env.BACKOFFICE_URL;
+    previousIsMailingActive = process.env.IS_MAILING_ACTIVE;
     process.env.DATABASE_URL = connectionString;
     process.env.JWT_SECRET = 'user-admin-integration-secret-over-32-characters';
     process.env.SENDGRID_API_KEY = 'integration-sendgrid-key';
     process.env.SENDGRID_FROM_EMAIL = 'noreply@example.test';
     process.env.BACKOFFICE_URL = 'https://backoffice.example.test';
+    // Force the email-required activation flow regardless of the developer's local .env;
+    // tests that need IS_MAILING_ACTIVE=false set and restore it themselves.
+    delete process.env.IS_MAILING_ACTIVE;
 
     app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: false });
     configureApiApp(app);
@@ -73,6 +78,7 @@ describe.skipIf(!connectionString)('administrator user management HTTP API', () 
     restoreEnvironment('SENDGRID_API_KEY', previousSendGridApiKey);
     restoreEnvironment('SENDGRID_FROM_EMAIL', previousSendGridFromEmail);
     restoreEnvironment('BACKOFFICE_URL', previousBackofficeUrl);
+    restoreEnvironment('IS_MAILING_ACTIVE', previousIsMailingActive);
   });
 
   it('allows an administrator to search accounts and never returns credential or session secrets', async () => {
@@ -492,6 +498,58 @@ describe.skipIf(!connectionString)('administrator user management HTTP API', () 
       expect(replay.status).toBe(400);
     } finally {
       globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('activates the account immediately with a visible password when IS_MAILING_ACTIVE=false', async () => {
+    const entity = await prisma.entity.create({ data: { name: `No Mail Entity ${suffix}` } });
+    createdEntityIds.push(entity.id);
+    const group = await prisma.group.create({ data: { name: `No Mail Group ${suffix}`, entityId: entity.id } });
+    createdGroupIds.push(group.id);
+    const responsibility = await prisma.officialResponsibility.create({ data: { name: `No Mail Role ${suffix}` } });
+    createdResponsibilityIds.push(responsibility.id);
+    const previousIsMailingActive = process.env.IS_MAILING_ACTIVE;
+    const previousSendGridApiKey = process.env.SENDGRID_API_KEY;
+    process.env.IS_MAILING_ACTIVE = 'false';
+    delete process.env.SENDGRID_API_KEY;
+    const email = `no-mail-${suffix}@example.test`;
+    try {
+      const response = await fetch(`${baseUrl}/admin/users`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountName: `No Mail User ${suffix}`,
+          email,
+          entityId: entity.id,
+          groupId: group.id,
+          responsibilityIds: [responsibility.id],
+          roles: ['RESPONSIBLE'],
+        }),
+      });
+      expect(response.status).toBe(201);
+      const payload = (await response.json()) as Record<string, unknown>;
+      expect(payload).toMatchObject({
+        accountName: `No Mail User ${suffix}`,
+        isActive: true,
+        invitationPending: false,
+      });
+      expect(typeof payload.initialPassword).toBe('string');
+      expect((payload.initialPassword as string).length).toBeGreaterThan(10);
+      const created = await prisma.user.findUnique({ where: { emailNormalized: email } });
+      expect(created).not.toBeNull();
+      if (created) createdUserIds.push(created.id);
+      expect(created?.activatedAt).not.toBeNull();
+      expect(await prisma.accountInvitation.count({ where: { userId: created?.id } })).toBe(0);
+
+      const login = await fetch(`${baseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email, password: payload.initialPassword }),
+      });
+      expect(login.status).toBe(200);
+    } finally {
+      restoreEnvironment('IS_MAILING_ACTIVE', previousIsMailingActive);
+      restoreEnvironment('SENDGRID_API_KEY', previousSendGridApiKey);
     }
   });
 

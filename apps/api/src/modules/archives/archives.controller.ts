@@ -4,9 +4,8 @@ import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { RequirePermission } from '../authorization/authorization.decorator.js';
 import { Permission } from '../authorization/permissions.js';
 import { RequirePermissionsGuard } from '../authorization/require-permissions.guard.js';
+import { type DownloadResponse, sendArchiveFile } from './archive-download.js';
 import { ArchivesService } from './archives.service.js';
-
-type DownloadResponse = { setHeader(name: string, value: string): void; send(data: Uint8Array): void };
 
 @Controller('archives')
 @ApiTags('archives')
@@ -23,14 +22,6 @@ export class ArchivesController {
   @Get(':archiveId/download')
   async download(@Param('archiveId') id: string, @Res() response: DownloadResponse): Promise<void> {
     const { archive, data } = await this.archives.getDownload(id);
-    response.setHeader('Content-Type', archive.contentType);
-    response.setHeader('Content-Length', String(data.byteLength));
-    response.setHeader(
-      'Content-Disposition',
-      `attachment; filename="archive-${archive.id}${archive.fileName.slice(archive.fileName.lastIndexOf('.'))}"`,
-    );
-    response.setHeader('Cache-Control', 'private, no-store');
-    response.setHeader('X-Content-Type-Options', 'nosniff');
-    response.send(data);
+    sendArchiveFile(response, archive, data);
   }
 }

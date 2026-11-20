@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { BrandIcon } from '../access/BrandIcon';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { type AuthSession, getConfiguredApiBaseUrl } from '../access/auth-api';
+import { BrandIcon } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
-import { archiveErrorKind, downloadArchive, listArchives, type ArchiveSummary } from './archive-api';
+import { type ArchiveSummary, archiveErrorKind, downloadArchive, listArchives } from './archive-api';
 import { formatArchiveSize } from './archive-format';
 
 type Props = { session: AuthSession; onSessionExpired: () => void };
@@ -111,7 +111,15 @@ export function ArchiveDirectoryScreen({ session, onSessionExpired }: Props) {
       {archives.map((archive) => {
         const isDownloading = downloadingId === archive.id;
         return (
-          <View key={archive.id} style={styles.card}>
+          <Pressable
+            key={archive.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Sokafy ${archive.title}`}
+            accessibilityState={{ disabled: downloadingId !== null, busy: isDownloading }}
+            disabled={downloadingId !== null}
+            onPress={() => void openArchive(archive)}
+            style={({ pressed }) => [styles.card, pressed && styles.pressed, downloadingId !== null && styles.disabled]}
+          >
             <View style={styles.iconWrap}>
               <BrandIcon name="archive" color={colors.primary} />
             </View>
@@ -122,25 +130,12 @@ export function ArchiveDirectoryScreen({ session, onSessionExpired }: Props) {
                 {archive.category} · {archive.year} · {formatArchiveSize(archive.size)}
               </Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Sokafy ${archive.title}`}
-              accessibilityState={{ disabled: downloadingId !== null, busy: isDownloading }}
-              disabled={downloadingId !== null}
-              onPress={() => void openArchive(archive)}
-              style={({ pressed }) => [
-                styles.openButton,
-                pressed && styles.pressed,
-                downloadingId !== null && styles.disabled,
-              ]}
-            >
-              {isDownloading ? (
+            {isDownloading ? (
+              <View style={styles.openButton}>
                 <ActivityIndicator color={colors.primary} />
-              ) : (
-                <BrandIcon name="download" color={colors.primary} size={20} />
-              )}
-            </Pressable>
-          </View>
+              </View>
+            ) : null}
+          </Pressable>
         );
       })}
       {downloadError ? (

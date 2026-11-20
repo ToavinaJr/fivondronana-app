@@ -1,3 +1,4 @@
+import { createHash, randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   Inject,
@@ -5,10 +6,9 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { randomUUID, createHash } from 'node:crypto';
 import { PrismaService } from '../database/prisma.service.js';
-import { FILE_STORAGE, VIRUS_SCANNER, type FileStorage, type VirusScanner } from './file-storage.js';
 import type { CreateArchiveDto } from './dto/create-archive.dto.js';
+import { FILE_STORAGE, type FileStorage, VIRUS_SCANNER, type VirusScanner } from './file-storage.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 function isDocx(buffer: Buffer): boolean {
@@ -145,7 +145,14 @@ export class ArchivesService {
   }
 
   async getDownload(id: string) {
-    const archive = await this.prisma.archive.findFirst({ where: { id, isPublished: true } });
+    return this.readArchiveBytes(await this.prisma.archive.findFirst({ where: { id, isPublished: true } }));
+  }
+
+  async getDownloadForAdmin(id: string) {
+    return this.readArchiveBytes(await this.prisma.archive.findUnique({ where: { id } }));
+  }
+
+  private async readArchiveBytes(archive: Awaited<ReturnType<PrismaService['archive']['findUnique']>>) {
     if (!archive) throw new NotFoundException('Tsy hita ny tahiry.');
     const file = await this.storage.get(archive.storageKey);
     if (

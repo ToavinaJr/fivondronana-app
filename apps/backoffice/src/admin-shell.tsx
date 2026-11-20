@@ -7,6 +7,15 @@ export type AdminPage = 'accounts' | 'archives';
 export const iconButtonClass =
   'inline-grid h-[34px] w-[34px] shrink-0 place-items-center rounded-lg border-0 bg-transparent p-0 text-[#747670] enabled:hover:bg-[#fff0ee] enabled:hover:text-[#971710] disabled:cursor-wait disabled:opacity-45';
 
+export function Required() {
+  return (
+    <span className="text-brand-red" aria-hidden="true">
+      {' '}
+      *
+    </span>
+  );
+}
+
 const navItems: { id: AdminPage; label: string; icon: IconName }[] = [
   { id: 'accounts', label: 'Comptes', icon: 'users' },
   { id: 'archives', label: 'Arisiva', icon: 'archive' },

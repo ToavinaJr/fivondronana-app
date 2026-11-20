@@ -25,7 +25,7 @@ The package versions are pinned to compatible framework release lines in each wo
 2. Start PostgreSQL with `docker compose --env-file .env -f infra/docker-compose.yml up -d postgres`.
 3. Install dependencies and create the Bun lockfile with `bun install`.
 4. Generate the Prisma client with `bun run db:generate`.
-5. Start the API with `bun run dev:api`.
+5. Start the API with `bun run dev:api`. This also starts (and waits for) the local ClamAV container required by Arisiva uploads; run `bun run clamav:up` on its own if you need it without the API.
 6. In a second terminal, start Expo with `bun run dev:mobile`. For a physical phone, the mobile client must use the development computer's LAN IP rather than `localhost`.
 
 For database deployments, run `bun run db:deploy` as an explicit release step before starting the API; the API container never applies migrations at startup. To run the containerized API with PostgreSQL locally, apply migrations first, then use `docker compose --env-file .env -f infra/docker-compose.yml up --build`. Ports bind to `127.0.0.1` by default. For a physical phone, set `API_BIND_ADDRESS` and `EXPO_PUBLIC_API_URL` to the development machine's LAN address; leave `POSTGRES_BIND_ADDRESS` on loopback.

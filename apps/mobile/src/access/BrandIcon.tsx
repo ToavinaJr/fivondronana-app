@@ -22,7 +22,10 @@ export type BrandIconName =
   | 'email'
   | 'close'
   | 'plus'
-  | 'check';
+  | 'check'
+  | 'eye'
+  | 'menu'
+  | 'filter';
 
 type NativeSymbol = NonNullable<ComponentProps<typeof SymbolView>['name']>;
 
@@ -47,6 +50,9 @@ const symbols: Record<BrandIconName, NativeSymbol> = {
   email: { ios: 'envelope', android: 'mail', web: 'mail' },
   close: { ios: 'xmark', android: 'close', web: 'close' },
   plus: { ios: 'plus', android: 'add', web: 'add' },
+  eye: { ios: 'eye', android: 'visibility', web: 'visibility' },
+  menu: { ios: 'line.3.horizontal', android: 'menu', web: 'menu' },
+  filter: { ios: 'line.3.horizontal.decrease', android: 'filter_list', web: 'filter_list' },
 };
 
 export function BrandIcon({

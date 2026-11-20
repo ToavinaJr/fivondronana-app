@@ -2,23 +2,21 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  View,
   useWindowDimensions,
+  View,
 } from 'react-native';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import type { AuthSession, PersonalCv } from '../access/auth-api';
+import type { AuthSession } from '../access/auth-api';
 import { getConfiguredApiBaseUrl } from '../access/auth-api';
+import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
-import { BrandIcon } from '../access/BrandIcon';
-import { createCvCollectionHtml } from './cv-pdf';
+import { getLeaderFacets, type LeaderFacets, listLeaders } from './leader-api';
 import { initialLeaderListState, leaderListReducer } from './leader-list-state';
-import { getLeaderFacets, listLeaders, listResponsibleCvs, type LeaderFacets } from './leader-api';
 
 type Props = { session: AuthSession; query: string; onOpenCv: (leaderId: string) => void };
 type FilterOption = { id: string; name: string };
@@ -36,11 +34,8 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
   const [facetAttempt, setFacetAttempt] = useState(0);
   const [entityId, setEntityId] = useState('');
   const [groupId, setGroupId] = useState('');
-  const [responsibilityId, setResponsibilityId] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState(query.trim());
   const [loadingMore, setLoadingMore] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [exportFeedback, setExportFeedback] = useState('');
   const currentData = useRef(state.data);
   currentData.current = state.data;
   const baseUrl = getConfiguredApiBaseUrl();
@@ -71,7 +66,6 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
     async (page: number, append: boolean) => {
       if (page === 1) dispatch({ type: 'REQUEST' });
       else setLoadingMore(true);
-      setExportFeedback('');
       try {
         const result = await listLeaders(
           session.accessToken,
@@ -81,7 +75,6 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
             q: debouncedQuery,
             entityId: entityId || undefined,
             groupId: groupId || undefined,
-            responsibilityId: responsibilityId || undefined,
           },
           baseUrl,
         );
@@ -93,44 +86,18 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
         setLoadingMore(false);
       }
     },
-    [baseUrl, debouncedQuery, entityId, groupId, responsibilityId, session.accessToken],
+    [baseUrl, debouncedQuery, entityId, groupId, session.accessToken],
   );
 
   useEffect(() => {
     void loadPage(1, false);
   }, [loadPage]);
 
-  const exportAll = async () => {
-    setExporting(true);
-    setExportFeedback('');
-    try {
-      const firstPage = await listResponsibleCvs(session.accessToken, { page: 1, pageSize: 50 }, baseUrl);
-      const cvs: PersonalCv[] = [...firstPage.data];
-      for (let page = 2; page <= firstPage.pagination.totalPages; page += 1) {
-        const nextPage = await listResponsibleCvs(session.accessToken, { page, pageSize: 50 }, baseUrl);
-        cvs.push(...nextPage.data);
-      }
-      if (cvs.length === 0) {
-        setExportFeedback('Tsy mbola misy CV azo alaina.');
-        return;
-      }
-      const file = await Print.printToFileAsync({ html: createCvCollectionHtml(cvs), base64: false });
-      if (await Sharing.isAvailableAsync())
-        await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', dialogTitle: 'CV rehetra FIVONDRONANA' });
-      else setExportFeedback('Vita ny PDF, fa tsy misy fizarana azo ampiasaina amin’ity fitaovana ity.');
-    } catch (error) {
-      setExportFeedback(error instanceof Error ? error.message : 'Tsy azo amboarina ny PDF. Andramo indray.');
-    } finally {
-      setExporting(false);
-    }
-  };
-
   const entityOptions: FilterOption[] = [{ id: '', name: 'Rehetra' }, ...(facets?.entities ?? [])];
   const groupOptions: FilterOption[] = [
     { id: '', name: 'Rehetra' },
     ...(facets?.groups.filter((item) => !entityId || item.entityId === entityId) ?? []),
   ];
-  const responsibilityOptions: FilterOption[] = [{ id: '', name: 'Rehetra' }, ...(facets?.responsibilities ?? [])];
 
   return (
     <ScrollView
@@ -147,48 +114,21 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
       <Text accessibilityRole="header" style={styles.heading}>
         Mpiandraikitra
       </Text>
-      <Text style={styles.subtitle}>Tadiavo araka ny entité, vondrona na andraikitra.</Text>
-      <FilterRow
-        label="Entité"
-        options={entityOptions}
-        selected={entityId}
-        onSelect={(value) => {
-          setEntityId(value);
-          setGroupId('');
-        }}
-      />
-      <FilterRow label="Vondrona" options={groupOptions} selected={groupId} onSelect={setGroupId} />
-      <FilterRow
-        label="Andraikitra"
-        options={responsibilityOptions}
-        selected={responsibilityId}
-        onSelect={setResponsibilityId}
-      />
+      <Text style={styles.subtitle}>Tadiavo araka ny entité na vondrona.</Text>
+      <View style={styles.filterRowWrap}>
+        <FilterPill
+          label="Entité"
+          icon="menu"
+          options={entityOptions}
+          selected={entityId}
+          onSelect={(value) => {
+            setEntityId(value);
+            setGroupId('');
+          }}
+        />
+        <FilterPill label="Vondrona" icon="filter" options={groupOptions} selected={groupId} onSelect={setGroupId} />
+      </View>
       {facetError ? <InlineRetry message={facetError} onRetry={() => setFacetAttempt((value) => value + 1)} /> : null}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Sintomy PDF ny CV rehetra"
-        disabled={exporting || state.data.length === 0}
-        accessibilityState={{ disabled: exporting || state.data.length === 0, busy: exporting }}
-        onPress={() => {
-          void exportAll();
-        }}
-        style={[styles.exportButton, (exporting || state.data.length === 0) && styles.disabled]}
-      >
-        {exporting ? (
-          <ActivityIndicator color={colors.onPrimary} />
-        ) : (
-          <>
-            <BrandIcon name="download" color={colors.onPrimary} />
-            <Text style={styles.exportText}>Sintomy CV rehetra (PDF)</Text>
-          </>
-        )}
-      </Pressable>
-      {exportFeedback ? (
-        <Text accessibilityRole="alert" style={styles.feedback}>
-          {exportFeedback}
-        </Text>
-      ) : null}
       {state.status === 'loading' ? <LoadingRows /> : null}
       {state.status === 'error' ? (
         <InlineRetry
@@ -235,8 +175,8 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
                 onPress={() => onOpenCv(leader.id)}
                 style={({ pressed }) => [styles.cvButton, pressed && styles.pressed]}
               >
-                <BrandIcon name="profile" size={16} color={colors.primary} />
-                <Text style={styles.cvButtonText}>Hijery CV</Text>
+                <Text style={styles.cvButtonText}>CV</Text>
+                <BrandIcon name="eye" size={16} color={colors.primary} />
               </Pressable>
             </View>
           </View>
@@ -264,34 +204,62 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
   );
 }
 
-function FilterRow({
+function FilterPill({
   label,
+  icon,
   options,
   selected,
   onSelect,
 }: {
   label: string;
+  icon: BrandIconName;
   options: FilterOption[];
   selected: string;
   onSelect: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const selectedOption = options.find((option) => option.id === selected) ?? options[0];
+
   return (
-    <View style={styles.filterGroup}>
-      <Text style={styles.filterLabel}>{label}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-        {options.map((option) => (
-          <Pressable
-            key={option.id || 'all'}
-            accessibilityRole="button"
-            accessibilityState={{ selected: selected === option.id }}
-            onPress={() => onSelect(option.id)}
-            style={[styles.chip, selected === option.id && styles.chipSelected]}
-          >
-            <Text style={[styles.chipText, selected === option.id && styles.chipTextSelected]}>{option.name}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </View>
+    <>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${label}: ${selectedOption?.name ?? ''}`}
+        onPress={() => setOpen(true)}
+        style={({ pressed }) => [styles.pill, pressed && styles.pressed]}
+      >
+        <Text style={styles.pillText} numberOfLines={1}>
+          {selectedOption?.name}
+        </Text>
+        <BrandIcon name={icon} size={16} color={colors.secondary} />
+      </Pressable>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setOpen(false)}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>{label}</Text>
+            <ScrollView style={styles.modalList}>
+              {options.map((option) => (
+                <Pressable
+                  key={option.id || 'all'}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selected === option.id }}
+                  onPress={() => {
+                    onSelect(option.id);
+                    setOpen(false);
+                  }}
+                  style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
+                >
+                  <Text style={[styles.modalOptionText, selected === option.id && styles.modalOptionTextSelected]}>
+                    {option.name}
+                  </Text>
+                  {selected === option.id ? <BrandIcon name="check" size={16} color={colors.primary} /> : null}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -325,39 +293,43 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24, gap: 12, backgroundColor: colors.page },
   heading: { color: colors.text, fontSize: 21, fontWeight: '700' },
   subtitle: { color: colors.secondary, fontSize: 14, lineHeight: 20, marginBottom: 4 },
-  filterGroup: { gap: 4 },
-  filterLabel: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
-  filterRow: { gap: 8, paddingVertical: 3 },
-  chip: {
-    minHeight: 48,
+  filterRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  pill: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 7,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    justifyContent: 'center',
   },
-  chipSelected: { backgroundColor: colors.selected, borderColor: colors.primary },
-  chipText: { color: colors.text, fontSize: 14 },
-  chipTextSelected: { color: colors.primary, fontWeight: '600' },
-  exportButton: {
+  pillText: { color: colors.text, fontSize: 14, fontWeight: '600', maxWidth: 140 },
+  modalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
+  modalSheet: {
+    maxHeight: '70%',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: colors.page,
+  },
+  modalTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  modalList: { flexGrow: 0 },
+  modalOption: {
     minHeight: 48,
     flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.accent,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: 7,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
-  exportText: { color: colors.onPrimary, fontWeight: '700', fontSize: 15, flexShrink: 1 },
-  disabled: { opacity: 0.55 },
-  feedback: { color: colors.secondary, fontSize: 14, lineHeight: 20 },
+  modalOptionText: { color: colors.text, fontSize: 15 },
+  modalOptionTextSelected: { color: colors.primary, fontWeight: '700' },
   leaderRow: {
     minHeight: 90,
     flexDirection: 'row',
@@ -389,7 +361,7 @@ const styles = StyleSheet.create({
   meta: { color: colors.secondary, fontSize: 14, flex: 1 },
   responsibility: { color: colors.text, fontSize: 14 },
   cvButton: {
-    minWidth: 94,
+    minWidth: 56,
     maxWidth: '100%',
     minHeight: 48,
     flexShrink: 0,

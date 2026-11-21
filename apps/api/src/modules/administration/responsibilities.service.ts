@@ -9,12 +9,23 @@ export class ResponsibilitiesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list() {
-    return this.prisma.officialResponsibility.findMany({ where: { isActive: true }, orderBy: { name: 'asc' } });
+    return this.prisma.officialResponsibility.findMany({ orderBy: { name: 'asc' } });
   }
 
   async create(name: string) {
     try {
       return await this.prisma.officialResponsibility.create({ data: { name: name.trim() } });
+    } catch (error) {
+      if (isPrismaCode(error, 'P2002')) throw new ConflictException('Cette responsabilité existe déjà.');
+      throw error;
+    }
+  }
+
+  async update(id: string, name: string) {
+    const responsibility = await this.prisma.officialResponsibility.findUnique({ where: { id } });
+    if (!responsibility) throw new NotFoundException('Responsabilité introuvable.');
+    try {
+      return await this.prisma.officialResponsibility.update({ where: { id }, data: { name: name.trim() } });
     } catch (error) {
       if (isPrismaCode(error, 'P2002')) throw new ConflictException('Cette responsabilité existe déjà.');
       throw error;

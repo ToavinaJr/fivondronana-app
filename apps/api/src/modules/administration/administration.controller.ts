@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { RequirePermission } from '../authorization/authorization.decorator.js';
@@ -22,6 +22,11 @@ export class AdministrationController {
   @Post()
   create(@Body() body: CreateResponsibilityDto) {
     return this.responsibilities.create(body.name);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: CreateResponsibilityDto) {
+    return this.responsibilities.update(id, body.name);
   }
 
   @Delete(':id')

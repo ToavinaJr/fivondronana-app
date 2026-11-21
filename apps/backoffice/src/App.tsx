@@ -14,6 +14,7 @@ import {
 } from './auth-client';
 import { ContactsPage } from './contacts';
 import { ConversationsPage } from './conversations';
+import { ResponsibilitiesPage } from './responsibilities';
 import { buttonPrimaryClass, formClass, inputClass, labelClass, noticeErrorClass, textButtonClass } from './ui-classes';
 
 type View = 'login' | 'forgot' | 'activate' | 'reset';
@@ -193,6 +194,16 @@ function Workspace({ account, csrfToken, onLogout }: { account: string; csrfToke
   if (page === 'contacts')
     return (
       <ContactsPage
+        account={account}
+        csrfToken={csrfToken}
+        activePage={page}
+        onNavigate={setPage}
+        onLogout={onLogout}
+      />
+    );
+  if (page === 'responsibilities')
+    return (
+      <ResponsibilitiesPage
         account={account}
         csrfToken={csrfToken}
         activePage={page}

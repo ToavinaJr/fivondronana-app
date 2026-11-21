@@ -21,12 +21,12 @@ export function createCvHtml(cv: PersonalCv): string {
     )
     .join('');
   const extraPersonal = cv.extraPersonal
-    .filter(Boolean)
-    .map((value, index) => row(`Fanampiny ${index + 1}`, value))
+    .filter((item) => item.label && item.value)
+    .map((item) => row(item.label, item.value))
     .join('');
   const extraContact = cv.extraContact
-    .filter(Boolean)
-    .map((value, index) => row(`Fifandraisana fanampiny ${index + 1}`, value))
+    .filter((item) => item.label && item.value)
+    .map((item) => row(item.label, item.value))
     .join('');
   const template = cv.template ? ` — ${escapeHtml(cv.template)}` : '';
   return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#171717;padding:28px;line-height:1.45}h1{color:#B8170F;font-size:24px}h2{font-size:17px;border-bottom:1px solid #ddd;padding-bottom:5px;margin-top:22px}p,li{font-size:13px}.cv-page{page-break-after:always}.cv-page:last-child{page-break-after:auto}</style></head><body><h1>FIVONDRONANA${template} — CV</h1><h2>Fampahafantarana ny tena</h2>${row('Anarana', `${cv.firstName} ${cv.lastName}`)}${row('Adiresy', cv.address)}${row('Daty nahaterahana', cv.birthDate)}${row('Toerana nahaterahana', cv.birthPlace)}${extraPersonal}<h2>Fifandraisana</h2>${row('Finday', cv.phone)}${row('Mailaka', cv.email)}${row('Facebook', cv.facebook)}${extraContact}<h2>Fampahafantarana ny maha skoto</h2>${row('Faritany', cv.province)}${row('Faritra', cv.area)}${row('Fivondronana', cv.fivondronana)}<h2>Sampana</h2><ul>${branches}</ul><h2>Hetsika</h2><ul>${activities}</ul></body></html>`;

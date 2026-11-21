@@ -186,4 +186,31 @@ describe.skipIf(!connectionString)('Hafatra conversations', () => {
     expect((await service.listForUser(a.user.id)).some((c) => c.id === custom.id)).toBe(false);
     expect((await service.listForUser(b.user.id)).some((c) => c.id === custom.id)).toBe(true);
   });
+
+  it('deletes a custom conversation along with its messages and attachment storage', async () => {
+    const a = await makeResponsible('Entity O');
+    const custom = await service.createCustomConversation('À supprimer', [], [a.user.id]);
+    const png = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      Buffer.from('to-be-deleted'),
+    ]);
+    const sent = await service.sendMessage(custom.id, a.user.id, undefined, {
+      buffer: png,
+      originalname: 'photo.png',
+      size: png.byteLength,
+    });
+    const storageKey = (await prisma.message.findUniqueOrThrow({ where: { id: sent.id } })).attachmentKey;
+
+    await service.removeCustomConversation(custom.id);
+
+    expect(await prisma.conversation.findUnique({ where: { id: custom.id } })).toBeNull();
+    expect(await prisma.fileObject.findUnique({ where: { storageKey: storageKey as string } })).toBeNull();
+  });
+
+  it('refuses to delete a general or per-entity conversation', async () => {
+    const a = await makeResponsible('Entity P');
+    const general = await prisma.conversation.findUniqueOrThrow({ where: { isGeneralSingleton: true } });
+    await expect(service.removeCustomConversation(general.id)).rejects.toThrow('Tsy hita ny Hafatra.');
+    await expect(service.removeCustomConversation(a.conversation.id)).rejects.toThrow('Tsy hita ny Hafatra.');
+  });
 });

@@ -242,6 +242,21 @@ export class ConversationsService implements OnModuleInit {
     return this.prisma.conversation.update({ where: { id }, data: { isActive } });
   }
 
+  async removeCustomConversation(id: string): Promise<void> {
+    const conversation = await this.prisma.conversation.findUnique({ where: { id } });
+    if (!conversation || conversation.kind !== 'CUSTOM') throw new NotFoundException('Tsy hita ny Hafatra.');
+    const attachments = await this.prisma.message.findMany({
+      where: { conversationId: id, attachmentKey: { not: null } },
+      select: { attachmentKey: true },
+    });
+    await this.prisma.conversation.delete({ where: { id } });
+    await Promise.all(
+      attachments
+        .filter((message): message is { attachmentKey: string } => Boolean(message.attachmentKey))
+        .map((message) => this.storage.delete(message.attachmentKey).catch(() => undefined)),
+    );
+  }
+
   private async requireConversation(id: string): Promise<ConversationRecord> {
     const conversation = await this.prisma.conversation.findUnique({ where: { id } });
     if (!conversation || !conversation.isActive) throw new NotFoundException('Tsy hita ny resaka.');

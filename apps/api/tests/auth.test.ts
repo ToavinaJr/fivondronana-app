@@ -101,7 +101,10 @@ describe('authentication', () => {
       isActive: true,
       roles: [{ role: 'ENTITY_MANAGER' }],
     }));
-    const auth = new AuthService({ user: { findFirst }, authSession: { create: mock(async () => ({})) } } as never, secret);
+    const auth = new AuthService(
+      { user: { findFirst }, authSession: { create: mock(async () => ({})) } } as never,
+      secret,
+    );
     const result = await auth.login('tiana@example.org', 'password123');
     expect(result.user.isResponsible).toBe(true);
 

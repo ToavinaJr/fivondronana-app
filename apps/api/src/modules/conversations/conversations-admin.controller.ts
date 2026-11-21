@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../auth/access-token.guard.js';
 import { RequirePermission } from '../authorization/authorization.decorator.js';
@@ -39,5 +39,11 @@ export class ConversationsAdminController {
   @Patch(':conversationId/active')
   setActive(@Param('conversationId') id: string, @Body() body: SetConversationActiveDto) {
     return this.conversations.setActive(id, body.isActive);
+  }
+
+  @Delete(':conversationId/custom')
+  @HttpCode(204)
+  async remove(@Param('conversationId') id: string): Promise<void> {
+    await this.conversations.removeCustomConversation(id);
   }
 }

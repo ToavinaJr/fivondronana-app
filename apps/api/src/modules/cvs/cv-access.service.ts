@@ -107,7 +107,7 @@ function getTemplate(groupName: string | undefined): 'Tily' | 'Mpanazava' | null
   return groupName === 'Tily' || groupName === 'Mpanazava' ? groupName : null;
 }
 
-function parseExtraFields(value: unknown): Array<{ label: string; value: string }> {
+export function parseExtraFields(value: unknown): Array<{ label: string; value: string }> {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (

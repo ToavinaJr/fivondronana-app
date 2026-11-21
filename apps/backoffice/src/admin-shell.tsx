@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import logo from '../../mobile/src/assets/vonenina-logo.jpeg';
 import { buttonOutlineClass } from './ui-classes';
 
-export type AdminPage = 'accounts' | 'archives' | 'conversations' | 'contacts';
+export type AdminPage = 'accounts' | 'archives' | 'conversations' | 'contacts' | 'responsibilities';
 
 export const iconButtonClass =
   'inline-grid h-[34px] w-[34px] shrink-0 place-items-center rounded-lg border-0 bg-transparent p-0 text-[#747670] enabled:hover:bg-[#fff0ee] enabled:hover:text-[#971710] disabled:cursor-wait disabled:opacity-45';
@@ -21,6 +21,7 @@ const navItems: { id: AdminPage; label: string; icon: IconName }[] = [
   { id: 'archives', label: 'Arisiva', icon: 'archive' },
   { id: 'conversations', label: 'Hafatra', icon: 'messages' },
   { id: 'contacts', label: 'Fifandraisana', icon: 'contacts' },
+  { id: 'responsibilities', label: 'Andraikitra', icon: 'badge' },
 ];
 
 export function AdminShell({
@@ -160,7 +161,9 @@ type IconName =
   | 'eye'
   | 'eye-off'
   | 'messages'
-  | 'contacts';
+  | 'contacts'
+  | 'badge'
+  | 'back';
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {
   const paths: Record<IconName, string> = {
@@ -184,6 +187,9 @@ export function Icon({ name, className }: { name: IconName; className?: string }
     messages: 'M21 11.5a8.38 8.38 0 0 1-9 8.4A9 9 0 1 1 20.6 10a8.5 8.5 0 0 1 .4 1.5Z',
     contacts:
       'M6 2h12a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm6 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-3.5 9c.4-2 1.8-3 3.5-3s3.1 1 3.5 3',
+    badge:
+      'M12 2 3 6v6c0 5 4 8 9 10 5-2 9-5 9-10V6l-9-4Zm0 6a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Zm-3 9c.5-1.8 1.7-2.8 3-2.8s2.5 1 3 2.8',
+    back: 'M19 12H5m0 0 6 6m-6-6 6-6',
   };
   return (
     <svg

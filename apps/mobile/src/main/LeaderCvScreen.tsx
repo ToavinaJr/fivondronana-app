@@ -132,7 +132,7 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
                 ['Adiresy', cv.address],
                 ['Daty nahaterahana', cv.birthDate.slice(0, 10)],
                 ['Toerana nahaterahana', cv.birthPlace],
-                ...cv.extraPersonal.map((value, index) => [`Fanampiny ${index + 1}`, value]),
+                ...cv.extraPersonal.map((item) => [item.label, item.value]),
               ]}
             />
             <CvSection
@@ -141,7 +141,7 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
                 ['Finday', cv.phone],
                 ['Mailaka', cv.email],
                 ['Facebook', cv.facebook],
-                ...cv.extraContact.map((value, index) => [`Fifandraisana fanampiny ${index + 1}`, value]),
+                ...cv.extraContact.map((item) => [item.label, item.value]),
               ]}
             />
             <CvSection

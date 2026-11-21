@@ -5,8 +5,34 @@ import { AuthModule } from '../auth/auth.module.js';
 import { AuthorizationModule } from '../authorization/authorization.module.js';
 import { PrismaService } from '../database/prisma.service.js';
 import { CvAccessController } from './cv-access.controller.js';
-import { CvAccessService } from './cv-access.service.js';
+import { CvAccessService, parseExtraFields } from './cv-access.service.js';
 import { CvInputDto } from './dto/cv-input.dto.js';
+
+const OWN_CV_SELECT = {
+  firstName: true,
+  lastName: true,
+  address: true,
+  birthDate: true,
+  birthPlace: true,
+  phone: true,
+  email: true,
+  facebook: true,
+  province: true,
+  area: true,
+  fivondronana: true,
+  extraPersonal: true,
+  extraContact: true,
+  branches: { select: { name: true, group: true, project: true, startedAt: true, endedAt: true } },
+  activities: { select: { name: true, responsibility: true, description: true, date: true } },
+} as const;
+
+function presentOwnCv(cv: {
+  extraPersonal: unknown;
+  extraContact: unknown;
+  [key: string]: unknown;
+}): Record<string, unknown> {
+  return { ...cv, extraPersonal: parseExtraFields(cv.extraPersonal), extraContact: parseExtraFields(cv.extraContact) };
+}
 
 @Controller('cvs/me')
 @ApiTags('curriculum vitae')
@@ -16,10 +42,11 @@ class MyCvController {
 
   @Get()
   async getMine(@Req() request: AuthenticatedRequest) {
-    return this.prisma.cv.findUnique({
+    const cv = await this.prisma.cv.findUnique({
       where: { userId: request.auth.user.id },
-      include: { branches: true, activities: true },
+      select: OWN_CV_SELECT,
     });
+    return cv ? presentOwnCv(cv) : null;
   }
 
   @Put()
@@ -87,7 +114,8 @@ class MyCvController {
             date: Date | null;
           }[],
         });
-      return tx.cv.findUnique({ where: { id: cv.id }, include: { branches: true, activities: true } });
+      const saved = await tx.cv.findUniqueOrThrow({ where: { id: cv.id }, select: OWN_CV_SELECT });
+      return presentOwnCv(saved);
     });
   }
 }

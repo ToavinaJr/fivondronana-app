@@ -194,6 +194,7 @@ export type CvBranch = {
   endedAt: string;
 };
 export type CvActivity = { id?: string; name: string; responsibility: string; description: string; date: string };
+export type CvExtraField = { label: string; value: string };
 export type PersonalCv = {
   id?: string;
   firstName: string;
@@ -207,8 +208,8 @@ export type PersonalCv = {
   province: string;
   area: string;
   fivondronana: string;
-  extraPersonal: string[];
-  extraContact: string[];
+  extraPersonal: CvExtraField[];
+  extraContact: CvExtraField[];
   branches: CvBranch[];
   activities: CvActivity[];
   template?: 'Tily' | 'Mpanazava' | null;

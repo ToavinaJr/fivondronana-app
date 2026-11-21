@@ -17,6 +17,7 @@ import {
   type AuthSession,
   type CvActivity,
   type CvBranch,
+  type CvExtraField,
   getMyCv,
   type PersonalCv,
   saveMyCv,
@@ -193,24 +194,30 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
           error={fieldErrors.birthDate}
         />
         <Field label="Toerana nahaterahana" value={cv.birthPlace ?? ''} onChange={(v) => field('birthPlace', v)} />
-        {cv.extraPersonal.map((value, index) => (
-          <Field
+        {cv.extraPersonal.map((item, index) => (
+          <ExtraFieldRow
             key={extraPersonalIds[index]}
-            label={`Fanampiny ${index + 1}`}
-            value={value}
-            onChange={(v) =>
+            item={item}
+            onChange={(next) =>
               setCv((current) => ({
                 ...current,
-                extraPersonal: current.extraPersonal.map((item, i) => (i === index ? v : item)),
+                extraPersonal: current.extraPersonal.map((row, i) => (i === index ? next : row)),
               }))
             }
+            onRemove={() => {
+              setExtraPersonalIds((current) => current.filter((_, i) => i !== index));
+              setCv((current) => ({
+                ...current,
+                extraPersonal: current.extraPersonal.filter((_, i) => i !== index),
+              }));
+            }}
           />
         ))}
         <AddButton
           label="+ Hanampy fampahafantarana"
           onPress={() => {
             setExtraPersonalIds((current) => [...current, createExtraRowId()]);
-            setCv((current) => ({ ...current, extraPersonal: [...current.extraPersonal, ''] }));
+            setCv((current) => ({ ...current, extraPersonal: [...current.extraPersonal, { label: '', value: '' }] }));
           }}
         />
       </Section>
@@ -230,24 +237,30 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
           error={fieldErrors.email}
         />
         <Field label="Facebook" value={cv.facebook ?? ''} onChange={(v) => field('facebook', v)} />
-        {cv.extraContact.map((value, index) => (
-          <Field
+        {cv.extraContact.map((item, index) => (
+          <ExtraFieldRow
             key={extraContactIds[index]}
-            label={`Fifandraisana fanampiny ${index + 1}`}
-            value={value}
-            onChange={(v) =>
+            item={item}
+            onChange={(next) =>
               setCv((current) => ({
                 ...current,
-                extraContact: current.extraContact.map((item, i) => (i === index ? v : item)),
+                extraContact: current.extraContact.map((row, i) => (i === index ? next : row)),
               }))
             }
+            onRemove={() => {
+              setExtraContactIds((current) => current.filter((_, i) => i !== index));
+              setCv((current) => ({
+                ...current,
+                extraContact: current.extraContact.filter((_, i) => i !== index),
+              }));
+            }}
           />
         ))}
         <AddButton
           label="+ Hanampy fifandraisana"
           onPress={() => {
             setExtraContactIds((current) => [...current, createExtraRowId()]);
-            setCv((current) => ({ ...current, extraContact: [...current.extraContact, ''] }));
+            setCv((current) => ({ ...current, extraContact: [...current.extraContact, { label: '', value: '' }] }));
           }}
         />
       </Section>
@@ -480,6 +493,23 @@ function DateField({
           {error}
         </Text>
       ) : null}
+    </View>
+  );
+}
+function ExtraFieldRow({
+  item,
+  onChange,
+  onRemove,
+}: {
+  item: CvExtraField;
+  onChange: (next: CvExtraField) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <View style={styles.repeat}>
+      <Field label="Anarana" value={item.label} onChange={(v) => onChange({ ...item, label: v })} />
+      <Field label="Soratra" value={item.value} onChange={(v) => onChange({ ...item, value: v })} />
+      <RemoveButton onPress={onRemove} />
     </View>
   );
 }

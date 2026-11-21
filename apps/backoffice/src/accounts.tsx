@@ -587,7 +587,7 @@ function AccountEditor({
       >
         <header className="flex items-start justify-between border-b border-[#ededeb] px-[19px] py-[21px] sm:px-7 sm:py-6">
           <div>
-            <p className="mb-2 text-[10px] font-extrabold tracking-[0.1em] text-[#858782]">GESTION DES ACCÈS</p>
+            <p className="mb-2 text-[10px] font-extrabold tracking-widest text-[#858782]">GESTION DES ACCÈS</p>
             <h2 id="editor-title" className="m-0 text-xl tracking-[-0.03em] sm:text-[23px]">
               {account ? 'Modifier le compte' : 'Ajouter un compte'}
             </h2>
@@ -722,24 +722,22 @@ function AccountEditor({
             </legend>
             {responsibilities.length ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {responsibilities
-                  .filter((item) => item.isActive)
-                  .map((item) => (
-                    <Choice
-                      key={item.id}
-                      checked={responsibilityIds.includes(item.id)}
-                      onChange={() =>
-                        setResponsibilityIds((current) =>
-                          current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id],
-                        )
-                      }
-                    >
-                      {item.name}
-                    </Choice>
-                  ))}
+                {responsibilities.map((item) => (
+                  <Choice
+                    key={item.id}
+                    checked={responsibilityIds.includes(item.id)}
+                    onChange={() =>
+                      setResponsibilityIds((current) =>
+                        current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id],
+                      )
+                    }
+                  >
+                    {item.name}
+                  </Choice>
+                ))}
               </div>
             ) : (
-              <p className="mt-[9px] text-[11px] text-[#797a75]">Aucune responsabilité active n’est configurée.</p>
+              <p className="mt-[9px] text-[11px] text-[#797a75]">Aucune responsabilité n’est configurée.</p>
             )}
             {responsibilityIds.length === 0 && (
               <small className="mt-2 inline-block text-xs text-[#a11a13]">

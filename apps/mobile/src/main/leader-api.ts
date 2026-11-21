@@ -161,12 +161,15 @@ function parseCv(value: unknown): PersonalCv {
   if (
     !(value.birthPlace === null || isString(value.birthPlace)) ||
     !(value.facebook === null || isString(value.facebook)) ||
-    !isStringArray(value.extraPersonal) ||
-    !isStringArray(value.extraContact) ||
+    !Array.isArray(value.extraPersonal) ||
+    !Array.isArray(value.extraContact) ||
     !Array.isArray(value.branches) ||
     !Array.isArray(value.activities)
   )
     return invalidResponse();
+  const extraPersonal = value.extraPersonal.map(parseExtraField);
+  const extraContact = value.extraContact.map(parseExtraField);
+  if (!extraPersonal.every(Boolean) || !extraContact.every(Boolean)) return invalidResponse();
   if (
     value.template !== undefined &&
     value.template !== null &&
@@ -206,8 +209,8 @@ function parseCv(value: unknown): PersonalCv {
     province: value.province,
     area: value.area,
     fivondronana: value.fivondronana,
-    extraPersonal: value.extraPersonal,
-    extraContact: value.extraContact,
+    extraPersonal: extraPersonal as NonNullable<(typeof extraPersonal)[number]>[],
+    extraContact: extraContact as NonNullable<(typeof extraContact)[number]>[],
     branches: branches as NonNullable<(typeof branches)[number]>[],
     activities: activities as NonNullable<(typeof activities)[number]>[],
     template: value.template as PersonalCv['template'],
@@ -237,8 +240,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(isString);
+function parseExtraField(value: unknown): { label: string; value: string } | null {
+  if (!isRecord(value) || !isString(value.label) || !isString(value.value)) return null;
+  return { label: value.label, value: value.value };
 }
 function trimSlash(value: string): string {
   return value.replace(/\/$/, '');

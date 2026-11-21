@@ -80,7 +80,7 @@ describe('leader API client', () => {
       province: 'Analamanga',
       area: 'Avaradrano',
       fivondronana: 'Antananarivo',
-      extraPersonal: [],
+      extraPersonal: [{ label: 'Andraikitra', value: 'Mpiandraikitra' }],
       extraContact: [],
       branches: [],
       activities: [],
@@ -92,7 +92,31 @@ describe('leader API client', () => {
         calls === 1 ? cv : { data: [cv], pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 } },
       );
     }) as typeof fetch;
-    expect((await getLeaderCv('token', 'leader-1', baseUrl)).firstName).toBe('Tiana');
+    const loaded = await getLeaderCv('token', 'leader-1', baseUrl);
+    expect(loaded.firstName).toBe('Tiana');
+    expect(loaded.extraPersonal).toEqual([{ label: 'Andraikitra', value: 'Mpiandraikitra' }]);
     expect((await listResponsibleCvs('token', { page: 1, pageSize: 20 }, baseUrl)).data).toHaveLength(1);
+  });
+
+  test('rejects a CV whose extra fields are not well-formed label/value pairs', async () => {
+    const cv = {
+      firstName: 'Tiana',
+      lastName: 'Rabe',
+      address: 'Antananarivo',
+      birthDate: '1990-01-01T00:00:00.000Z',
+      birthPlace: null,
+      phone: '0341234567',
+      email: 'tiana@example.org',
+      facebook: null,
+      province: 'Analamanga',
+      area: 'Avaradrano',
+      fivondronana: 'Antananarivo',
+      extraPersonal: ['a plain string, not an object'],
+      extraContact: [],
+      branches: [],
+      activities: [],
+    };
+    globalThis.fetch = (async () => Response.json(cv)) as typeof fetch;
+    await expect(getLeaderCv('token', 'leader-1', baseUrl)).rejects.toThrow('Valin-teny tsy araka ny tokony ho izy.');
   });
 });

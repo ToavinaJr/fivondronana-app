@@ -1,12 +1,8 @@
-import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react';
-import {
-  type AdminConversation,
-  type AdminEntity,
-  type AdminUser,
-  adminRequest,
-  type PageResult,
-} from './admin-client';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
+import { type AdminConversation, type AdminEntity, type AdminUser, adminRequest } from './admin-client';
 import { type AdminPage, AdminShell, Icon, iconButtonClass, Required } from './admin-shell';
+import { MemberPicker } from './member-picker';
+import { MembersDashboard } from './members-dashboard';
 import { buttonOutlineClass, buttonPrimaryClass, fieldClass, fieldLabelClass, noticeErrorClass } from './ui-classes';
 
 export function ConversationsPage({
@@ -29,6 +25,7 @@ export function ConversationsPage({
   const [notice, setNotice] = useState('');
   const [busyId, setBusyId] = useState('');
   const [editing, setEditing] = useState<AdminConversation | 'new' | null>(null);
+  const [viewingMembers, setViewingMembers] = useState<AdminConversation | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,6 +67,35 @@ export function ConversationsPage({
     }
   }
 
+  async function remove(conversation: AdminConversation) {
+    if (!window.confirm(`Supprimer définitivement « ${conversation.title} » ?`)) return;
+    setBusyId(conversation.id);
+    setError('');
+    setNotice('');
+    try {
+      await adminRequest(`conversations/${conversation.id}/custom`, { method: 'DELETE', csrfToken });
+      setNotice('Hafatra supprimé.');
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'La suppression a échoué.');
+    } finally {
+      setBusyId('');
+    }
+  }
+
+  if (viewingMembers)
+    return (
+      <ConversationMembersPage
+        account={account}
+        csrfToken={csrfToken}
+        activePage={activePage}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        conversation={viewingMembers}
+        onBack={() => setViewingMembers(null)}
+      />
+    );
+
   return (
     <AdminShell
       account={account}
@@ -107,8 +133,10 @@ export function ConversationsPage({
         loading={loading}
         error={error}
         busyId={busyId}
+        onOpen={setViewingMembers}
         onEdit={setEditing}
         onToggleActive={toggleActive}
+        onRemove={remove}
       />
 
       {editing && (
@@ -146,15 +174,19 @@ function ConversationsTable({
   loading,
   error,
   busyId,
+  onOpen,
   onEdit,
   onToggleActive,
+  onRemove,
 }: {
   conversations: AdminConversation[];
   loading: boolean;
   error: string;
   busyId: string;
+  onOpen: (conversation: AdminConversation) => void;
   onEdit: (conversation: AdminConversation) => void;
   onToggleActive: (conversation: AdminConversation) => Promise<void>;
+  onRemove: (conversation: AdminConversation) => Promise<void>;
 }) {
   const emptyState = (
     <>
@@ -202,8 +234,18 @@ function ConversationsTable({
             {!loading &&
               conversations.map((conversation) => (
                 <tr key={conversation.id} className="[&:last-child>td]:border-b-0">
-                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs font-semibold text-[#30312e]">
-                    {conversation.title}
+                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs">
+                    {conversation.kind === 'CUSTOM' ? (
+                      <button
+                        type="button"
+                        className="font-semibold text-[#30312e] hover:underline"
+                        onClick={() => onOpen(conversation)}
+                      >
+                        {conversation.title}
+                      </button>
+                    ) : (
+                      <span className="font-semibold text-[#30312e]">{conversation.title}</span>
+                    )}
                   </td>
                   <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
                     {kindLabel(conversation.kind)}
@@ -217,16 +259,28 @@ function ConversationsTable({
                   <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs">
                     <div className="flex justify-end gap-0.5">
                       {conversation.kind === 'CUSTOM' && (
-                        <button
-                          className={iconButtonClass}
-                          type="button"
-                          title="Modifier"
-                          aria-label={`Modifier ${conversation.title}`}
-                          disabled={busyId === conversation.id}
-                          onClick={() => onEdit(conversation)}
-                        >
-                          <Icon name="edit" />
-                        </button>
+                        <>
+                          <button
+                            className={iconButtonClass}
+                            type="button"
+                            title="Modifier"
+                            aria-label={`Modifier ${conversation.title}`}
+                            disabled={busyId === conversation.id}
+                            onClick={() => onEdit(conversation)}
+                          >
+                            <Icon name="edit" />
+                          </button>
+                          <button
+                            className={iconButtonClass}
+                            type="button"
+                            title="Supprimer"
+                            aria-label={`Supprimer ${conversation.title}`}
+                            disabled={busyId === conversation.id}
+                            onClick={() => void onRemove(conversation)}
+                          >
+                            <Icon name="trash" />
+                          </button>
+                        </>
                       )}
                       <button
                         className={iconButtonClass}
@@ -261,9 +315,19 @@ function ConversationsTable({
           conversations.map((conversation) => (
             <div key={conversation.id} className="rounded-[10px] border border-[#e2e3df] bg-white p-4">
               <div className="flex items-center justify-between gap-2">
-                <strong className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#30312e]">
-                  {conversation.title}
-                </strong>
+                {conversation.kind === 'CUSTOM' ? (
+                  <button
+                    type="button"
+                    className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left text-xs font-semibold text-[#30312e] hover:underline"
+                    onClick={() => onOpen(conversation)}
+                  >
+                    {conversation.title}
+                  </button>
+                ) : (
+                  <strong className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#30312e]">
+                    {conversation.title}
+                  </strong>
+                )}
                 <ActiveBadge isActive={conversation.isActive} />
               </div>
               <small className="mt-1 block text-[11px] text-[#858680]">
@@ -271,16 +335,28 @@ function ConversationsTable({
               </small>
               <div className="mt-3 flex justify-end gap-0.5 border-t border-[#eeeeeb] pt-3">
                 {conversation.kind === 'CUSTOM' && (
-                  <button
-                    className={iconButtonClass}
-                    type="button"
-                    title="Modifier"
-                    aria-label={`Modifier ${conversation.title}`}
-                    disabled={busyId === conversation.id}
-                    onClick={() => onEdit(conversation)}
-                  >
-                    <Icon name="edit" />
-                  </button>
+                  <>
+                    <button
+                      className={iconButtonClass}
+                      type="button"
+                      title="Modifier"
+                      aria-label={`Modifier ${conversation.title}`}
+                      disabled={busyId === conversation.id}
+                      onClick={() => onEdit(conversation)}
+                    >
+                      <Icon name="edit" />
+                    </button>
+                    <button
+                      className={iconButtonClass}
+                      type="button"
+                      title="Supprimer"
+                      aria-label={`Supprimer ${conversation.title}`}
+                      disabled={busyId === conversation.id}
+                      onClick={() => void onRemove(conversation)}
+                    >
+                      <Icon name="trash" />
+                    </button>
+                  </>
                 )}
                 <button
                   className={iconButtonClass}
@@ -409,25 +485,29 @@ function ConversationFormModal({
             <input className={fieldClass} name="title" maxLength={160} defaultValue={conversation?.title} required />
           </label>
 
-          <div className={fieldLabelClass}>
-            <span>Entités (tous les membres de ces entités verront ce Hafatra)</span>
-            <div className="grid max-h-[160px] gap-1.5 overflow-auto rounded-[7px] border border-[#dfe0dc] p-2.5">
-              {entities.length === 0 && <span className="px-1.5 py-1 text-xs text-[#858680]">Aucune entité.</span>}
-              {entities.map((entity) => (
-                <label key={entity.id} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px]">
-                  <input
-                    className="accent-brand-red"
-                    type="checkbox"
-                    checked={entityIds.includes(entity.id)}
-                    onChange={() => toggleEntity(entity.id)}
-                  />
-                  <span className={entity.isActive ? '' : 'text-[#aaa]'}>{entity.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          {!editing && (
+            <>
+              <div className={fieldLabelClass}>
+                <span>Entités (tous les membres de ces entités verront ce Hafatra)</span>
+                <div className="grid max-h-[160px] gap-1.5 overflow-auto rounded-[7px] border border-[#dfe0dc] p-2.5">
+                  {entities.length === 0 && <span className="px-1.5 py-1 text-xs text-[#858680]">Aucune entité.</span>}
+                  {entities.map((entity) => (
+                    <label key={entity.id} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px]">
+                      <input
+                        className="accent-brand-red"
+                        type="checkbox"
+                        checked={entityIds.includes(entity.id)}
+                        onChange={() => toggleEntity(entity.id)}
+                      />
+                      <span className={entity.isActive ? '' : 'text-[#aaa]'}>{entity.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-          <MemberPicker csrfToken={csrfToken} members={members} onAdd={addMember} onRemove={removeMember} />
+              <MemberPicker csrfToken={csrfToken} members={members} onAdd={addMember} onRemove={removeMember} />
+            </>
+          )}
 
           {error && <p className={noticeErrorClass}>{error}</p>}
           <footer className="sticky -bottom-[19px] -mx-[19px] -mb-[19px] flex justify-end gap-2.5 border-t border-[#ededeb] bg-white px-[19px] py-[13px] sm:static sm:m-0 sm:border-0 sm:bg-transparent sm:p-0 sm:pt-1">
@@ -444,96 +524,85 @@ function ConversationFormModal({
   );
 }
 
-function MemberPicker({
+function ConversationMembersPage({
+  account,
   csrfToken,
-  members,
-  onAdd,
-  onRemove,
+  activePage,
+  onNavigate,
+  onLogout,
+  conversation,
+  onBack,
 }: {
+  account: string;
   csrfToken: string;
-  members: { id: string; accountName: string }[];
-  onAdd: (user: AdminUser) => void;
-  onRemove: (userId: string) => void;
+  activePage: AdminPage;
+  onNavigate: (page: AdminPage) => void;
+  onLogout: () => void;
+  conversation: AdminConversation;
+  onBack: () => void;
 }) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<AdminUser[]>([]);
-  const [searching, setSearching] = useState(false);
-  const debounceRef = useRef<number | undefined>(undefined);
+  const [members, setMembers] = useState<AdminUser[]>(
+    () => conversation.members.map((link) => link.user) as AdminUser[],
+  );
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    window.clearTimeout(debounceRef.current);
-    const term = query.trim();
-    if (!term) {
-      setResults([]);
-      return;
+  async function save(nextMembers: AdminUser[]) {
+    await adminRequest(`conversations/${conversation.id}/custom`, {
+      method: 'PATCH',
+      body: {
+        title: conversation.title,
+        entityIds: conversation.entities.map((link) => link.entity.id),
+        memberUserIds: nextMembers.map((member) => member.id),
+      },
+      csrfToken,
+    });
+  }
+
+  async function addMember(user: AdminUser) {
+    setError('');
+    const next = members.some((member) => member.id === user.id) ? members : [...members, user];
+    try {
+      await save(next);
+      setMembers(next);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Impossible d’ajouter ce compte.');
     }
-    debounceRef.current = window.setTimeout(async () => {
-      setSearching(true);
-      try {
-        const page = await adminRequest<PageResult<AdminUser>>(`users?q=${encodeURIComponent(term)}`, { csrfToken });
-        setResults(page.data);
-      } catch {
-        setResults([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-    return () => window.clearTimeout(debounceRef.current);
-  }, [query, csrfToken]);
+  }
+
+  async function removeMember(userId: string) {
+    setError('');
+    const next = members.filter((member) => member.id !== userId);
+    try {
+      await save(next);
+      setMembers(next);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Impossible de retirer ce compte.');
+    }
+  }
 
   return (
-    <div className={fieldLabelClass}>
-      <span>Personnes ajoutées directement</span>
-      <input
-        className={fieldClass}
-        type="search"
-        placeholder="Rechercher par nom, e-mail ou téléphone…"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
+    <AdminShell
+      account={account}
+      page={activePage}
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      kicker="HAFATRA"
+      title={conversation.title}
+      description="Comptes ajoutés directement à ce Hafatra."
+      actions={
+        <button className={buttonOutlineClass} type="button" onClick={onBack}>
+          <Icon name="back" className="h-4 w-4" /> Retour
+        </button>
+      }
+    >
+      <MembersDashboard
+        members={members}
+        loading={false}
+        error={error}
+        csrfToken={csrfToken}
+        onAdd={addMember}
+        onRemove={removeMember}
       />
-      {query.trim() && (
-        <div className="grid max-h-[140px] gap-1 overflow-auto rounded-[7px] border border-[#dfe0dc] p-1.5">
-          {searching && <span className="px-1.5 py-1 text-xs text-[#858680]">Recherche…</span>}
-          {!searching && results.length === 0 && (
-            <span className="px-1.5 py-1 text-xs text-[#858680]">Aucun résultat.</span>
-          )}
-          {!searching &&
-            results.map((user) => (
-              <button
-                key={user.id}
-                type="button"
-                className="rounded-md px-1.5 py-1.5 text-left text-[13px] hover:bg-[#f5f6f4]"
-                onClick={() => {
-                  onAdd(user);
-                  setQuery('');
-                }}
-              >
-                {user.accountName}
-                {user.email ? <span className="text-[11px] text-[#858680]"> · {user.email}</span> : null}
-              </button>
-            ))}
-        </div>
-      )}
-      {members.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {members.map((member) => (
-            <span
-              key={member.id}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f1ee] px-2.5 py-1 text-[12px] text-[#41423e]"
-            >
-              {member.accountName}
-              <button
-                type="button"
-                aria-label={`Retirer ${member.accountName}`}
-                className="text-[#858680] hover:text-[#8c1812]"
-                onClick={() => onRemove(member.id)}
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
+    </AdminShell>
   );
 }

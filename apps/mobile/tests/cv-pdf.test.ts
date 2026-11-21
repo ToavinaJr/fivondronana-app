@@ -14,7 +14,7 @@ const cv: PersonalCv = {
   province: 'Antananarivo',
   area: 'Analamanga',
   fivondronana: 'FIVONDRONANA',
-  extraPersonal: ['Mpiandraikitra'],
+  extraPersonal: [{ label: 'Andraikitra', value: 'Mpiandraikitra' }],
   extraContact: [],
   branches: [{ name: 'Mpanazava', group: 'Maitso', project: 'Tetikasa', startedAt: '', endedAt: '' }],
   activities: [
@@ -41,7 +41,13 @@ describe('CV PDF HTML generation', () => {
   });
 
   it('renders optional fields safely when they are empty', () => {
-    const html = createCvHtml({ ...cv, extraPersonal: [''], extraContact: [''], branches: [], activities: [] });
+    const html = createCvHtml({
+      ...cv,
+      extraPersonal: [{ label: '', value: '' }],
+      extraContact: [{ label: '', value: '' }],
+      branches: [],
+      activities: [],
+    });
 
     expect(html).toContain('<ul></ul>');
     expect(html).not.toContain('Fanampiny 1:</p>');

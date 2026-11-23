@@ -1,4 +1,5 @@
 import RNDateTimePicker from '@react-native-community/datetimepicker';
+import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -149,12 +150,17 @@ export function CvEditor({ session, onBack }: { session: AuthSession; onBack: ()
     setFeedback('');
     try {
       const html = createCvHtml(cv);
-      const file = await Print.printToFileAsync({ html, base64: false });
+      const printed = await Print.printToFileAsync({ html, base64: false });
+      const bytes = new Uint8Array(await (await fetch(printed.uri)).arrayBuffer());
+      const shareableFile = new File(Paths.cache, `cv-${Date.now()}.pdf`);
+      await shareableFile.write(bytes);
       if (await Sharing.isAvailableAsync())
-        await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', dialogTitle: 'CV FIVONDRONANA' });
+        await Sharing.shareAsync(shareableFile.uri, { mimeType: 'application/pdf', dialogTitle: 'CV FIVONDRONANA' });
       else setFeedback('Vita ny PDF, fa tsy misy fizarana azo ampiasaina amin’ity fitaovana ity.');
-    } catch {
-      setFeedback('Tsy azo amboarina na zaraina ny PDF. Andramo indray.');
+    } catch (error) {
+      console.error('CV PDF export failed', error);
+      const detail = error instanceof Error ? error.message : String(error);
+      setFeedback(`Tsy azo amboarina na zaraina ny PDF. Andramo indray. (${detail})`);
     }
   };
   if (loading)

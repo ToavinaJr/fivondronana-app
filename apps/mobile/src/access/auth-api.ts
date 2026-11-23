@@ -151,13 +151,18 @@ export type PickedAvatar = { uri: string; name: string; mimeType: string };
 export async function uploadAvatar(accessToken: string, avatar: PickedAvatar): Promise<void> {
   const form = new FormData();
   form.append('file', { uri: avatar.uri, name: avatar.name, type: avatar.mimeType } as unknown as Blob);
-  const response = await fetch(`${apiBaseUrl}/users/me/avatar`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: form,
-  }).catch(() => {
-    throw new Error('Tsy tratra ny mpizara. Hamarino ny tambajotra.');
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiBaseUrl}/users/me/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: form,
+    });
+  } catch (error) {
+    console.error('Avatar upload failed', error);
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Tsy tratra ny mpizara. Hamarino ny tambajotra. (${detail})`);
+  }
   if (response.status === 401) throw new SessionExpiredError();
   if (response.status === 400) {
     const body = await response.json().catch(() => ({}));

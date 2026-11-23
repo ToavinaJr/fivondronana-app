@@ -1,3 +1,4 @@
+import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
@@ -48,12 +49,17 @@ export function LeaderCvScreen({ session, userId, onBack }: Props) {
     setExporting(true);
     setFeedback('');
     try {
-      const file = await Print.printToFileAsync({ html: createCvHtml(cv), base64: false });
+      const printed = await Print.printToFileAsync({ html: createCvHtml(cv), base64: false });
+      const bytes = new Uint8Array(await (await fetch(printed.uri)).arrayBuffer());
+      const shareableFile = new File(Paths.cache, `cv-${Date.now()}.pdf`);
+      await shareableFile.write(bytes);
       if (await Sharing.isAvailableAsync())
-        await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', dialogTitle: 'CV FIVONDRONANA' });
+        await Sharing.shareAsync(shareableFile.uri, { mimeType: 'application/pdf', dialogTitle: 'CV FIVONDRONANA' });
       else setFeedback('Vita ny PDF, fa tsy misy fizarana azo ampiasaina amin’ity fitaovana ity.');
-    } catch {
-      setFeedback('Tsy azo amboarina na zaraina ny PDF. Andramo indray.');
+    } catch (error) {
+      console.error('CV PDF export failed', error);
+      const detail = error instanceof Error ? error.message : String(error);
+      setFeedback(`Tsy azo amboarina na zaraina ny PDF. Andramo indray. (${detail})`);
     } finally {
       setExporting(false);
     }

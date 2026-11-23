@@ -16,7 +16,7 @@ import {
   type AuthSession,
   type AuthUser,
   changePassword,
-  myAvatarUrl,
+  fetchMyAvatarDataUrl,
   removeAvatar,
   updateAccountName,
   uploadAvatar,
@@ -53,6 +53,40 @@ export function MainShell({
   const [flow, dispatch] = useReducer(mainFlowReducer, initialMainFlow);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [avatarVersion, setAvatarVersion] = useState(0);
+  const [avatarDebug, setAvatarDebug] = useState('Aucun chargement observé.');
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
+  const reportAvatarDebug = (message: string) => {
+    console.info(`[avatar-debug] ${message}`);
+    setAvatarDebug(message);
+  };
+
+  useEffect(() => {
+    let active = true;
+    if (!session.user.hasAvatar) {
+      setAvatarDataUrl(null);
+      return () => {
+        active = false;
+      };
+    }
+    setAvatarDataUrl(null);
+    reportAvatarDebug('Téléchargement authentifié de l’avatar commencé.');
+    void fetchMyAvatarDataUrl(session.accessToken)
+      .then((dataUrl) => {
+        if (!active) return;
+        setAvatarDataUrl(dataUrl);
+        reportAvatarDebug('Téléchargement authentifié réussi; image prête à afficher.');
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        reportAvatarDebug(
+          `Échec du téléchargement authentifié : ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, [session.accessToken, session.user.hasAvatar, avatarVersion]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -96,7 +130,21 @@ export function MainShell({
             onPress={() => dispatch({ type: 'SELECT_TAB', tab: 'settings' })}
             style={styles.avatar}
           >
-            <BrandIcon name="profile" size={24} />
+            {session.user.hasAvatar && avatarDataUrl ? (
+              <Image
+                source={{ uri: avatarDataUrl }}
+                onLoadStart={() => reportAvatarDebug('Barre supérieure : chargement commencé.')}
+                onLoad={(event) =>
+                  reportAvatarDebug(
+                    `Barre supérieure : chargée (${event.nativeEvent.source.width} × ${event.nativeEvent.source.height}).`,
+                  )
+                }
+                onError={(event) => reportAvatarDebug(`Barre supérieure : erreur — ${event.nativeEvent.error}`)}
+                style={styles.avatarHeaderImage}
+              />
+            ) : (
+              <BrandIcon name="profile" size={24} />
+            )}
           </Pressable>
         </View>
       </View>
@@ -152,7 +200,15 @@ export function MainShell({
       ) : flow.tab === 'messages' ? (
         <MessagesScreen session={session} onSessionExpired={onSignOut} />
       ) : (
-        <SettingsScreen session={session} onSignOut={onSignOut} onSessionUpdate={onSessionUpdate} />
+        <SettingsScreen
+          session={session}
+          avatarDataUrl={avatarDataUrl}
+          onAvatarChanged={() => setAvatarVersion((value) => value + 1)}
+          avatarDebug={avatarDebug}
+          onAvatarDebug={reportAvatarDebug}
+          onSignOut={onSignOut}
+          onSessionUpdate={onSessionUpdate}
+        />
       )}
 
       {!flow.detail && (
@@ -187,10 +243,18 @@ function PageContent({ children }: { children: React.ReactNode }) {
 
 function SettingsScreen({
   session,
+  avatarDataUrl,
+  onAvatarChanged,
+  avatarDebug,
+  onAvatarDebug,
   onSignOut,
   onSessionUpdate,
 }: {
   session: AuthSession;
+  avatarDataUrl: string | null;
+  onAvatarChanged: () => void;
+  avatarDebug: string;
+  onAvatarDebug: (message: string) => void;
   onSignOut: () => void;
   onSessionUpdate: (user: AuthUser) => void;
 }) {
@@ -205,7 +269,6 @@ function SettingsScreen({
   const [nameMessage, setNameMessage] = useState('');
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarMessage, setAvatarMessage] = useState('');
-  const [avatarVersion, setAvatarVersion] = useState(0);
 
   const saveName = async () => {
     setNameMessage('');
@@ -246,7 +309,7 @@ function SettingsScreen({
         mimeType: asset.mimeType ?? 'image/jpeg',
       });
       onSessionUpdate({ ...session.user, hasAvatar: true });
-      setAvatarVersion((value) => value + 1);
+      onAvatarChanged();
     } catch (error) {
       setAvatarMessage(error instanceof Error ? error.message : 'Tsy voatahiry ny sary.');
     } finally {
@@ -260,7 +323,7 @@ function SettingsScreen({
     try {
       await removeAvatar(session.accessToken);
       onSessionUpdate({ ...session.user, hasAvatar: false });
-      setAvatarVersion((value) => value + 1);
+      onAvatarChanged();
     } catch (error) {
       setAvatarMessage(error instanceof Error ? error.message : 'Tsy voaesotra ny sary.');
     } finally {
@@ -415,12 +478,16 @@ function SettingsScreen({
           onPress={onAvatarPress}
           style={styles.avatarLarge}
         >
-          {session.user.hasAvatar ? (
+          {session.user.hasAvatar && avatarDataUrl ? (
             <Image
-              source={{
-                uri: `${myAvatarUrl()}?v=${avatarVersion}`,
-                headers: { Authorization: `Bearer ${session.accessToken}` },
-              }}
+              source={{ uri: avatarDataUrl }}
+              onLoadStart={() => onAvatarDebug('Paramètres : chargement commencé.')}
+              onLoad={(event) =>
+                onAvatarDebug(
+                  `Paramètres : chargée (${event.nativeEvent.source.width} × ${event.nativeEvent.source.height}).`,
+                )
+              }
+              onError={(event) => onAvatarDebug(`Paramètres : erreur — ${event.nativeEvent.error}`)}
               style={styles.avatarImage}
             />
           ) : (
@@ -542,7 +609,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.portrait,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  avatarHeaderImage: { width: 40, height: 40, borderRadius: 20 },
   headerBack: { minWidth: 64, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4 },
   searchWrap: { paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
   search: {
@@ -610,6 +679,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   avatarImage: { width: 72, height: 72, borderRadius: 36 },
+  avatarDebug: { color: colors.secondary, fontSize: 11, lineHeight: 16, textAlign: 'center', marginBottom: 4 },
   avatarEditBadge: {
     position: 'absolute',
     right: -2,

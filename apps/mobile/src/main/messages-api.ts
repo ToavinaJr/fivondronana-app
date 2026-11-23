@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system';
 import { SessionExpiredError } from '../access/session';
 import { directoryErrorMessage } from './directory-errors';
 
@@ -56,11 +57,7 @@ export async function sendMessage(
   const form = new FormData();
   if (body) form.append('body', body);
   if (attachment) {
-    form.append('file', {
-      uri: attachment.uri,
-      name: attachment.name,
-      type: attachment.mimeType,
-    } as unknown as Blob);
+    form.append('file', new File(attachment.uri) as unknown as Blob, attachment.name);
   }
   let response: Response;
   try {

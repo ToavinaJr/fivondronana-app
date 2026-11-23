@@ -1,3 +1,5 @@
+/// <reference types="bun" />
+
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { networkInterfaces } from 'node:os';
 import { resolve } from 'node:path';

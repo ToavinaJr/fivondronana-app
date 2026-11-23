@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { File } from 'expo-file-system';
 import { getApiErrorMessage } from './api-errors';
 import { readCvResponse } from './cv-response';
 import { SessionExpiredError } from './session';
@@ -150,7 +151,7 @@ export type PickedAvatar = { uri: string; name: string; mimeType: string };
 
 export async function uploadAvatar(accessToken: string, avatar: PickedAvatar): Promise<void> {
   const form = new FormData();
-  form.append('file', { uri: avatar.uri, name: avatar.name, type: avatar.mimeType } as unknown as Blob);
+  form.append('file', new File(avatar.uri) as unknown as Blob, avatar.name);
   let response: Response;
   try {
     response = await fetch(`${apiBaseUrl}/users/me/avatar`, {
@@ -184,6 +185,34 @@ export async function removeAvatar(accessToken: string): Promise<void> {
 
 export function myAvatarUrl(): string {
   return `${apiBaseUrl}/users/me/avatar`;
+}
+
+export async function fetchMyAvatarDataUrl(accessToken: string): Promise<string> {
+  return fetchAvatarDataUrl(myAvatarUrl(), accessToken);
+}
+
+export async function fetchAvatarDataUrl(url: string, accessToken: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  }).catch(() => {
+    throw new Error('Tsy tratra ny mpizara rehefa maka ny avatar.');
+  });
+  if (response.status === 401) throw new SessionExpiredError();
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Tsy azo alaina ny avatar (HTTP ${response.status}). ${detail}`.trim());
+  }
+
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') resolve(reader.result);
+      else reject(new Error('Tsy azo ovaina ho sary aseho ilay avatar nalaina.'));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('Tsy azo vakina ilay avatar nalaina.'));
+    reader.readAsDataURL(blob);
+  });
 }
 
 export function leaderAvatarUrl(leaderId: string): string {

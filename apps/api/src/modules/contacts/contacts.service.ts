@@ -35,7 +35,7 @@ export class ContactsService {
   ): Promise<{ data: ContactResponseDto[]; pagination: ReturnType<typeof createPaginatedResponse>['pagination'] }> {
     const term = query.q?.trim();
     if (!term) {
-      const where = { isPublished: true };
+      const where = { isPublished: true, ...(query.kind ? { kind: query.kind } : {}) };
       const [data, total] = await Promise.all([
         this.prisma.contact.findMany({
           where,
@@ -50,7 +50,7 @@ export class ContactsService {
 
     const normalizedTerm = normalize(term);
     const candidates = await this.prisma.contact.findMany({
-      where: { isPublished: true },
+      where: { isPublished: true, ...(query.kind ? { kind: query.kind } : {}) },
       orderBy: [{ name: 'asc' }, { id: 'asc' }],
       select: PUBLIC_FIELDS,
       take: SEARCH_SCAN_LIMIT,

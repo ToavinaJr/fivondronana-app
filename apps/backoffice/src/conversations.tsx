@@ -200,7 +200,7 @@ function ConversationsTable({
   return (
     <>
       <div className="hidden overflow-auto rounded-[10px] border border-[#e2e3df] bg-white sm:block">
-        <table className="w-full min-w-[760px] border-collapse text-left">
+        <table className="w-full min-w-190 border-collapse text-left">
           <thead>
             <tr>
               {['Titre', 'Type', 'Portée', 'Statut'].map((heading) => (
@@ -219,14 +219,14 @@ function ConversationsTable({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={5} className="!h-[170px] !text-center text-[#777973]">
+                <td colSpan={5} className="h-42.5! text-center! text-[#777973]">
                   Chargement des Hafatra…
                 </td>
               </tr>
             )}
             {!loading && !error && conversations.length === 0 && (
               <tr>
-                <td colSpan={5} className="!h-[170px] !text-center text-[#777973]">
+                <td colSpan={5} className="h-42.5! text-center! text-[#777973]">
                   <div className="mx-auto flex max-w-xs flex-col items-center">{emptyState}</div>
                 </td>
               </tr>
@@ -234,7 +234,7 @@ function ConversationsTable({
             {!loading &&
               conversations.map((conversation) => (
                 <tr key={conversation.id} className="[&:last-child>td]:border-b-0">
-                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs">
+                  <td className="h-17.5 border-b border-[#eeeeeb] px-4 align-middle text-xs">
                     {conversation.kind === 'CUSTOM' ? (
                       <button
                         type="button"
@@ -247,16 +247,16 @@ function ConversationsTable({
                       <span className="font-semibold text-[#30312e]">{conversation.title}</span>
                     )}
                   </td>
-                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                  <td className="h-17.5 border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
                     {kindLabel(conversation.kind)}
                   </td>
-                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                  <td className="h-17.5 border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
                     {scopeLabel(conversation)}
                   </td>
-                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
+                  <td className="h-17.5 border-b border-[#eeeeeb] px-4 align-middle text-xs text-[#41423e]">
                     <ActiveBadge isActive={conversation.isActive} />
                   </td>
-                  <td className="h-[70px] border-b border-[#eeeeeb] px-4 align-middle text-xs">
+                  <td className="h-17.5 border-b border-[#eeeeeb] px-4 align-middle text-xs">
                     <div className="flex justify-end gap-0.5">
                       {conversation.kind === 'CUSTOM' && (
                         <>
@@ -455,14 +455,14 @@ function ConversationFormModal({
   return (
     <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[rgb(25,27,24)]/50 p-5 sm:p-6">
       <section
-        className="max-h-[95vh] w-full max-w-[600px] overflow-auto rounded-xl bg-white shadow-[0_24px_80px_rgb(0_0_0/0.22)] sm:max-h-[min(92vh,900px)]"
+        className="max-h-[95vh] w-full max-w-150 overflow-auto rounded-xl bg-white shadow-[0_24px_80px_rgb(0_0_0/0.22)] sm:max-h-[min(92vh,900px)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="conversation-title"
       >
-        <header className="flex items-start justify-between border-b border-[#ededeb] px-[19px] py-[21px] sm:px-7 sm:py-6">
+        <header className="flex items-start justify-between border-b border-[#ededeb] px-4.75 py-5.25 sm:px-7 sm:py-6">
           <div>
-            <p className="mb-2 text-[10px] font-extrabold tracking-[0.1em] text-[#858782]">
+            <p className="mb-2 text-[10px] font-extrabold tracking-widest text-[#858782]">
               {editing ? 'MODIFIER LE HAFATRA' : 'NOUVEAU HAFATRA'}
             </p>
             <h2 id="conversation-title" className="m-0 text-xl tracking-[-0.03em] sm:text-[23px]">
@@ -474,7 +474,7 @@ function ConversationFormModal({
           </button>
         </header>
         <form
-          className="grid gap-[17px] px-[19px] py-[19px] sm:gap-5 sm:px-7 sm:pb-[26px] sm:pt-[22px]"
+          className="grid gap-4.25 px-4.75 py-4.75 sm:gap-5 sm:px-7 sm:pb-6.5 sm:pt-5.5"
           onSubmit={submit}
         >
           <label className={fieldLabelClass}>
@@ -489,7 +489,7 @@ function ConversationFormModal({
             <>
               <div className={fieldLabelClass}>
                 <span>Entités (tous les membres de ces entités verront ce Hafatra)</span>
-                <div className="grid max-h-[160px] gap-1.5 overflow-auto rounded-[7px] border border-[#dfe0dc] p-2.5">
+                <div className="grid max-h-40 gap-1.5 overflow-auto rounded-[7px] border border-[#dfe0dc] p-2.5">
                   {entities.length === 0 && <span className="px-1.5 py-1 text-xs text-[#858680]">Aucune entité.</span>}
                   {entities.map((entity) => (
                     <label key={entity.id} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px]">
@@ -510,11 +510,11 @@ function ConversationFormModal({
           )}
 
           {error && <p className={noticeErrorClass}>{error}</p>}
-          <footer className="sticky -bottom-[19px] -mx-[19px] -mb-[19px] flex justify-end gap-2.5 border-t border-[#ededeb] bg-white px-[19px] py-[13px] sm:static sm:m-0 sm:border-0 sm:bg-transparent sm:p-0 sm:pt-1">
-            <button className={`${buttonOutlineClass} !min-h-10 !text-xs`} type="button" onClick={onClose}>
+          <footer className="sticky -bottom-4.75 -mx-4.75 -mb-4.75 flex justify-end gap-2.5 border-t border-[#ededeb] bg-white px-4.75 py-3.25 sm:static sm:m-0 sm:border-0 sm:bg-transparent sm:p-0 sm:pt-1">
+            <button className={`${buttonOutlineClass} min-h-10! text-xs!`} type="button" onClick={onClose}>
               Annuler
             </button>
-            <button className={`${buttonPrimaryClass} !min-h-10 !text-xs`} type="submit" disabled={busy}>
+            <button className={`${buttonPrimaryClass} min-h-10! text-xs!`} type="submit" disabled={busy}>
               {busy ? 'Enregistrement…' : editing ? 'Enregistrer' : 'Créer'}
             </button>
           </footer>

@@ -27,7 +27,9 @@ export type BrandIconName =
   | 'eyeOff'
   | 'menu'
   | 'filter'
-  | 'camera';
+  | 'camera'
+  | 'chevronDown'
+  | 'chevronUp';
 
 type NativeSymbol = NonNullable<ComponentProps<typeof SymbolView>['name']>;
 
@@ -57,6 +59,8 @@ const symbols: Record<BrandIconName, NativeSymbol> = {
   menu: { ios: 'line.3.horizontal', android: 'menu', web: 'menu' },
   filter: { ios: 'line.3.horizontal.decrease', android: 'filter_list', web: 'filter_list' },
   camera: { ios: 'camera', android: 'photo_camera', web: 'photo_camera' },
+  chevronDown: { ios: 'chevron.down', android: 'keyboard_arrow_down', web: 'keyboard_arrow_down' },
+  chevronUp: { ios: 'chevron.up', android: 'keyboard_arrow_up', web: 'keyboard_arrow_up' },
 };
 
 export function BrandIcon({

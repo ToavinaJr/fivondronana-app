@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import type { AuthSession } from '../access/auth-api';
-import { getConfiguredApiBaseUrl, leaderAvatarUrl } from '../access/auth-api';
+import { fetchAvatarDataUrl, getConfiguredApiBaseUrl, leaderAvatarUrl } from '../access/auth-api';
 import { BrandIcon, type BrandIconName } from '../access/BrandIcon';
 import { colors } from '../theme/tokens';
 import { getLeaderFacets, type LeaderFacets, listLeaders } from './leader-api';
@@ -148,13 +148,7 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
               importantForAccessibility="no-hide-descendants"
             >
               {leader.hasAvatar ? (
-                <Image
-                  source={{
-                    uri: leaderAvatarUrl(leader.id),
-                    headers: { Authorization: `Bearer ${session.accessToken}` },
-                  }}
-                  style={styles.portraitImage}
-                />
+                <LeaderAvatar leaderId={leader.id} accessToken={session.accessToken} name={leader.accountName} />
               ) : (
                 <Text style={styles.initial}>{leader.accountName.trim().slice(0, 1).toLocaleUpperCase()}</Text>
               )}
@@ -215,6 +209,34 @@ export function LeaderDirectoryScreen({ session, query, onOpenCv }: Props) {
         </Pressable>
       ) : null}
     </ScrollView>
+  );
+}
+
+function LeaderAvatar({ leaderId, accessToken, name }: { leaderId: string; accessToken: string; name: string }) {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setDataUrl(null);
+    void fetchAvatarDataUrl(leaderAvatarUrl(leaderId), accessToken)
+      .then((result) => {
+        if (active) setDataUrl(result);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        console.warn(
+          `[avatar-debug] Mpiandraikitra ${leaderId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, [accessToken, leaderId]);
+
+  return dataUrl ? (
+    <Image source={{ uri: dataUrl }} style={styles.portraitImage} />
+  ) : (
+    <Text style={styles.initial}>{name.trim().slice(0, 1).toLocaleUpperCase()}</Text>
   );
 }
 
@@ -356,16 +378,15 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   portrait: {
-    width: 54,
-    minHeight: 64,
-    paddingVertical: 8,
+    width: 76,
+    height: 76,
     borderRadius: 5,
-    backgroundColor: colors.portrait,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  portraitImage: { width: 54, height: 64 },
+  portraitImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   groupContext: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   groupLogo: { width: 20, height: 24 },
   initial: { color: colors.secondary, fontSize: 23, fontWeight: '600' },

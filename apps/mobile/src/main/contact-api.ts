@@ -14,7 +14,7 @@ export type ContactSummary = {
 };
 export type PageMetadata = { page: number; pageSize: number; total: number; totalPages: number };
 export type Page<T> = { data: T[]; pagination: PageMetadata };
-export type ContactFilters = { page?: number; pageSize?: number; q?: string };
+export type ContactFilters = { page?: number; pageSize?: number; q?: string; kind?: 'INTERNAL' | 'EXTERNAL' };
 
 export async function listContacts(
   accessToken: string,

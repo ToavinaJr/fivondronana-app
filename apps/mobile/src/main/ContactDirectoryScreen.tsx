@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Linking,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -18,10 +20,13 @@ import { buildMailUri, buildTelUri } from './contact-links';
 import { contactListReducer, initialContactListState } from './contact-list-state';
 
 type Props = { session: AuthSession; query: string };
+type ContactKindFilter = 'ALL' | 'INTERNAL' | 'EXTERNAL';
 
 export function ContactDirectoryScreen({ session, query }: Props) {
   const [state, dispatch] = useReducer(contactListReducer, initialContactListState);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [kindFilter, setKindFilter] = useState<ContactKindFilter>('ALL');
+  const [filterOpen, setFilterOpen] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState(query.trim());
   const [loadingMore, setLoadingMore] = useState(false);
   const currentData = useRef(state.data);
@@ -38,7 +43,11 @@ export function ContactDirectoryScreen({ session, query }: Props) {
       if (page === 1) dispatch({ type: 'REQUEST' });
       else setLoadingMore(true);
       try {
-        const result = await listContacts(session.accessToken, { page, pageSize: 20, q: debouncedQuery }, baseUrl);
+        const result = await listContacts(
+          session.accessToken,
+          { page, pageSize: 20, q: debouncedQuery, kind: kindFilter === 'ALL' ? undefined : kindFilter },
+          baseUrl,
+        );
         const data = append ? [...currentData.current, ...result.data] : result.data;
         dispatch({ type: 'SUCCESS', data, pagination: result.pagination });
       } catch (error) {
@@ -47,7 +56,7 @@ export function ContactDirectoryScreen({ session, query }: Props) {
         setLoadingMore(false);
       }
     },
-    [baseUrl, debouncedQuery, session.accessToken],
+    [baseUrl, debouncedQuery, kindFilter, session.accessToken],
   );
 
   useEffect(() => {
@@ -66,10 +75,41 @@ export function ContactDirectoryScreen({ session, query }: Props) {
         />
       }
     >
-      <Text accessibilityRole="header" style={styles.heading}>
-        Fifandraisana
-      </Text>
-      <Text style={styles.subtitle}>Ireo tompon’andraikitra sy mpiara-miasa.</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Sivana: ${filterLabel(kindFilter)}`}
+        accessibilityState={{ expanded: filterOpen }}
+        onPress={() => setFilterOpen(true)}
+        style={({ pressed }) => [styles.filterButton, pressed && styles.pressed]}
+      >
+        <Text style={styles.filterButtonText}>{filterLabel(kindFilter)}</Text>
+        <BrandIcon name="filter" size={17} color={colors.text} />
+      </Pressable>
+      <Modal visible={filterOpen} transparent animationType="fade" onRequestClose={() => setFilterOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setFilterOpen(false)}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Karazana fifandraisana</Text>
+            {(['ALL', 'INTERNAL', 'EXTERNAL'] as const).map((option) => (
+              <Pressable
+                key={option}
+                accessibilityRole="button"
+                accessibilityState={{ selected: kindFilter === option }}
+                onPress={() => {
+                  setKindFilter(option);
+                  setExpandedId(null);
+                  setFilterOpen(false);
+                }}
+                style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
+              >
+                <Text style={[styles.modalOptionText, kindFilter === option && styles.modalOptionTextSelected]}>
+                  {filterLabel(option)}
+                </Text>
+                {kindFilter === option ? <BrandIcon name="check" size={16} color={colors.primary} /> : null}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
       {state.status === 'loading' ? <LoadingRows /> : null}
       {state.status === 'error' ? (
         <InlineRetry
@@ -129,15 +169,13 @@ function ContactRow({
         onPress={onToggle}
         style={styles.contactHead}
       >
-        <View style={styles.contactMark}>
-          <BrandIcon name="contacts" />
-        </View>
+        <Image source={require('../assets/sampana.jpeg')} resizeMode="contain" style={styles.contactMark} />
         <View style={styles.rowBody}>
           <Text style={styles.rowTitle}>{contact.name}</Text>
           <Text style={styles.contactRole}>{contact.responsibility}</Text>
           <Text style={styles.rowMeta}>{contact.groupLabel}</Text>
         </View>
-        <Text style={styles.expandLabel}>{expanded ? 'Afenina' : 'Hijery bebe kokoa'}</Text>
+        <BrandIcon name={expanded ? 'chevronUp' : 'chevronDown'} size={20} color={colors.text} />
       </Pressable>
       {expanded && (
         <View style={styles.contactDetails}>
@@ -152,6 +190,12 @@ function ContactRow({
       )}
     </View>
   );
+}
+
+function filterLabel(filter: ContactKindFilter): string {
+  if (filter === 'INTERNAL') return 'Anaty';
+  if (filter === 'EXTERNAL') return 'Ivelany';
+  return 'Rehetra';
 }
 
 function DetailLink({ icon, label, uri }: { icon: BrandIconName; label: string; uri: string | null }) {
@@ -205,32 +249,64 @@ function LoadingRows() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28, gap: 8, backgroundColor: colors.page },
-  heading: { color: colors.text, fontSize: 23, fontWeight: '700', marginBottom: 8 },
-  subtitle: { color: colors.secondary, fontSize: 14, lineHeight: 21, marginBottom: 12 },
+  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 28, gap: 12, backgroundColor: colors.page },
   rowBody: { flex: 1, gap: 4 },
   rowTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
   rowMeta: { color: colors.secondary, fontSize: 13, lineHeight: 18 },
-  contactCard: { marginBottom: 8, paddingHorizontal: 12, backgroundColor: colors.muted, borderRadius: 8 },
-  contactHead: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  contactMark: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.page,
+  filterButton: {
+    minHeight: 34,
+    width: 136,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.page,
   },
-  contactRole: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
-  expandLabel: {
-    maxWidth: 88,
-    color: colors.primary,
-    fontSize: 12,
-    textAlign: 'right',
-    textDecorationLine: 'underline',
-    textDecorationColor: colors.primary,
+  filterButtonText: { color: colors.text, fontSize: 14 },
+  modalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
+  modalSheet: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: colors.page,
   },
-  contactDetails: { paddingLeft: 52, paddingBottom: 16, gap: 8 },
+  modalTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  modalOption: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  modalOptionText: { color: colors.text, fontSize: 15 },
+  modalOptionTextSelected: { color: colors.primary, fontWeight: '700' },
+  contactCard: {
+    marginBottom: 8,
+    paddingHorizontal: 0,
+    backgroundColor: colors.page,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  contactHead: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
+  contactMark: { width: 28, height: 28, flexShrink: 0 },
+  contactRole: { color: colors.contactRole, fontSize: 13, fontWeight: '700' },
+  contactDetails: {
+    marginTop: 4,
+    paddingLeft: 56,
+    paddingRight: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
   detailLine: { flex: 1, color: colors.text, fontSize: 13 },
   detailLink: { color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' },
   contactDetailRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },

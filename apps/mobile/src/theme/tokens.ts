@@ -1,6 +1,7 @@
 export const colors = {
   primary: '#B8170F',
   accent: '#087F7B',
+  contactRole: '#713B8D',
   page: '#FFFFFF',
   surface: '#FFFFFF',
   muted: '#F5F5F5',

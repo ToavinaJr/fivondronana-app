@@ -28,7 +28,7 @@ try {
   const passwordHash = await hashPassword(password);
   await prisma.$transaction(async (transaction) => {
     // Serialize bootstrap attempts so two simultaneous runs cannot both pass the empty-table check.
-    await transaction.$queryRaw`SELECT pg_advisory_xact_lock(731904261)`;
+    await transaction.$queryRaw`SELECT 1 FROM pg_advisory_xact_lock(731904261)`;
 
     const userCount = await transaction.user.count();
     if (userCount !== 0) {

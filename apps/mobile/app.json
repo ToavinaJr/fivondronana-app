@@ -8,10 +8,18 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "android": {
+      "package": "com.fivondronana.app"
+    },
     "plugins": [
       "expo-sharing",
       "expo-secure-store",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2ee67f6d-5790-44a6-8f9a-48189cc8af23"
+      }
+    }
   }
 }

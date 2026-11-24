@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "d06a8958-d7b7-41f9-84b8-597a38aa82be"
+      }
+    },
+    "android": {
+      "package": "com.toavinajr.fivondronanaplatform"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "session-refresh",
+      "objective": "Implement revocable, rotating refresh sessions and wire remember-me on mobile to SecureStore.",
+      "dependencies": [],
+      "read_set": ["apps/api/src/modules/auth", "apps/api/prisma/schema.prisma", "apps/mobile/src/access", "apps/mobile/tests"],
+      "write_set": ["apps/api/src/modules/auth", "apps/api/prisma/schema.prisma", "apps/api/prisma/migrations", "apps/api/tests/auth.test.ts", "apps/mobile/src/access", "apps/mobile/App.tsx", "apps/mobile/tests"],
+      "side_effects": ["Additive Prisma migration; do not reset or mutate the development database."],
+      "owner": "coordinator",
+      "inputs": ["Approved ADR: 15-minute access token and refresh-token rotation; user selected SecureStore for mobile."],
+      "expected_outputs": ["Atomic single-use refresh rotation, bounded long session, logout/password-change/deactivation revocation, mobile refresh after expiry."],
+      "validation": ["Focused API/mobile tests", "Typecheck", "API build", "Disposable PostgreSQL integration suite when available"],
+      "evidence_required": ["Failing tests observed before implementation", "Fresh test output", "Reviewed migration"],
+      "stop_condition": "Rotation and revocation tests pass; no expired or reused refresh token yields an access token.",
+      "status": "pending"
+    },
+    {
+      "id": "password-recovery",
+      "objective": "Complete generic-response, rate-limited, single-use email password recovery and client reset flow.",
+      "dependencies": [],
+      "read_set": ["apps/api/src/modules/auth", "apps/api/src/api-bootstrap.ts", "apps/mobile/src/access", "apps/mobile/tests"],
+      "write_set": ["apps/api/src/modules/auth", "apps/api/prisma/schema.prisma", "apps/api/prisma/migrations", "apps/api/tests", "apps/mobile/src/access", "apps/mobile/App.tsx", "apps/mobile/tests"],
+      "side_effects": ["Additive migration; SendGrid calls mocked in tests; no real email sent."],
+      "owner": "coordinator",
+      "inputs": ["Approved ADR: email via SendGrid; hashed short-lived single-use recovery tokens."],
+      "expected_outputs": ["Request and completion endpoints; no account enumeration; secure reset link; all prior sessions revoked."],
+      "validation": ["Focused API/mobile tests", "Typecheck", "API build"],
+      "evidence_required": ["RED-GREEN proof", "Token expiry/replay tests", "Rate-limit verification"],
+      "stop_condition": "Recovery request is enumeration-safe and token use is atomic, expiring, and revokes sessions.",
+      "status": "pending"
+    },
+    {
+      "id": "backoffice-auth",
+      "objective": "Build the React/TypeScript backoffice authentication shell with administrator-gated routes and secure browser cookies.",
+      "dependencies": ["session-refresh", "password-recovery"],
+      "read_set": ["apps/api/src/modules/auth", "apps/api/src/api-bootstrap.ts", "docs/superpowers/plans/2026-11-18-platform-completion.md", "docs/decisions/0001-platform-foundation.md"],
+      "write_set": ["apps/api/src/modules/auth", "apps/api/src/api-bootstrap.ts", "apps/backoffice", "package.json", "bun.lock", "docs/decisions/0001-platform-foundation.md", "apps/api/tests"],
+      "side_effects": ["Cookie-based browser auth; CORS credential policy; no external deployment or real provider action."],
+      "owner": "coordinator",
+      "inputs": ["User selected HttpOnly/Secure browser cookie; shared credentials and admin role are already approved."],
+      "expected_outputs": ["CSRF/Origin-protected browser login, refresh, logout; admin-only protected shell; activation and recovery routes."],
+      "validation": ["API HTTP auth tests", "Backoffice route/form tests", "Typecheck", "Build"],
+      "evidence_required": ["Cookie flags and role-gating assertions", "CSRF rejection tests", "Fresh build/test output"],
+      "stop_condition": "Browser cannot read session tokens; non-admin, revoked, disabled, or CSRF requests are denied.",
+      "status": "pending"
+    },
+    {
+      "id": "review-handoff",
+      "objective": "Run full relevant suites, inspect all diffs, obtain independent security review, and document remaining runtime proof.",
+      "dependencies": ["session-refresh", "password-recovery", "backoffice-auth"],
+      "read_set": ["all changed files"],
+      "write_set": ["docs/decisions/0001-platform-foundation.md", "apps/mobile/PRODUCT.md"],
+      "side_effects": ["No commit, deploy, SendGrid delivery, or production database action."],
+      "owner": "coordinator",
+      "inputs": ["Implementation and test evidence from prerequisite tasks."],
+      "expected_outputs": ["Independent review findings resolved or explicitly deferred; docs reflect implemented auth."],
+      "validation": ["Root test, typecheck, format, lint, API build, backoffice build"],
+      "evidence_required": ["Fresh command output", "Reviewer report", "Git diff/status read-back"],
+      "stop_condition": "No unresolved critical/important findings and all applicable verification results are reported accurately.",
+      "status": "pending"
+    }
+  ]
+}

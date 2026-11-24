@@ -13,6 +13,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:bootstrap-admin": "bun --env-file=../../.env run scripts/bootstrap-admin.ts",
     "db:seed:demo": "bun --env-file=../../.env run scripts/seed-demo.ts"
   },
   "dependencies": {

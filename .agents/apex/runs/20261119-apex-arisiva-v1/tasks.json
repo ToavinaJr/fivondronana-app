@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task": "APEX -v final platform audit; implement ADR-compliant Arisiva storage",
+  "mode": "implementation",
+  "proof_required": true,
+  "tasks": [
+    { "id": "runtime-config", "status": "validated", "write_set": ["apps/api/src/runtime-config.ts", "apps/api/src/main.ts", "apps/api/src/modules/database/database-config.ts", "infra/docker-compose.yml", "apps/api/tests/runtime-config.test.ts", ".env.example", "apps/api/package.json"], "validation": ["unit", "typecheck", "build", "isolated integration"] },
+    { "id": "audit", "status": "in_progress", "write_set": ["docs/AUDIT_FINAL.md", "apps/mobile/PRODUCT.md"], "validation": ["read-only review", "cross-reference requirements"] },
+    { "id": "arisiva", "status": "validated", "write_set": ["apps/api/prisma/schema.prisma", "apps/api/prisma/migrations/", "apps/api/src/modules/archives/", "infra/docker-compose.yml", "docs/decisions/0001-platform-foundation.md", "docs/ARISIVA_IMPLEMENTATION_REPORT.md"], "validation": ["unit", "isolated PostgreSQL integration", "Nest dependency graph", "ClamAV INSTREAM clean and EICAR proof"] },
+    { "id": "mobile-archives", "status": "in_progress", "write_set": ["apps/mobile/src/main/ArchiveDirectoryScreen.tsx", "apps/mobile/src/main/archive-api.ts", "apps/mobile/src/main/archive-format.ts", "apps/mobile/src/main/MainShell.tsx", "apps/mobile/tests/archive-api.test.ts", "apps/mobile/package.json", "bun.lock", "apps/mobile/PRODUCT.md", "docs/ARISIVA_IMPLEMENTATION_REPORT.md"], "validation": ["7 focused archive-client tests", "64 mobile tests", "typecheck", "format", "focused lint", "independent review findings resolved", "native-device runtime proof pending: no Android adb/device available"] },
+    { "id": "review-proof", "status": "in_progress", "write_set": [], "validation": ["independent security review", "runtime proof", "final diff review"] }
+  ],
+  "apex_state_cli": "BLOCKED: installed state script imports Unix-only fcntl; Windows Python 3.14 raises ModuleNotFoundError; WSL access denied. This run graph is a manual non-secret checkpoint.",
+  "runtime_proof": "NOT_PROVEN: no Android adb/device available on this Windows host; Expo web export is unsupported because react-dom and react-native-web are not installed. No native-device qualification claimed."
+}

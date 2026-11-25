@@ -133,16 +133,16 @@ export function App() {
 
   return (
     <main className="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(340px,0.9fr)_minmax(480px,1.1fr)]">
-      <aside className="flex min-h-[245px] flex-col justify-between bg-[linear-gradient(145deg,#9d1510,#c02a20_62%,#83140f)] px-6 py-7 text-white sm:min-h-[265px] sm:px-8 lg:min-h-0 lg:p-[clamp(32px,6vw,88px)]">
-        <div className="mt-auto max-w-[520px] lg:my-auto">
+      <aside className="flex min-h-61.25 flex-col justify-between bg-[linear-gradient(145deg,#9d1510,#c02a20_62%,#83140f)] px-6 py-7 text-white sm:min-h-66.25 sm:px-8 lg:min-h-0 lg:p-[clamp(32px,6vw,88px)]">
+        <div className="mt-auto max-w-130 lg:my-auto">
           <Brand />
           <span className="inline-block text-[11px] font-extrabold tracking-[0.14em] text-[#f8d7d4]">
             ESPACE DE GESTION
           </span>
-          <h1 className="my-3 max-w-[560px] text-[clamp(26px,6vw,54px)] leading-[1.08] tracking-[-0.045em] lg:max-w-[480px]">
+          <h1 className="my-3 max-w-140 text-[clamp(26px,6vw,54px)] leading-[1.08] tracking-[-0.045em] lg:max-w-120">            
             Fivondronana, au service de la communauté.
           </h1>
-          <p className="max-w-[400px] text-sm leading-[1.7] text-[#ffe8e6] sm:text-base">
+          <p className="max-w-100 text-sm leading-[1.7] text-[#ffe8e6] sm:text-base">
             Un espace réservé aux administrateurs autorisés pour piloter les services de la plateforme.
           </p>
         </div>
@@ -158,7 +158,7 @@ export function App() {
         {view === 'reset' && <OneTimePasswordForm mode="reset" onNavigate={navigate} onNotice={setNotice} />}
         {notice && (
           <p
-            className="mt-4 w-full max-w-[440px] rounded-lg bg-[#eaf7f5] px-3.5 py-3 text-[13px] leading-[1.5] text-[#075c56]"
+            className="mt-4 w-full max-w-110 rounded-lg bg-[#eaf7f5] px-3.5 py-3 text-[13px] leading-normal text-[#075c56]"
             role="status"
           >
             {notice}
@@ -224,7 +224,7 @@ function Brand({ compact = false }: { compact?: boolean }) {
       <img
         src={logo}
         alt="Logo FIVONDRONANA"
-        className={`rounded-full border-2 object-cover ${compact ? 'h-[42px] w-[42px] border-brand-border' : 'h-[58px] w-[58px] border-white/75'}`}
+        className={`rounded-full border-2 object-cover ${compact ? 'h-10.5 w-10.5 border-brand-border' : 'h-14.5 w-14.5 border-white/75'}`}
       />
       <span>FIVONDRONANA</span>
     </div>
@@ -233,7 +233,7 @@ function Brand({ compact = false }: { compact?: boolean }) {
 
 function FormFrame({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
-    <div className="w-full max-w-[440px]">
+    <div className="w-full max-w-110">
       <span className="inline-block text-[11px] font-extrabold tracking-[0.14em] text-brand-teal">
         PORTAIL ADMINISTRATEUR
       </span>
@@ -357,7 +357,7 @@ function RecoveryForm({
           {busy ? 'Envoi…' : 'Envoyer le lien'}
         </button>
         <button
-          className={`${textButtonClass} mt-[22px] self-center`}
+          className={`${textButtonClass} mt-5.5 self-center`}
           type="button"
           onClick={() => onNavigate('login')}
         >
@@ -428,7 +428,7 @@ function OneTimePasswordForm({
           maxLength={128}
           required
         />
-        <span className="-mt-[15px] mb-5 text-xs text-brand-muted">8 caractères minimum</span>
+        <span className="-mt-3.75 mb-5 text-xs text-brand-muted">8 caractères minimum</span>
         {error && (
           <p className={noticeErrorClass} role="alert">
             {error}
@@ -438,7 +438,7 @@ function OneTimePasswordForm({
           {busy ? 'Enregistrement…' : activation ? 'Activer le compte' : 'Réinitialiser le mot de passe'}
         </button>
         <button
-          className={`${textButtonClass} mt-[22px] self-center`}
+          className={`${textButtonClass} mt-5.5 self-center`}
           type="button"
           onClick={() => onNavigate('login')}
         >
